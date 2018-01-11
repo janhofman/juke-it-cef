@@ -82,8 +82,11 @@ void SimpleApp::OnContextInitialized() {
   // that instead of the default URL.
   url = command_line->GetSwitchValue("url");
   if (url.empty())
-    url = "http://www.google.com";
-
+#if _DEBUG
+	  url = "http://localhost:3000";
+#else
+	  url = "http://www.google.com";
+#endif
   if (use_views) {
     // Create the BrowserView.
     CefRefPtr<CefBrowserView> browser_view = CefBrowserView::CreateBrowserView(

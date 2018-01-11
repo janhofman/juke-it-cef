@@ -1,24 +1,27 @@
-/*
- * HomePage
- *
- * This is the first thing users see of our App, at the '/' route
- *
- * NOTE: while this component should technically be a stateless functional
- * component (SFC), hot reloading does not currently support SFCs. If hot
- * reloading is not a necessity for you then you can refactor it and remove
- * the linting exception.
- */
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import {push} from 'react-router-redux';
 
-import React from 'react';
-import { FormattedMessage } from 'react-intl';
-import messages from './messages';
+import {Home} from './../../components';
+import {logOut} from './../../actions/loginActions';
 
-export default class HomePage extends React.PureComponent { // eslint-disable-line react/prefer-stateless-function
+class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
+  logout(){
+    this.props.dispatch(push('/'));
+    this.props.dispatch(logOut());
+  }
+
   render() {
     return (
-      <h1>
-        <FormattedMessage {...messages.header} />
-      </h1>
+      <Home 
+        {...this.props}
+        logOut={this.logout.bind(this)}
+      />
     );
   }
 }
+
+export default connect((store) => {
+  return({
+  });
+})(HomePage)

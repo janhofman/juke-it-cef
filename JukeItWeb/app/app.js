@@ -22,6 +22,10 @@ import App from 'containers/App';
 // Import Language Provider
 import LanguageProvider from 'containers/LanguageProvider';
 
+// Import store
+import configureStore from './store/configureStore';
+import initialState from './store/initialState';
+
 // Load the favicon, the manifest.json file and the .htaccess file
 /* eslint-disable import/no-unresolved, import/extensions */
 import '!file-loader?name=[name].[ext]!./images/favicon.ico';
@@ -37,16 +41,19 @@ import '!file-loader?name=[name].[ext]!./manifest.json';
 import 'file-loader?name=[name].[ext]!./.htaccess';
 /* eslint-enable import/no-unresolved, import/extensions */
 
-import configureStore from './configureStore';
-
 // Import i18n messages
 import { translationMessages } from './i18n';
 
 // Import CSS reset and Global Styles
 import './global-styles';
 
+import injectTapEventPlugin from 'react-tap-event-plugin';
+
+// Needed for onTouchTap from material-ui
+// http://stackoverflow.com/a/34015469/988941
+injectTapEventPlugin();
+
 // Create redux store with history
-const initialState = {};
 const history = createHistory();
 const store = configureStore(initialState, history);
 const MOUNT_NODE = document.getElementById('app');
