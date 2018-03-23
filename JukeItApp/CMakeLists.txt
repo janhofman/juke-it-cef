@@ -12,6 +12,10 @@ set(CEFSIMPLE_SRCS
   simple_app.h
   simple_handler.cc
   simple_handler.h
+  RenderApp.h
+  RenderApp.cpp
+  SqliteHandler.h
+  Sqlitehandler.cpp
   )
 set(CEFSIMPLE_SRCS_LINUX
   cefsimple_linux.cc

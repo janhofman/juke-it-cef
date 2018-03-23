@@ -48,6 +48,7 @@ const styles = {
 class Login extends Component{    
 
     render(){
+        //window.cefQuery({request: 'my_request', persistent: false, onSuccess: function(response) { console.log(response); }, onFailure: function(error_code, error_message) {} });
         const { formatMessage } = this.props.intl;
         const { authorizing, emptyEmail, emptyPasswd } = this.props;
         return (

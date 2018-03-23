@@ -6,13 +6,16 @@
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
 #include "include/cef_client.h"
+#include "include/wrapper/cef_message_router.h"
+#include "SqliteHandler.h"
 
 #include <list>
 
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
-                      public CefLoadHandler {
+                      public CefLoadHandler,
+					  public CefRequestHandler {
  public:
   explicit SimpleHandler(bool use_views);
   ~SimpleHandler();
@@ -21,13 +24,11 @@ class SimpleHandler : public CefClient,
   static SimpleHandler* GetInstance();
 
   // CefClient methods:
-  virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
-    return this;
-  }
-  virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE {
-    return this;
-  }
+  virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
+  virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
+  virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
+  virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
   // CefDisplayHandler methods:
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -44,6 +45,10 @@ class SimpleHandler : public CefClient,
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) OVERRIDE;
+
+  // CefRequestHandler methods:
+  virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, CefRequestHandler::TerminationStatus status) OVERRIDE;
+  virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool is_redirect) OVERRIDE;
 
   // Request that all existing browser windows close.
   void CloseAllBrowsers(bool force_close);
@@ -64,8 +69,12 @@ class SimpleHandler : public CefClient,
 
   bool is_closing_;
 
+  // browser-side router for handling IPCs
+  CefRefPtr<CefMessageRouterBrowserSide> browser_router_;
+  scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
+
   // Include the default reference counting implementation.
-  IMPLEMENT_REFCOUNTING(SimpleHandler);
+	IMPLEMENT_REFCOUNTING(SimpleHandler);
 };
 
 #endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_

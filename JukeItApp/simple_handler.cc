@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "tests/cefsimple/simple_handler.h"
+#include "simple_handler.h"
 
 #include <sstream>
 #include <string>
@@ -16,12 +16,12 @@
 
 namespace {
 
-SimpleHandler* g_instance = NULL;
+CefRefPtr<SimpleHandler> g_instance = NULL;
 
 }  // namespace
 
 SimpleHandler::SimpleHandler(bool use_views)
-    : use_views_(use_views), is_closing_(false) {
+    : use_views_(use_views), is_closing_(false){
   DCHECK(!g_instance);
   g_instance = this;
 }
@@ -33,6 +33,11 @@ SimpleHandler::~SimpleHandler() {
 // static
 SimpleHandler* SimpleHandler::GetInstance() {
   return g_instance;
+}
+
+bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {
+	// call browser-router_ method
+	return browser_router_->OnProcessMessageReceived(browser, source_process, message);
 }
 
 void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -57,6 +62,15 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
+  if (!browser_router_) {
+	  // Create the browser-side router for query handling.
+	  CefMessageRouterConfig config;
+	  browser_router_ = CefMessageRouterBrowserSide::Create(config);
+
+	  // Register handlers with the router.
+	  sqlite_handler_.reset(new SqliteHandler());
+	  browser_router_->AddHandler(sqlite_handler_.get(), false);
+  }
   // Add to the list of existing browsers.
   browser_list_.push_back(browser);
 }
@@ -80,6 +94,9 @@ bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
+  // call browser_router method
+  browser_router_->OnBeforeClose(browser);
+
   // Remove from the list of existing browsers.
   BrowserList::iterator bit = browser_list_.begin();
   for (; bit != browser_list_.end(); ++bit) {
@@ -90,8 +107,13 @@ void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 
   if (browser_list_.empty()) {
-    // All browser windows have closed. Quit the application message loop.
-    CefQuitMessageLoop();
+	  // Free the router when the last browser is closed.
+	  browser_router_->RemoveHandler(sqlite_handler_.get());
+	  sqlite_handler_.reset();
+	  browser_router_ = NULL;
+
+	  // All browser windows have closed. Quit the application message loop.
+	  CefQuitMessageLoop();
   }
 }
 
@@ -129,4 +151,17 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
   BrowserList::const_iterator it = browser_list_.begin();
   for (; it != browser_list_.end(); ++it)
     (*it)->GetHost()->CloseBrowser(force_close);
+}
+
+void SimpleHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, CefRequestHandler::TerminationStatus status) {
+	CEF_REQUIRE_UI_THREAD();
+	// call browser_router_ method
+	browser_router_->OnRenderProcessTerminated(browser);
+}
+
+bool SimpleHandler::OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool is_redirect) {
+	CEF_REQUIRE_UI_THREAD();
+	// call browser_router_ method
+	 browser_router_->OnBeforeBrowse(browser, frame);
+	 return false;
 }

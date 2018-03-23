@@ -5,7 +5,8 @@
 #include <windows.h>
 
 #include "include/cef_sandbox_win.h"
-#include "tests/cefsimple/simple_app.h"
+#include "simple_app.h"
+#include "RendererApp.h"
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
 // automatically if using the required compiler version. Pass -DUSE_SANDBOX=OFF
@@ -21,57 +22,79 @@
 
 // Entry point function for all processes.
 int APIENTRY wWinMain(HINSTANCE hInstance,
-                      HINSTANCE hPrevInstance,
-                      LPTSTR lpCmdLine,
-                      int nCmdShow) {
-  UNREFERENCED_PARAMETER(hPrevInstance);
-  UNREFERENCED_PARAMETER(lpCmdLine);
+	HINSTANCE hPrevInstance,
+	LPTSTR lpCmdLine,
+	int nCmdShow) {
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
-  // Enable High-DPI support on Windows 7 or newer.
-  CefEnableHighDPISupport();
+	// Enable High-DPI support on Windows 7 or newer.
+	CefEnableHighDPISupport();
 
-  void* sandbox_info = NULL;
+	void* sandbox_info = NULL;
 
 #if defined(CEF_USE_SANDBOX)
-  // Manage the life span of the sandbox information object. This is necessary
-  // for sandbox support on Windows. See cef_sandbox_win.h for complete details.
-  CefScopedSandboxInfo scoped_sandbox;
-  sandbox_info = scoped_sandbox.sandbox_info();
+	// Manage the life span of the sandbox information object. This is necessary
+	// for sandbox support on Windows. See cef_sandbox_win.h for complete details.
+	CefScopedSandboxInfo scoped_sandbox;
+	sandbox_info = scoped_sandbox.sandbox_info();
 #endif
 
-  // Provide CEF with command-line arguments.
-  CefMainArgs main_args(hInstance);
+	// Provide CEF with command-line arguments.
+	CefMainArgs main_args(hInstance);
+
+	// Create a temporary CommandLine object.
+	CefRefPtr<CefCommandLine> command_line =
+		CefCommandLine::CreateCommandLine();
+#if defined(OS_WIN)
+	command_line->InitFromString(::GetCommandLineW());
+#else
+	command_line->InitFromArgv(main_args.argc, main_args.argv);
+#endif
+
+	// Create a CefApp of the correct process type.
+	CefRefPtr<CefApp> app = NULL;
+	if (!command_line->HasSwitch("type")) {
+		app = new SimpleApp();
+	}
+	/*else {
+		const std::string& process_type = command_line->GetSwitchValue("type");
+		if (process_type == "renderer")
+			app = new RendererApp();
+	}*/
+
+#if defined(OS_LINUX)
+	// On Linux the zygote process is used to spawn other process types. Since we
+	// don't know what type of process it will be we give it the renderer app.
+	//if (process_type == kZygoteProcess)
+  //	  return PROCESS_TYPE_RENDERER;
+#endif
 
   // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
   // that share the same executable. This function checks the command-line and,
   // if this is a sub-process, executes the appropriate logic.
-  int exit_code = CefExecuteProcess(main_args, NULL, sandbox_info);
-  if (exit_code >= 0) {
-    // The sub-process has completed so return here.
-    return exit_code;
-  }
+	int exit_code = CefExecuteProcess(main_args, app, sandbox_info);
+	if (exit_code >= 0) {
+		// The sub-process has completed so return here.
+		return exit_code;
+	}
 
-  // Specify CEF global settings here.
-  CefSettings settings;
+	// Specify CEF global settings here.
+	CefSettings settings;
 
 #if !defined(CEF_USE_SANDBOX)
-  settings.no_sandbox = true;
+	settings.no_sandbox = true;
 #endif
 
-  // SimpleApp implements application-level callbacks for the browser process.
-  // It will create the first browser instance in OnContextInitialized() after
-  // CEF has initialized.
-  CefRefPtr<SimpleApp> app(new SimpleApp);
+	// Initialize CEF.
+	CefInitialize(main_args, settings, app.get(), sandbox_info);
 
-  // Initialize CEF.
-  CefInitialize(main_args, settings, app.get(), sandbox_info);
+	// Run the CEF message loop. This will block until CefQuitMessageLoop() is
+	// called.  
+	CefRunMessageLoop();
 
-  // Run the CEF message loop. This will block until CefQuitMessageLoop() is
-  // called.
-  CefRunMessageLoop();
+	// Shut down CEF.
+	CefShutdown();
 
-  // Shut down CEF.
-  CefShutdown();
-
-  return 0;
+	return 0;
 }

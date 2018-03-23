@@ -15,7 +15,6 @@ import PlaybackPage from './../../containers/PlaybackPage';
 
 class Home extends Component {
   render() {
-    console.log(app);
     const { match, intl } = this.props;
     const { formatMessage } = intl;
     return (
