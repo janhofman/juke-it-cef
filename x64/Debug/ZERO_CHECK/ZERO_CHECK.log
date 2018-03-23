@@ -1,0 +1,33 @@
+﻿  Checking Build System
+  CMake is re-running because C:/Git/juke-it-cef/build/CMakeFiles/generate.stamp is out-of-date.
+    the file 'C:/Git/juke-it-cef/CMakeLists.txt'
+    is newer than 'C:/Git/juke-it-cef/build/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- *** CEF CONFIGURATION SETTINGS ***
+  -- Generator:                    Visual Studio 14 2015 Win64
+  -- Platform:                     Windows
+  -- Project architecture:         x86_64
+  -- Binary distribution root:     C:/Git/juke-it-cef
+  -- CEF Windows sandbox:          ON
+  -- Visual Studio ATL support:    ON
+  -- Standard libraries:           comctl32.lib;rpcrt4.lib;shlwapi.lib;ws2_32.lib;dbghelp.lib;psapi.lib;version.lib;winmm.lib
+  -- Compile defines:              __STDC_CONSTANT_MACROS;__STDC_FORMAT_MACROS;WIN32;_WIN32;_WINDOWS;UNICODE;_UNICODE;WINVER=0x0601;_WIN32_WINNT=0x601;NOMINMAX;WIN32_LEAN_AND_MEAN;_HAS_EXCEPTIONS=0;PSAPI_VERSION=1;CEF_USE_SANDBOX;CEF_USE_ATL
+  -- Compile defines (Debug):      
+  -- Compile defines (Release):    NDEBUG;_NDEBUG
+  -- C compile flags:              /MP;/Gy;/GR-;/W4;/WX;/wd4100;/wd4127;/wd4244;/wd4481;/wd4512;/wd4701;/wd4702;/wd4996;/Zi 
+  -- C compile flags (Debug):      /MTd;/RTC1;/Od 
+  -- C compile flags (Release):    /MT;/O2;/Ob2;/GF 
+  -- C++ compile flags:            /MP;/Gy;/GR-;/W4;/WX;/wd4100;/wd4127;/wd4244;/wd4481;/wd4512;/wd4701;/wd4702;/wd4996;/Zi 
+  -- C++ compile flags (Debug):    /MTd;/RTC1;/Od 
+  -- C++ compile flags (Release):  /MT;/O2;/Ob2;/GF 
+  -- Exe link flags:                /MANIFEST:NO;/LARGEADDRESSAWARE
+  -- Exe link flags (Debug):       /DEBUG 
+  -- Exe link flags (Release):      
+  -- Shared link flags:             
+  -- Shared link flags (Debug):    /DEBUG 
+  -- Shared link flags (Release):   
+  -- CEF Binary files:             chrome_elf.dll;d3dcompiler_43.dll;d3dcompiler_47.dll;libcef.dll;libEGL.dll;libGLESv2.dll;natives_blob.bin;snapshot_blob.bin;swiftshader
+  -- CEF Resource files:           cef.pak;cef_100_percent.pak;cef_200_percent.pak;cef_extensions.pak;devtools_resources.pak;icudtl.dat;locales
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: C:/Git/juke-it-cef/build
