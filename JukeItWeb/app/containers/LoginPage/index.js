@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Login from './../../components/Login';
 import { connect } from 'react-redux';
 import {push} from 'react-router-redux';
-import { 
+import {
     emptyEmail,
     emptyPasswd,
     loggingIn,
@@ -81,16 +81,25 @@ class LoginPage extends Component{
                                     dispatch(spotUpdate(spotData));
                                     dispatch(addFirebaseListeners(userId, spotId));
                                     dispatch(push('/home'));//history.push('/home');
-                                });                                
-                            }    
-                        });                                     
+                                });
+                            }
+                        });
                     })
                     .catch((error) => dispatch(logInError(error)));
             }
         });
     }
 
-    render(){  
+    render() {
+      window.cefQuery({
+        request: 'ciaoC++:',
+        onSuccess: function (response) {
+          console.log(response);
+        },
+        onFailure: function (errorCode, errorMessage) { console.log(errorCode, errorMessage);
+        },
+      });
+
         return (
             <Login
                 {...this.props}

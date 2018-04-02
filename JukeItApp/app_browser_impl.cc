@@ -8,7 +8,11 @@ namespace message_router {
 	namespace {
 
 		std::string GetStartupURL() {
-			return shared::kTestOrigin + std::string("message_router.html");
+#if _DEBUG
+			return std::string("http://localhost:3000");
+#else
+			return startup_url = "http://www.google.com";
+#endif
 		}
 
 	}  // namespace
@@ -25,6 +29,7 @@ namespace message_router {
 
 		// CefBrowserProcessHandler methods:
 		void OnContextInitialized() OVERRIDE {
+
 			// Create the browser window.
 			const CefString& startup_url = GetStartupURL();
 			shared::CreateBrowser(new Client(startup_url), startup_url,

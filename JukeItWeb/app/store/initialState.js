@@ -1,6 +1,6 @@
 import firebase from 'firebase';
-//import fs from 'fs';
-//import sqlite3 from 'sqlite3';
+// import fs from 'fs';
+// import sqlite3 from 'sqlite3';
 
 var firebaseConfig = {
           apiKey: "AIzaSyD5cr_tEZR8FmHBZF9gVOd-mYL52v4reKQ",
@@ -9,17 +9,17 @@ var firebaseConfig = {
           storageBucket: "mixitfirebase.appspot.com",
           messagingSenderId: "458619177042"
         };
-/*try{
+ /* try{
     fs.accessSync('data.dat', fs.constants.R_OK | fs.constants.W_OK);
 }catch(err){
     var db = new sqlite3.cached.Database("data.dat");
     db.exec(
         `CREATE TABLE artist(id INTEGER PRIMARY KEY ASC, name TEXT UNIQUE NOT NULL);
         CREATE TABLE genre(id INTEGER PRIMARY KEY ASC, name TEXT UNIQUE NOT NULL);
-        CREATE TABLE album(id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL, artistId INTEGER 
+        CREATE TABLE album(id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL, artistId INTEGER
         CONSTRAINT fk_artist_album REFERENCES artist(id), CONSTRAINT uq_album_name_artist UNIQUE (name, artistId) ON CONFLICT IGNORE);
-        CREATE TABLE song(id INTEGER PRIMARY KEY ASC, title TEXT, artistId INTEGER CONSTRAINT fk_artist_song REFERENCES artist(id), 
-        albumId INTEGER CONSTRAINT fk_album_song REFERENCES album(id), genreId INTEGER CONSTRAINT fk_genre_song REFERENCES genre(id), 
+        CREATE TABLE song(id INTEGER PRIMARY KEY ASC, title TEXT, artistId INTEGER CONSTRAINT fk_artist_song REFERENCES artist(id),
+        albumId INTEGER CONSTRAINT fk_album_song REFERENCES album(id), genreId INTEGER CONSTRAINT fk_genre_song REFERENCES genre(id),
         length INTEGER, path TEXT UNIQUE NOT NULL);
         CREATE TABLE variables(name TEXT PRIMARY KEY NOT NULL, intValue INTEGER, textValue TEXT);
         CREATE TABLE playlist(id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL, description TEXT, usr TEXT NOT NULL,

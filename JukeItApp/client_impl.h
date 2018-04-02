@@ -51,6 +51,7 @@ namespace message_router {
 		// Handles the browser side of query routing.
 		CefRefPtr<CefMessageRouterBrowserSide> message_router_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
+		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
 
 		const CefString startup_url_;
 
