@@ -2,13 +2,13 @@ import firebase from 'firebase';
 // import fs from 'fs';
 // import sqlite3 from 'sqlite3';
 
-var firebaseConfig = {
-          apiKey: "AIzaSyD5cr_tEZR8FmHBZF9gVOd-mYL52v4reKQ",
-          authDomain: "mixitfirebase.firebaseapp.com",
-          databaseURL: "https://mixitfirebase.firebaseio.com",
-          storageBucket: "mixitfirebase.appspot.com",
-          messagingSenderId: "458619177042"
-        };
+const firebaseConfig = {
+  apiKey: 'AIzaSyD5cr_tEZR8FmHBZF9gVOd-mYL52v4reKQ',
+  authDomain: 'mixitfirebase.firebaseapp.com',
+  databaseURL: 'https://mixitfirebase.firebaseio.com',
+  storageBucket: 'mixitfirebase.appspot.com',
+  messagingSenderId: '458619177042',
+};
  /* try{
     fs.accessSync('data.dat', fs.constants.R_OK | fs.constants.W_OK);
 }catch(err){
@@ -33,8 +33,9 @@ var firebaseConfig = {
         CASE WHEN s.albumId IS NULL THEN NULL ELSE alb.name END AS album, CASE WHEN s.genreId IS NULL THEN NULL ELSE g.name END AS genre
         FROM song AS s LEFT JOIN artist AS a ON (s.artistId = a.id) LEFT JOIN album AS alb ON (s.albumId = alb.id) LEFT JOIN genre AS g ON (s.genreId = g.id)`
     );
-}*/
+} */
 export default {
-    firebase : firebase.initializeApp(firebaseConfig),
-    //sqlite: new sqlite3.cached.Database("data.dat"),
-}
+  firebase: firebase.initializeApp(firebaseConfig),
+    // sqlite: new sqlite3.cached.Database("data.dat"),
+  cefQuery: window.cefQuery,
+};

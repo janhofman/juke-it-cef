@@ -61,6 +61,7 @@ export default function createReducer(injectedReducers) {
     playlists,
     firebase: (state = {}) => state,
     //sqlite: (state = {}) => state,
+    cefQuery: (state = {}) => state,
     ...injectedReducers,
   });
 }

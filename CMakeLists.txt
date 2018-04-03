@@ -117,7 +117,7 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 # Project name.
 # TODO: Change this line to match your project name when you copy this file.
-project(cef)
+project(JukeIt)
 
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY OS_FOLDERS ON)
@@ -204,6 +204,7 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 #add_subdirectory(tests/gtest)
 #add_subdirectory(tests/ceftests)
 add_subdirectory(JukeItApp)
+add_subdirectory(sqlite3)
 
 
 # Display configuration settings.

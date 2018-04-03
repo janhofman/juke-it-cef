@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import FlatButton from 'material-ui/FlatButton'
+import FlatButton from 'material-ui/FlatButton';
 import deepOrange500 from 'material-ui/styles/colors';
 import { injectIntl } from 'react-intl';
 import { Switch, Route } from 'react-router-dom';
 import messages from './messages';
-//import {PlayerStrip} from './../../../containers';
+// import {PlayerStrip} from './../../../containers';
 import OrangeDivider from './../OrangeDivider';
 import LibraryPage from './../../containers/LibraryPage';
 import EstablishmentPage from './../../containers/EstablishmentPage';
@@ -15,12 +15,11 @@ import PlaybackPage from './../../containers/PlaybackPage';
 
 class Home extends Component {
   render() {
-    console.log(app);
     const { match, intl } = this.props;
     const { formatMessage } = intl;
     return (
       <div>
-        <div style={ {backgroundColor: '#1a1a1a'}}>
+        <div style={{ backgroundColor: '#1a1a1a' }}>
           <Link to="/home/library">
             <FlatButton label={formatMessage(messages.libTabTitle)} />
           </Link>
@@ -33,26 +32,26 @@ class Home extends Component {
           <Link to={'/home/playback'}>
             <FlatButton label={formatMessage(messages.playbackTabTitle)} />
           </Link>
-          <Link to='/home/settings'>
+          <Link to="/home/settings">
             <FlatButton label={formatMessage(messages.settingsTabTitle)} />
           </Link>
-          <FlatButton 
-              label={formatMessage(messages.logout)}
-              onTouchTap={this.props.logOut}
-          />          
+          <FlatButton
+            label={formatMessage(messages.logout)}
+            onTouchTap={this.props.logOut}
+          />
         </div>
         <OrangeDivider />
         <div>
-            <Switch>
-              <Route exact path={match.url} component={EstablishmentPage} />
-              <Route path={match.url + '/library'} component={LibraryPage} />
-              <Route path={match.url + '/playlists'} component={PlaylistsPage} />
-              <Route path={match.url + '/playback'} component={PlaybackPage} />
-              <Route path={match.url + '/settings'} component={SettingsPage} />
-            </Switch>
+          <Switch>
+            <Route exact path={match.url} component={EstablishmentPage} />
+            <Route path={`${match.url}/library`} component={LibraryPage} />
+            <Route path={`${match.url}/playlists`} component={PlaylistsPage} />
+            <Route path={`${match.url}/playback`} component={PlaybackPage} />
+            <Route path={`${match.url}/settings`} component={SettingsPage} />
+          </Switch>
         </div>
-        {/*<PlayerStrip height={ '50px' }/>*/}
-      </div>     
+        {/* <PlayerStrip height={ '50px' }/> */}
+      </div>
     );
   }
 }

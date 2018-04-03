@@ -6,68 +6,96 @@
 # Source files.
 #
 
-# cefsimple sources.
-set(CEFSIMPLE_SRCS
-  simple_app.cc
+# JukeItApp sources.
+set(JUKEITAPP_SRCS
+  app_browser_impl.h
+  app_browser_impl.cc
+  app_factory.h
+  app_renderer_impl.cc
+  browser_util.h
+  browser_util.cc
+  client_impl.h
+  client_impl.cc
+  client_manager.h
+  client_manager.cc
+  client_util.h
+  client_util.cc
+  main.h
+  main_minimal.cc
+  main_util.h
+  main_util.cc
+  resource_util.h
+  resource_util.cc  
   simple_app.h
-  simple_handler.cc
+  simple_app.cc
   simple_handler.h
+  simple_handler.cc
+  sqlite_handler.h
+  sqlite_handler.cc
   )
-set(CEFSIMPLE_SRCS_LINUX
+set(JUKEITAPP_SRCS_LINUX
   cefsimple_linux.cc
   simple_handler_linux.cc
+  client_util_linux.cc
+  resource_util_linux.cc
   )
-set(CEFSIMPLE_SRCS_MACOSX
+set(JUKEITAPP_SRCS_MACOSX
   cefsimple_mac.mm
   simple_handler_mac.mm
+  client_util_mac.mm
+  resource_util_mac.mm
   )
-set(CEFSIMPLE_SRCS_WINDOWS
+set(JUKEITAPP_SRCS_WINDOWS
   JukeItApp.exe.manifest
-  cefsimple.rc
+  compatibility.manifest
+  client_util_win.cc
+  JukeItApp.rc
   cefsimple_win.cc
   resource.h
+  resource_util_win.cc
+  resource_util_win_impl.cc
   simple_handler_win.cc
   )
-APPEND_PLATFORM_SOURCES(CEFSIMPLE_SRCS)
-source_group(JukeItApp FILES ${CEFSIMPLE_SRCS})
+APPEND_PLATFORM_SOURCES(JUKEITAPP_SRCS)
+source_group(JukeItApp FILES ${JUKEITAPP_SRCS})
 
-set(CEFSIMPLE_RES_SRCS_WINDOWS
+set(JUKEITAPP_RES_SRCS_WINDOWS
   res/cefsimple.ico
   res/small.ico
   )
-APPEND_PLATFORM_SOURCES(CEFSIMPLE_RES_SRCS)
-source_group(JukeItApp\\\\res FILES ${CEFSIMPLE_RES_SRCS})
+APPEND_PLATFORM_SOURCES(JUKEITAPP_RES_SRCS)
+source_group(JukeItApp\\\\res FILES ${JUKEITAPP_RES_SRCS})
 
-set(CEFSIMPLE_SRCS
-  ${CEFSIMPLE_SRCS}
-  ${CEFSIMPLE_RES_SRCS}
+set(JUKEITAPP_SRCS
+  ${JUKEITAPP_SRCS}
+  ${JUKEITAPP_RES_SRCS}
   )
 
-# cefsimple helper sources.
-set(CEFSIMPLE_HELPER_SRCS_MACOSX
+# JukeItApp helper sources.
+set(JUKEITAPP_HELPER_SRCS_MACOSX
   process_helper_mac.cc
   )
-APPEND_PLATFORM_SOURCES(CEFSIMPLE_HELPER_SRCS)
-source_group(JukeItApp FILES ${CEFSIMPLE_HELPER_SRCS})
+APPEND_PLATFORM_SOURCES(JUKEITAPP_HELPER_SRCS)
+source_group(JukeItApp FILES ${JUKEITAPP_HELPER_SRCS})
 
-# cefsimple resources.
-set(CEFSIMPLE_RESOURCES_MAC_SRCS_MACOSX
+# JukeItApp resources.
+set(JUKEITAPP_RESOURCES_MAC_SRCS_MACOSX
   mac/Info.plist
   mac/cefsimple.icns
   )
-APPEND_PLATFORM_SOURCES(CEFSIMPLE_RESOURCES_MAC_SRCS)
-source_group(JukeItApp\\\\mac FILES ${CEFSIMPLE_RESOURCES_MAC_SRCS})
+APPEND_PLATFORM_SOURCES(JUKEITAPP_RESOURCES_MAC_SRCS)
+source_group(JukeItApp\\\\mac FILES ${JUKEITAPP_RESOURCES_MAC_SRCS})
 
-set(CEFSIMPLE_RESOURCES_MAC_ENGLISH_LPROJ_SRCS_MACOSX
+set(JUKEITAPP_RESOURCES_MAC_ENGLISH_LPROJ_SRCS_MACOSX
   mac/English.lproj/InfoPlist.strings
   mac/English.lproj/MainMenu.xib
   )
-APPEND_PLATFORM_SOURCES(CEFSIMPLE_RESOURCES_MAC_ENGLISH_LPROJ_SRCS)
-source_group(JukeItApp\\\\mac\\\\English.lproj FILES ${CEFSIMPLE_RESOURCES_MAC_ENGLISH_LPROJ_SRCS})
+APPEND_PLATFORM_SOURCES(JUKEITAPP_RESOURCES_MAC_ENGLISH_LPROJ_SRCS)
+source_group(JukeItApp\\\\mac\\\\English.lproj FILES ${JUKEITAPP_RESOURCES_MAC_ENGLISH_LPROJ_SRCS})
 
-set(CEFSIMPLE_RESOURCES_SRCS
-  ${CEFSIMPLE_RESOURCES_MAC_SRCS}
-  ${CEFSIMPLE_RESOURCES_MAC_ENGLISH_LPROJ_SRCS}
+set(JUKEITAPP_RESOURCES_SRCS
+  ${JUKEITAPP_RESOURCES_MAC_SRCS}
+  ${JUKEITAPP_RESOURCES_MAC_ENGLISH_LPROJ_SRCS}
   )
 
 
@@ -94,7 +122,7 @@ SET_CEF_TARGET_OUT_DIR()
 
 if(OS_LINUX)
   # Executable target.
-  add_executable(${CEF_TARGET} ${CEFSIMPLE_SRCS})
+  add_executable(${CEF_TARGET} ${JUKEITAPP_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
   target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
@@ -126,7 +154,7 @@ if(OS_MACOSX)
   set(PRODUCT_NAME "${CEF_TARGET}")
 
   # Helper executable target.
-  add_executable(${CEF_HELPER_TARGET} MACOSX_BUNDLE ${CEFSIMPLE_HELPER_SRCS})
+  add_executable(${CEF_HELPER_TARGET} MACOSX_BUNDLE ${JUKEITAPP_HELPER_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_HELPER_TARGET})
   add_dependencies(${CEF_HELPER_TARGET} libcef_dll_wrapper)
   target_link_libraries(${CEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
@@ -138,7 +166,7 @@ if(OS_MACOSX)
   FIX_MACOSX_HELPER_FRAMEWORK_RPATH(${CEF_HELPER_TARGET})
 
   # Main executable target.
-  add_executable(${CEF_TARGET} MACOSX_BUNDLE ${CEFSIMPLE_RESOURCES_SRCS} ${CEFSIMPLE_SRCS})
+  add_executable(${CEF_TARGET} MACOSX_BUNDLE ${JUKEITAPP_RESOURCES_SRCS} ${JUKEITAPP_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper "${CEF_HELPER_TARGET}")
   target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
@@ -169,7 +197,7 @@ if(OS_MACOSX)
   # directive but that doesn't properly handle nested resource directories.
   # Remove these prefixes from input file paths.
   set(PREFIXES "mac/")
-  COPY_MACOSX_RESOURCES("${CEFSIMPLE_RESOURCES_SRCS}" "${PREFIXES}" "${CEF_TARGET}" "${CMAKE_CURRENT_SOURCE_DIR}" "${CEF_APP}")
+  COPY_MACOSX_RESOURCES("${JUKEITAPP_RESOURCES_SRCS}" "${PREFIXES}" "${CEF_TARGET}" "${CMAKE_CURRENT_SOURCE_DIR}" "${CEF_APP}")
 endif()
 
 
@@ -179,10 +207,10 @@ endif()
 
 if(OS_WINDOWS)
   # Executable target.
-  add_executable(${CEF_TARGET} WIN32 ${CEFSIMPLE_SRCS})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
+  add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
+  add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} sqlite3 libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
