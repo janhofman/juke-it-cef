@@ -12,10 +12,9 @@ import StyledTextField from './../StyledTextField';
 import LoadScreen from './../LoadScreen';
 import messages from './messages';
 import GenresPage from '../../containers/GenresPage';
-import SettingsPage from "../../containers/SettingsPage";
-import EstablishmentPage from "../../containers/EstablishmentPage";
-import LibraryPage from "../../containers/LibraryPage";
-import PlaybackPage from "../../containers/PlaybackPage";
+import ArtistsPage from '../../containers/ArtistsPage';
+import AlbumsPage from '../../containers/AlbumsPage';
+import SongsPage from '../../containers/SongsPage';
 
 const styles = {
   search: {
@@ -95,9 +94,9 @@ class Library extends Component {
         <div style={styles.gap} />
         <LoadScreen loading={this.props.libLoading}>
           <Switch>
-            {/*<Route exact path={match.url} component={SongsPage} />*/}
-            {/*<Route path={`${match.url}/albums`} component={AlbumsPage} />
-            <Route path={`${match.url}/artists`} component={ArtistsPage} />*/}
+            <Route exact path={match.url} component={SongsPage} />
+            <Route path={`${match.url}/albums`} component={AlbumsPage} />
+            <Route path={`${match.url}/artists`} component={ArtistsPage} />
             <Route path={`${match.url}/genres`} component={GenresPage} />
           </Switch>
         </LoadScreen>

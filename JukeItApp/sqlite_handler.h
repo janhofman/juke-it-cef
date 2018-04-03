@@ -23,13 +23,23 @@ public:
 
 private:
 	enum CommandName {
-		LOAD_GENRES, NOT_SUPPORTED
+		LOAD_ALBUMS,
+		LOAD_ARTISTS,
+		LOAD_GENRES,		
+		LOAD_SONGS,
+
+		NOT_SUPPORTED
 	};
 
 	CommandName GetCommandName(const std::string& command);
 	std::string LoadGenres();
+	std::string LoadArtists();
+	std::string LoadAlbums();
+	std::string LoadSongs();
 
-	static bool startsWith(const std::string& s, const std::string& prefix);
+	static bool StartsWith(const std::string& s, const std::string& prefix);
+	static void AppendString(std::stringstream& stream, const unsigned char* str);
+	static void SqliteHandler::AppendInt(std::stringstream& stream, const unsigned char* str);
 
 	const CefString startup_url_;
 	sqlite3* db_handle_;

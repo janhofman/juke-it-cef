@@ -125,25 +125,22 @@ export function cleanLibrary() {
 
 export function loadSongs() {
   return (dispatch, getState) => {
-    const { sqlite, library } = getState();
+    const { cefQuery, library } = getState();
     const { songsLoaded } = library;
     if (!songsLoaded) {
       dispatch(cleanSongs);
       let promise = new Promise((resolve, reject) => {
-                // TODO use songView
-        sqlite.all('SELECT s.id, s.title, s.length, s.path, CASE WHEN s.artistId IS NULL THEN NULL ELSE a.name END AS artist, '
-                + 'CASE WHEN s.albumId IS NULL THEN NULL ELSE alb.name END AS album, CASE WHEN s.genreId IS NULL THEN NULL ELSE g.name END AS genre '
-                + 'FROM song AS s LEFT JOIN artist AS a ON (s.artistId = a.id) LEFT JOIN album AS alb ON (s.albumId = alb.id) LEFT JOIN genre AS g ON (s.genreId = g.id)',
-                (err, rows) => {
-                  if (err) {
-                    reject(err);
-                  } else if (rows) {
-                    resolve(rows);
-                  } else {
-                    reject('null or undefined:', rows);
-                  }
-                }
-            );
+        cefQuery({
+          request: 'SQL_LOAD_SONGS',
+          onSuccess: function (response) {
+            console.log(response);
+            const data = JSON.parse(response);
+            resolve(data);
+          },
+          onFailure: function (errorCode, errorMessage) {
+            reject(errorCode, errorMessage);
+          },
+        });
       });
       promise = makeCancelable(promise);
       promise.promise
@@ -156,22 +153,22 @@ export function loadSongs() {
 
 export function loadAlbums() {
   return (dispatch, getState) => {
-    const { sqlite, library } = getState();
+    const { cefQuery, library } = getState();
     const { albumsLoaded } = library;
     if (!albumsLoaded) {
       dispatch(cleanAlbums());
       let promise = new Promise((resolve, reject) => {
-        sqlite.all('SELECT alb.id, alb.name, a.name AS artistName FROM album AS alb INNER JOIN artist AS a ON(alb.artistId = a.id)',
-                    (err, rows) => {
-                      if (err) {
-                        reject(err);
-                      } else if (rows) {
-                        resolve(rows);
-                      } else {
-                        reject('null or undefined:', rows);
-                      }
-                    }
-                );
+        cefQuery({
+          request: 'SQL_LOAD_ALBUMS',
+          onSuccess: function (response) {
+            console.log(response);
+            const data = JSON.parse(response);
+            resolve(data);
+          },
+          onFailure: function (errorCode, errorMessage) {
+            reject(errorCode, errorMessage);
+          },
+        });
       });
       promise = makeCancelable(promise);
       promise.promise
@@ -184,22 +181,22 @@ export function loadAlbums() {
 
 export function loadArtists() {
   return (dispatch, getState) => {
-    const { sqlite, library } = getState();
+    const { cefQuery, library } = getState();
     const { artistsLoaded } = library;
     if (!artistsLoaded) {
       dispatch(cleanArtists());
       let promise = new Promise((resolve, reject) => {
-        sqlite.all('SELECT id, name FROM artist',
-                    (err, rows) => {
-                      if (err) {
-                        reject(err);
-                      } else if (rows) {
-                        resolve(rows);
-                      } else {
-                        reject('null or undefined:', rows);
-                      }
-                    }
-                );
+        cefQuery({
+          request: 'SQL_LOAD_ARTISTS',
+          onSuccess: function (response) {
+            console.log(response);
+            const data = JSON.parse(response);
+            resolve(data);
+          },
+          onFailure: function (errorCode, errorMessage) {
+            reject(errorCode, errorMessage);
+          },
+        });
       });
       promise = makeCancelable(promise);
       promise.promise
@@ -228,19 +225,6 @@ export function loadGenres() {
             reject(errorCode, errorMessage);
           },
         });
-
-        /*
-        sqlite.all('SELECT id, name FROM genre',
-                    (err, rows) => {
-                      if (err) {
-                        reject(err);
-                      } else if (rows) {
-                        resolve(rows);
-                      } else {
-                        reject('null or undefined:', rows);
-                      }
-                    }
-                );*/
       });
       promise = makeCancelable(promise);
       promise.promise
@@ -274,8 +258,8 @@ export function addSongs(songs) {
             console.log(metadata);
             song.album = metadata.album;
             song.artist = metadata.artist.length > 0 ? metadata.artist[0] : null;
-            song.title = metadata.title.length > 0 ? metadata.title : path.parse(element).name,
-                        song.length = Math.round(metadata.duration * 1000);
+            song.title = metadata.title.length > 0 ? metadata.title : path.parse(element).name;
+            song.length = Math.round(metadata.duration * 1000);
             song.genre = metadata.genre.length > 0 ? metadata.genre[0] : null;
             song.path = element;
           }
