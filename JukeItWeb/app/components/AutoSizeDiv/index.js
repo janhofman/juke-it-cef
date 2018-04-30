@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
-export default class ScrollPane extends Component {
+export default class AutoSizeDiv extends Component {
   constructor(props) {
     super(props);
     this.resize = this.resize.bind(this);
@@ -8,6 +9,19 @@ export default class ScrollPane extends Component {
       height: 0,
     };
   }
+  componentDidMount() {
+    this.resize();
+    if (typeof window !== 'undefined') { window.addEventListener('resize', this.resize, false); }
+  }
+
+  componentWillReceiveProps() {
+    this.resize();
+  }
+
+  componentWillUnmount() {
+    if (typeof window !== 'undefined') { window.removeEventListener('resize', this.resize, false); }
+  }
+
   computeHeight(elem) {
     const box = elem.getBoundingClientRect();
     const body = document.body;
@@ -23,38 +37,21 @@ export default class ScrollPane extends Component {
     const bottom = pageHeight - top - ownHeight;
     const viewportHeight = Math.max(docElem.clientHeight, window.innerHeight || 0);
     const height = Math.floor(viewportHeight - top - bottom);
-        // console.log('top: ', top, ' bottom: ' , bottom, ' ownHeight: ', ownHeight, ' viewport: ', viewportHeight );
-	    return (height > 0 ? height : 100);
+    // console.log('top: ', top, ' bottom: ' , bottom, ' ownHeight: ', ownHeight, ' viewport: ', viewportHeight );
+    return (height > 0 ? height : 100);
   }
   resize() {
-    const elem = document.getElementById('scrollPane');
+    const elem = document.getElementById('autoSizeDiv');
     this.setState({ height: this.computeHeight(elem) });
-  }
-  componentDidMount() {
-    this.resize();
-    if (typeof window !== 'undefined') { window.addEventListener('resize', this.resize, false); }
-  }
-
-  componentWillReceiveProps() {
-    this.resize();
-  }
-
-  componentWillUnmount() {
-    if (typeof window !== 'undefined') { window.removeEventListener('resize', this.resize, false); }
   }
 
   render() {
     const style = {
       height: `${this.state.height}px`,
-      overflow: 'auto',
     };
-    const { unscrollable } = this.props;
-    if (unscrollable) {
-      style.overflow = 'hidden';
-    }
     return (
       <div
-        id={'scrollPane'}
+        id={'autoSizeDiv'}
         style={style}
       >
         {this.props.children}
@@ -62,3 +59,7 @@ export default class ScrollPane extends Component {
     );
   }
 }
+
+AutoSizeDiv.propTypes = {
+  children: PropTypes.any,
+};

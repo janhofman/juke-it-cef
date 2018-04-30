@@ -12,15 +12,19 @@ import CircularProgress from 'material-ui/CircularProgress';
 import Popover from 'material-ui/Popover';
 import { Menu, MenuItem } from 'material-ui/Menu';
 import { grey500, deepOrange500 } from 'material-ui/styles/colors';
-import {
+/*import {
   Table,
   TableHeader,
   TableHeaderColumn,
   TableBody,
   TableRowColumn,
   TableRow,
-} from 'material-ui/Table';
-import ScrollPane from '../../containers/ScrollPane';
+} from 'material-ui/Table';*/
+import Table from '../Table';
+import TableBodyRow from '../TableBodyRow';
+import TableHead from '../TableHead';
+import TableHeadCell from '../TableHeadCell';
+import AutoSizeDiv from '../AutoSizeDiv';
 import LoadScreen from '../LoadScreen';
 import MillisToTime from '../MillisToTime';
 import messages from './messages';
@@ -85,77 +89,114 @@ class SongListDumb extends Component {
       addSongToPlaylistAction,
       addSongToQueueAction,
     } = this.props;
-    return (
-      <div>
-        <LoadScreen loading={!loaded}>
-          <img
-            src={image || './../resources/images/logo_negative_no_bg.png'}
-            style={styles.image}
-          />
+    return <div>
+      <LoadScreen loading={!loaded}>
+        <img
+          src={image || './../resources/images/logo_negative_no_bg.png'}
+          style={styles.image}
+        />
 
-          <div style={styles.title}>
-            <div style={styles.playlistInfo}>
-              <div>
-                <p style={styles.playlistName}>{title || null}</p>
-                <RaisedButton
-                  label={formatMessage(messages.playButton)}
-                  labelPosition="after"
-                  containerElement="label"
-                  icon={<PlayButton />}
-                  onTouchTap={playAction}
-                  style={{ verticalAlign: 'middle' }}
-                />
-                <IconButton
-                  style={{ verticalAlign: 'middle' }}
-                  onTouchTap={openOptions}
-                >
-                  <Options />
-                </IconButton>
-              </div>
-              <p>{subtitle || null}</p>
+        <div style={styles.title}>
+          <div style={styles.playlistInfo}>
+            <div>
+              <p style={styles.playlistName}>{title || null}</p>
+              <RaisedButton
+                label={formatMessage(messages.playButton)}
+                labelPosition="after"
+                containerElement="label"
+                icon={<PlayButton/>}
+                onTouchTap={playAction}
+                style={{verticalAlign: 'middle'}}
+              />
+              <IconButton
+                style={{verticalAlign: 'middle'}}
+                onTouchTap={openOptions}
+              >
+                <Options/>
+              </IconButton>
             </div>
+            <p>{subtitle || null}</p>
           </div>
-          <div style={styles.datagrid}>
-            <div style={{ display: selectable ? 'block' : 'none' }}>
-              <FlatButton
-                label={'Add'}
-                // abelPosition='after'
-                containerElement="label"
-                // icon={<PlayButton/>}
-                onTouchTap={addSelectionToPlaylistAction}
-                // style={{verticalAlign: 'middle'}}
-              />
-              <FlatButton
-                label={'Cancel'}
-                // abelPosition='after'
-                containerElement="label"
-                // icon={<PlayButton/>}
-                onTouchTap={cancelSelectable}
-                // style={{verticalAlign: 'middle'}}
-              />
-            </div>
-            <Table>
-              <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
-                <TableRow>
-                  <TableHeaderColumn>
-                    {formatMessage(messages.nameColumnHeader)}
-                  </TableHeaderColumn>
-                  <TableHeaderColumn>
-                    {formatMessage(messages.artistColumnHeader)}
-                  </TableHeaderColumn>
-                  <TableHeaderColumn>
-                    {formatMessage(messages.albumColumnHeader)}
-                  </TableHeaderColumn>
-                  <TableHeaderColumn>
-                    {formatMessage(messages.genreColumnHeader)}
-                  </TableHeaderColumn>
-                  <TableHeaderColumn style={{ width: '59px' }}>
-                    {formatMessage(messages.timeColumnHeader)}
-                  </TableHeaderColumn>
-                </TableRow>
-              </TableHeader>
+        </div>
+        <div style={styles.datagrid}>
+          <div style={{display: selectable ? 'block' : 'none'}}>
+            <FlatButton
+              label={'Add'}
+              // abelPosition='after'
+              containerElement="label"
+              // icon={<PlayButton/>}
+              onTouchTap={addSelectionToPlaylistAction}
+              // style={{verticalAlign: 'middle'}}
+            />
+            <FlatButton
+              label={'Cancel'}
+              // abelPosition='after'
+              containerElement="label"
+              // icon={<PlayButton/>}
+              onTouchTap={cancelSelectable}
+              // style={{verticalAlign: 'middle'}}
+            />
+          </div>
+          {/*
+                      <Table>
+                        <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
+                          <TableRow>
+                            <TableHeaderColumn>
+                              {formatMessage(messages.nameColumnHeader)}
+                            </TableHeaderColumn>
+                            <TableHeaderColumn>
+                              {formatMessage(messages.artistColumnHeader)}
+                            </TableHeaderColumn>
+                            <TableHeaderColumn>
+                              {formatMessage(messages.albumColumnHeader)}
+                            </TableHeaderColumn>
+                            <TableHeaderColumn>
+                              {formatMessage(messages.genreColumnHeader)}
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{ width: '59px' }}>
+                              {formatMessage(messages.timeColumnHeader)}
+                            </TableHeaderColumn>
+                          </TableRow>
+                        </TableHeader>
+                      </Table>
+                      <ScrollPane>
+                      */}
+          <AutoSizeDiv>
+            <Table
+              head={<TableHead>
+                <TableHeadCell>
+                  {formatMessage(messages.nameColumnHeader)}
+                </TableHeadCell>
+                <TableHeadCell>
+                  {formatMessage(messages.artistColumnHeader)}
+                </TableHeadCell>
+                <TableHeadCell>
+                  {formatMessage(messages.albumColumnHeader)}
+                </TableHeadCell>
+                <TableHeadCell>
+                  {formatMessage(messages.genreColumnHeader)}
+                </TableHeadCell>
+                <TableHeadCell /*style={{ width: '59px' }}*/>
+                  {formatMessage(messages.timeColumnHeader)}
+                </TableHeadCell>
+              </TableHead>}
+              items={songs}
+              fixedWidth={true}
+              getRow={(song, idx) => {
+                return (
+                  <TableBodyRow key={idx}>
+                    <td>{song.title}</td>
+                    <td>{song.artist}</td>
+                    <td>{song.album}</td>
+                    <td>{song.genre}</td>
+                    <td /*style={{ width: '50px' }}*/><MillisToTime value={song.length}/></td>
+                  </TableBodyRow>
+                );
+              }}
+            >
             </Table>
-            <ScrollPane>
+          </AutoSizeDiv>
+          {/*
               <Table multiSelectable={selectable} selectable={selectable} onRowSelection={handleRowSelection}>
                 <TableBody
                   displayRowCheckbox={selectable}
@@ -181,57 +222,57 @@ class SongListDumb extends Component {
                         <TableRowColumn>{song.artist}</TableRowColumn>
                         <TableRowColumn>{song.album}</TableRowColumn>
                         <TableRowColumn>{song.genre}</TableRowColumn>
-                        <TableRowColumn style={{ width: '50px' /* textAlign: 'right' */}}><MillisToTime value={song.length} /></TableRowColumn>
+                        <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.length} /></TableRowColumn>
                       </TableRow>
                     )) : null
                   }
                 </TableBody>
               </Table>
             </ScrollPane>
-          </div>
-          <Popover
-            open={optionsOpen}
-            anchorEl={optionsAnchor}
-            onRequestClose={closeOptions}
-          >
-            <Menu>
-              <MenuItem
-                primaryText={formatMessage(messages.addToPlaylistOpt)}
-                rightIcon={<ArrowDropRight />}
-                menuItems={playlists.map((playlist, idx) =>
-                  (<MenuItem
-                    primaryText={playlist.name} key={idx}
-                    onTouchTap={() => handleAddToPlaylist(playlist.id)}
-                  />))}
-              />
-            </Menu>
-          </Popover>
-          <Popover
-            open={contextMenuOpen}
-            anchorEl={contextMenuAnchor}
-            onRequestClose={handleCloseContextMenu}
-            anchorOrigin={{ horizontal: 'middle', vertical: 'bottom' }}
-            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-          >
-            <Menu>
-              <MenuItem
-                primaryText={formatMessage(messages.addToQueueOpt)}
-                onTouchTap={addSongToQueueAction}
-              />
-              <MenuItem
-                primaryText={formatMessage(messages.addToPlaylistOpt)}
-                rightIcon={<ArrowDropRight />}
-                menuItems={playlists.map((playlist, idx) =>
-                  (<MenuItem
-                    primaryText={playlist.name} key={idx}
-                    onTouchTap={() => addSongToPlaylistAction(playlist.id)}
-                  />))}
-              />
-            </Menu>
-          </Popover>
-        </LoadScreen>
-      </div>
-    );
+              */}
+        </div>
+        <Popover
+          open={optionsOpen}
+          anchorEl={optionsAnchor}
+          onRequestClose={closeOptions}
+        >
+          <Menu>
+            <MenuItem
+              primaryText={formatMessage(messages.addToPlaylistOpt)}
+              rightIcon={<ArrowDropRight/>}
+              menuItems={playlists.map((playlist, idx) =>
+                (<MenuItem
+                  primaryText={playlist.name} key={idx}
+                  onTouchTap={() => handleAddToPlaylist(playlist.id)}
+                />))}
+            />
+          </Menu>
+        </Popover>
+        <Popover
+          open={contextMenuOpen}
+          anchorEl={contextMenuAnchor}
+          onRequestClose={handleCloseContextMenu}
+          anchorOrigin={{horizontal: 'middle', vertical: 'bottom'}}
+          targetOrigin={{horizontal: 'left', vertical: 'top'}}
+        >
+          <Menu>
+            <MenuItem
+              primaryText={formatMessage(messages.addToQueueOpt)}
+              onTouchTap={addSongToQueueAction}
+            />
+            <MenuItem
+              primaryText={formatMessage(messages.addToPlaylistOpt)}
+              rightIcon={<ArrowDropRight/>}
+              menuItems={playlists.map((playlist, idx) =>
+                (<MenuItem
+                  primaryText={playlist.name} key={idx}
+                  onTouchTap={() => addSongToPlaylistAction(playlist.id)}
+                />))}
+            />
+          </Menu>
+        </Popover>
+      </LoadScreen>
+    </div>;
   }
 }
 
