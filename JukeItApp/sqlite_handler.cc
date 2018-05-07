@@ -132,6 +132,12 @@ std::string SqliteHandler::LoadGenres() {
 	// end array
 	ss << ']';
 	sqlite3_finalize(statement);
+
+	MusicPlayer player;
+	player.Play2("H:\\Music\\Linkin Park\\Linkin Park-Hybrid Theory(Darkside_RG)\\08_-In_The_End.mp3");
+	//DecodeFile("H:\\Music\\Linkin Park\\Linkin Park-Hybrid Theory(Darkside_RG)\\08_-In_The_End.mp3", "output.pcm");
+
+
 	return ss.str();
 }
 

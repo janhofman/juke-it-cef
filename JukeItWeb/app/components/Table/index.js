@@ -81,7 +81,6 @@ export default class Table extends Component {
     const childHeight = this.props.childHeight || contentDimensions.height;
 
     const itemsPerCol = Math.max(1, Math.floor(viewHeight / childHeight));
-    const scrollTop = Math.max(0, this.el.scrollTop);
 
     return {
       itemCount,
@@ -103,7 +102,7 @@ export default class Table extends Component {
 
     const scrollTop = Math.max(0, this.el.scrollTop);
     const indexByScrollTop = (scrollTop / scrollHeight) * d.itemCount;
-    let end = Math.min(d.itemCount, Math.floor(indexByScrollTop) + (d.itemsPerCol + 1));
+    let end = Math.min(d.itemCount, Math.floor(indexByScrollTop) + (d.itemsPerCol + 3));
 
     const maxStartEnd = end;
     const maxStart = Math.max(0, maxStartEnd - d.itemsPerCol);
@@ -164,9 +163,7 @@ export default class Table extends Component {
   }
 
   render() {
-    console.log('rendering table');
-    console.log('state:', this.state);
-    console.log('props:', this.props);
+    console.log('rendering table, state:', this.state, 'props:', this.props);
     return (
       <div ref={(el) => this.el = el} style={style.host}>
         <div style={{ height: `${this.state.scrollHeight}px` }} >

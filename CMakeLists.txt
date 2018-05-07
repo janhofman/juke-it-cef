@@ -205,6 +205,7 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 #add_subdirectory(tests/ceftests)
 add_subdirectory(JukeItApp)
 add_subdirectory(sqlite3)
+add_subdirectory(portaudio)
 
 
 # Display configuration settings.

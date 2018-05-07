@@ -24,6 +24,8 @@ set(JUKEITAPP_SRCS
   main_minimal.cc
   main_util.h
   main_util.cc
+  MusicPlayer.h
+  MusicPlayer.cc
   resource_util.h
   resource_util.cc  
   simple_app.h
@@ -210,7 +212,13 @@ if(OS_WINDOWS)
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  target_link_libraries(${CEF_TARGET} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  set(FFMPEG_LIB_LOCATION 
+      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avcodec.lib
+      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avutil.lib
+      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
+     )
+  
+  target_link_libraries(${CEF_TARGET} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

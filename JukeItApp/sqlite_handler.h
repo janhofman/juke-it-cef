@@ -3,6 +3,8 @@
 
 #include "include/wrapper/cef_helpers.h"
 #include "include/wrapper/cef_message_router.h"
+#include "MusicPlayer.h"
+
 extern "C" {
 	#include "sqlite3/include/sqlite3.h"
 }
