@@ -153,6 +153,7 @@ void MusicPlayer::Play(std::string filename)
 		fprintf(stderr, Pa_GetErrorText(err));
 		return;
 	}
+	
 	outputParameters.channelCount = 2;// userData.codec_ctx->channels;
 	outputParameters.sampleFormat = paUInt8; // we always use uint8_t
 	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
@@ -227,44 +228,88 @@ void MusicPlayer::Play(std::string filename)
 	return;
 }
 
-static int Decode2(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame, uint8_t *outbuffer, uint8_t ** bufferEnd, FILE *f)
+static int Decode2(paUserData2 *userData, uint8_t *outbuffer, uint8_t ** bufferEnd, size_t nSamples, FILE *f)
 {
 	int i, ch;
 	int ret, data_size;
 	int rtc = 0;
 	uint8_t *out = outbuffer;
 
-	/* send the packet with the compressed data to the decoder */
-	ret = avcodec_send_packet(dec_ctx, pkt);
-	if (ret < 0) {
-		fprintf(stderr, "Error submitting the packet to the decoder\n");
+	data_size = av_get_bytes_per_sample(userData->ctx_codec->sample_fmt);
+	if (data_size < 0) {
+		/* This should not occur, checking just for paranoia */
+		fprintf(stderr, "Failed to calculate data size\n");
 		exit(1);
 	}
 
-	/* read all the output frames (in general there may be any number of them */
-	while (ret >= 0) {
-		ret = avcodec_receive_frame(dec_ctx, frame);
-		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-			break;
-		else if (ret < 0) {
-			fprintf(stderr, "Error during decoding\n");
-			exit(1);
-		}
-		data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
-		if (data_size < 0) {
-			/* This should not occur, checking just for paranoia */
-			fprintf(stderr, "Failed to calculate data size\n");
-			exit(1);
-		}
-		for (i = 0; i < frame->nb_samples; i++) {
-			for (ch = 0; ch < dec_ctx->channels; ch++) {
-				fwrite(frame->data[ch] + data_size*i, 1, data_size, f);
-				memcpy(out, frame->data[ch] + data_size*i, data_size);
+	// first write remaining samples from last loaded frame
+	if (userData->pkt->size && userData->nextDataIndex < userData->frame->nb_samples) {
+		for (i = userData->nextDataIndex; i < userData->frame->nb_samples && rtc < nSamples; i++) {
+			for (ch = 0; ch < userData->ctx_codec->channels; ch++) {
+				fwrite(userData->frame->data[ch] + data_size*i, 1, data_size, f);
+				memcpy(out, userData->frame->data[ch] + data_size*i, data_size);
 				out += data_size;
 			}
+			rtc++;
 		}
-		rtc++;
+		userData->nextDataIndex = i;
+		if (i >= userData->frame->nb_samples) {
+			av_packet_unref(userData->pkt);
+		}
 	}
+
+	if (rtc < nSamples) {
+		while (rtc < nSamples) {
+			ret = avcodec_receive_frame(userData->ctx_codec, userData->frame);
+			if (ret == AVERROR(EAGAIN)) {
+				// read another packet
+				av_read_frame(userData->ctx_format, userData->pkt);
+				ret = avcodec_send_packet(userData->ctx_codec, userData->pkt);
+				ret = avcodec_receive_frame(userData->ctx_codec, userData->frame);
+			}
+			else if (ret == AVERROR_EOF) {
+				break;
+			}
+			for (i = 0; i < userData->frame->nb_samples && rtc < nSamples; i++) {
+				for (ch = 0; ch < userData->ctx_codec->channels; ch++) {
+					fwrite(userData->frame->data[ch] + data_size*i, 1, data_size, f);
+					memcpy(out, userData->frame->data[ch] + data_size*i, data_size);
+					out += data_size;
+				}
+				rtc++;
+			}
+			userData->nextDataIndex = i;
+		}
+	}
+		//while (av_read_frame(userData->ctx_format, userData->pkt) >= 0 && rtc < nSamples) {
+		//	/* send the packet with the compressed data to the decoder */
+		//	ret = avcodec_send_packet(userData->ctx_codec, userData->pkt);
+		//	if (ret < 0) {
+		//		fprintf(stderr, "Error submitting the packet to the decoder\n");
+		//		exit(1);
+		//	}
+
+		//	/* read all the output frames (in general there may be any number of them */
+		//	while (ret >= 0 && rtc < nSamples) {
+		//		ret = avcodec_receive_frame(userData->ctx_codec, userData->frame);
+		//		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+		//			break;
+		//		else if (ret < 0) {
+		//			fprintf(stderr, "Error during decoding\n");
+		//			exit(1);
+		//		}
+		//		for (i = 0; i < userData->frame->nb_samples && rtc < nSamples; i++) {
+		//			for (ch = 0; ch < userData->ctx_codec->channels; ch++) {
+		//				fwrite(userData->frame->data[ch] + data_size*i, 1, data_size, f);
+		//				memcpy(out, userData->frame->data[ch] + data_size*i, data_size);
+		//				out += data_size;
+		//			}
+		//			rtc++;
+		//		}
+		//		userData->nextDataIndex = i;
+		//	}
+		//}
+	//}
 	*bufferEnd = out;
 	// return number of processed frames
 	return rtc;
@@ -287,16 +332,7 @@ static int PaCallback2(const void *inputBuffer, void *outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	while (av_read_frame(userData->ctx_format, userData->pkt) >= 0 && framesCount > 0) {		
-		int framesDecoded = Decode2(userData->ctx_codec, userData->pkt, userData->frame, out, &out, userData->f);
-		framesCount -= framesDecoded;
-		diff = out - pDebug;
-
-		av_packet_unref(userData->pkt);
-		return paContinue;
-	}
-
-	if (framesCount > 0 || av_read_frame(userData->ctx_format, userData->pkt) < 0) {
+	if ((unsigned int)Decode2(userData, out, &out, framesCount, userData->f) < framesCount - 1) {
 		auto ctx = userData->ctx_codec;
 		memset(out, 0, framesCount * ctx->channels * av_get_bytes_per_sample(ctx->sample_fmt));
 		return paComplete;
@@ -364,10 +400,10 @@ void MusicPlayer::Play2(std::string filename) {
 	}
 
 	auto device = Pa_GetDeviceInfo(outputParameters.device);
-
+	(void)device;
 	outputParameters.channelCount = aud_stream->codecpar->channels;// userData.codec_ctx->channels;
 	outputParameters.sampleFormat = paFloat32; // we always use uint8_t
-	outputParameters.suggestedLatency = device->defaultHighInputLatency;
+	outputParameters.suggestedLatency = device->defaultHighOutputLatency;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
 	userData.f = fopen("output.pcm", "wb");

@@ -36,6 +36,7 @@ typedef struct {
 	AVPacket* pkt = NULL;
 	AVFrame* frame = NULL;
 	FILE * f;
+	int nextDataIndex;
 } paUserData2;
 //
 //static int PaCallback(const void *inputBuffer, void *outputBuffer,
