@@ -4,6 +4,7 @@
 
 #include "client_impl.h"
 #include "sqlite_handler.h"
+#include "music_handler.h"
 
 #include "include/wrapper/cef_helpers.h"
 
@@ -83,8 +84,12 @@ namespace message_router {
 			// Register handlers with the router.
 			message_handler_.reset(new MessageHandler(startup_url_));
 			message_router_->AddHandler(message_handler_.get(), false);
+
 			sqlite_handler_.reset(new SqliteHandler(startup_url_));
 			message_router_->AddHandler(sqlite_handler_.get(), false);
+
+			music_handler_.reset(new MusicHandler(startup_url_));
+			message_router_->AddHandler(music_handler_.get(), false);
 		}
 
 		browser_ct_++;
@@ -105,8 +110,11 @@ namespace message_router {
 			// Free the router when the last browser is closed.
 			message_router_->RemoveHandler(message_handler_.get());
 			message_router_->RemoveHandler(sqlite_handler_.get());
+			message_router_->RemoveHandler(music_handler_.get());
+
 			message_handler_.reset();
 			sqlite_handler_.reset();
+			music_handler_.reset();
 			message_router_ = NULL;
 		}
 

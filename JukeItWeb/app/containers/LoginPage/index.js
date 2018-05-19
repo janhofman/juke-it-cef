@@ -91,15 +91,6 @@ class LoginPage extends Component{
     }
 
     render() {
-      window.cefQuery({
-        request: 'ciaoC++:',
-        onSuccess: function (response) {
-          console.log(response);
-        },
-        onFailure: function (errorCode, errorMessage) { console.log(errorCode, errorMessage);
-        },
-      });
-
         return (
             <Login
                 {...this.props}

@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import FlatButton from 'material-ui/FlatButton';
 import deepOrange500 from 'material-ui/styles/colors';
 import { injectIntl } from 'react-intl';
-import { Switch, Route } from 'react-router-dom';
+import { Switch, Route, Link } from 'react-router-dom';
 import messages from './messages';
-// import {PlayerStrip} from './../../../containers';
+import PlayerStrip from '../../containers/PlayerStrip';
 import OrangeDivider from './../OrangeDivider';
 import LibraryPage from './../../containers/LibraryPage';
 import EstablishmentPage from './../../containers/EstablishmentPage';
@@ -50,7 +49,7 @@ class Home extends Component {
             <Route path={`${match.url}/settings`} component={SettingsPage} />
           </Switch>
         </div>
-        {/* <PlayerStrip height={ '50px' }/> */}
+        <PlayerStrip height={ '50px' }/>
       </div>
     );
   }

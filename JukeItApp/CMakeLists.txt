@@ -24,6 +24,8 @@ set(JUKEITAPP_SRCS
   main_minimal.cc
   main_util.h
   main_util.cc
+  music_handler.h
+  music_handler.cc
   MusicPlayer.h
   MusicPlayer.cc
   resource_util.h

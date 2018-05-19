@@ -52,6 +52,7 @@ namespace message_router {
 		CefRefPtr<CefMessageRouterBrowserSide> message_router_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
+		scoped_ptr<CefMessageRouterBrowserSide::Handler> music_handler_;
 
 		const CefString startup_url_;
 

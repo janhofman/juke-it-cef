@@ -38,24 +38,46 @@ typedef struct {
 	FILE * f;
 	int nextDataIndex;
 } paUserData2;
-//
-//static int PaCallback(const void *inputBuffer, void *outputBuffer,
-//	unsigned long framesCount,
-//	const PaStreamCallbackTimeInfo* timeInfo,
-//	PaStreamCallbackFlags statusFlags,
-//	void *userData);
-//
-//static int Decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame, uint8_t *outbuffer);
+
+enum StreamStatus {
+	OPEN,
+	EMPTY,
+	PLAYING,
+	PAUSED
+};
+
+typedef struct {
+	AVCodec *codec = NULL;
+	AVFormatContext *ctx_format = NULL;
+	AVCodecContext *ctx_codec = NULL;
+	int stream_idx;
+	AVPacket* pkt = NULL;
+	AVFrame* frame = NULL;
+	FILE * f;
+	int nextDataIndex;
+	StreamStatus status;
+	PaStream *stream;
+} StreamInfo;
+
 int DecodeFile(std::string input, std::string output);
-static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
-	FILE *outfile);
 
 class MusicPlayer {
 public:
-	void Play(std::string filename);
+	MusicPlayer();
+	~MusicPlayer();
+	void Play();
+	void Pause();
+	void Open(std::string& filename);
+	void Close();
+
 	void Play2(std::string filename);
 private:
+	StreamInfo _streamInfo;
+	PaSampleFormat GetSampleFormat(AVSampleFormat format);
+	void CleanStreamInfo();
 };
+
+void Test(MusicPlayer *player);
 
 #endif
 

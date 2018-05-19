@@ -102,7 +102,7 @@ export default class Table extends Component {
 
     const scrollTop = Math.max(0, this.el.scrollTop);
     const indexByScrollTop = (scrollTop / scrollHeight) * d.itemCount;
-    let end = Math.min(d.itemCount, Math.floor(indexByScrollTop) + (d.itemsPerCol + 3));
+    let end = Math.min(d.itemCount, Math.floor(indexByScrollTop) + (d.itemsPerCol + 6));
 
     const maxStartEnd = end;
     const maxStart = Math.max(0, maxStartEnd - d.itemsPerCol);

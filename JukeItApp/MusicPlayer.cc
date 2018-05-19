@@ -1,43 +1,90 @@
 #include "MusicPlayer.h"
 
-static int Decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame, uint8_t *outbuffer, uint8_t ** bufferEnd)
+void Test(MusicPlayer *player) {
+	std::string path = "H:\\Music\\Linkin Park\\Linkin Park-Hybrid Theory(Darkside_RG)\\08_-In_The_End.mp3";
+	player->Open(path);
+	player->Play();
+	Pa_Sleep(10000);
+	player->Pause();
+	Pa_Sleep(5000);
+	player->Play();
+	Pa_Sleep(10000);
+	player->Pause();
+	player->Close();
+}
+
+MusicPlayer::MusicPlayer() {
+	// register all codecs
+	av_register_all();
+
+	// initialize PortAudio
+	PaError err = Pa_Initialize();
+	if (err != paNoError) {
+		fprintf(stderr, "Error: Portaudio not initialized.\n");
+		fprintf(stderr, Pa_GetErrorText(err));
+	}	
+}
+
+MusicPlayer::~MusicPlayer() {
+	Pa_Terminate();
+}
+
+static int Decode(StreamInfo *streamInfo, uint8_t *outbuffer, uint8_t ** bufferEnd, size_t nSamples/*, FILE *f*/)
 {
 	int i, ch;
 	int ret, data_size;
 	int rtc = 0;
-
-	/* send the packet with the compressed data to the decoder */
-	ret = avcodec_send_packet(dec_ctx, pkt);
-	if (ret < 0) {
-		fprintf(stderr, "Error submitting the packet to the decoder\n");
+	uint8_t *out = outbuffer;
+	// resolve our data size
+	data_size = av_get_bytes_per_sample(streamInfo->ctx_codec->sample_fmt);
+	if (data_size < 0) {
+		/* This should not occur, checking just for paranoia */
+		fprintf(stderr, "Failed to calculate data size\n");
 		exit(1);
 	}
 
-	/* read all the output frames (in general there may be any number of them */
-	while (ret >= 0) {
-		ret = avcodec_receive_frame(dec_ctx, frame);
-		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-			break;
-		else if (ret < 0) {
-			fprintf(stderr, "Error during decoding\n");
-			exit(1);
-		}
-		data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
-		if (data_size < 0) {
-			/* This should not occur, checking just for paranoia */
-			fprintf(stderr, "Failed to calculate data size\n");
-			exit(1);
-		}
-		for (i = 0; i < frame->nb_samples; i++) {
-			for (ch = 0; ch < dec_ctx->channels; ch++) {
-				// fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
-				memcpy(outbuffer, frame->data[ch] + data_size*i, data_size);
-				outbuffer += data_size;
+	// first write remaining samples from last loaded frame
+	if (streamInfo->pkt->size && streamInfo->nextDataIndex < streamInfo->frame->nb_samples) {
+		for (i = streamInfo->nextDataIndex; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+			for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
+				//fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
+				memcpy(out, streamInfo->frame->data[ch] + data_size*i, data_size);
+				// move pointer
+				out += data_size;
 			}
+			rtc++;
 		}
-		rtc++;
+		// mark where we ended
+		streamInfo->nextDataIndex = i;
+		/*if (i >= streamInfo->frame->nb_samples) {
+		av_packet_unref(userData->pkt);
+		}*/
 	}
-	*bufferEnd = outbuffer;
+	// continue decoding until we write enough data
+	while (rtc < nSamples) {
+		ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
+		if (ret == AVERROR(EAGAIN)) {
+			// we need to read another packet
+			av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
+			ret = avcodec_send_packet(streamInfo->ctx_codec, streamInfo->pkt);
+			ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
+		}
+		else if (ret == AVERROR_EOF) {
+			// we got to the end of file
+			break;
+		}
+		for (i = 0; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+			for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
+				//fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
+				memcpy(out, streamInfo->frame->data[ch] + data_size*i, data_size);
+				out += data_size;
+			}
+			rtc++;
+		}
+		// mark where we ended
+		streamInfo->nextDataIndex = i;
+	}
+	*bufferEnd = out;
 	// return number of processed frames
 	return rtc;
 }
@@ -46,186 +93,181 @@ static int PaCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesCount,
 	const PaStreamCallbackTimeInfo* timeInfo,
 	PaStreamCallbackFlags statusFlags,
-	void *userData)
+	void *helpStruct)
 {
-	paUserData *helpStruct = (paUserData*)userData;
+	StreamInfo *streamInfo = (StreamInfo*)helpStruct;
 	uint8_t *out = (uint8_t*)outputBuffer;
 
 	(void)timeInfo; /* Prevent unused variable warnings. */
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	while (helpStruct->data_size > 0 && framesCount > 0) {
-		int ret = av_parser_parse2(helpStruct->parser,
-			helpStruct->codec_ctx,
-			&helpStruct->pkt->data,
-			&helpStruct->pkt->size,
-			helpStruct->data,
-			(int)helpStruct->data_size,
-			AV_NOPTS_VALUE,
-			AV_NOPTS_VALUE,
-			0);
-
-		if (ret < 0) {
-			fprintf(stderr, "Error while parsing\n");
-			exit(1);
-		}
-		helpStruct->data += ret;
-		helpStruct->data_size -= ret;
-
-		int framesDecoded = 0;
-		if (helpStruct->pkt->size) {
-			framesDecoded = Decode(helpStruct->codec_ctx, helpStruct->pkt, helpStruct->decoded_frame, out, &out);
-			framesCount -= framesDecoded;
-		}			
-
-		if (helpStruct->data_size < AUDIO_REFILL_THRESH) {
-			memmove(helpStruct->inbuf, helpStruct->data, helpStruct->data_size);
-			helpStruct->data = helpStruct->inbuf;
-			size_t len = fread(helpStruct->data + helpStruct->data_size, 1, 
-				AUDIO_INBUF_SIZE - helpStruct->data_size, helpStruct->f);
-			if (len > 0)
-				helpStruct->data_size += len;
-		}
-	}
-
-	if (framesCount > 0 || helpStruct->data_size == 0) {
-		auto ctx = helpStruct->codec_ctx;
-		memset(out, 0, framesCount * ctx->channels * av_get_bytes_per_sample(ctx->sample_fmt));
+	int decodedFrames = Decode(streamInfo, out, &out, framesCount/*, streamInfo->f*/);
+	if ((unsigned int)decodedFrames < framesCount) {
+		// stream finished, zero out the remaining buffer
+		auto ctx = streamInfo->ctx_codec;
+		size_t dataSize = av_get_bytes_per_sample(ctx->sample_fmt);
+		auto end = out + decodedFrames * dataSize;
+		memset(end, 0, (framesCount - decodedFrames) * ctx->channels * dataSize);
 		return paComplete;
 	}
 
 	return paContinue;
 }
 
-void MusicPlayer::Play(std::string filename)
-{
-	const AVCodec *codec;
-	paUserData userData;
+void MusicPlayer::Open(std::string& filename) {
+	AVStream *aud_stream = NULL;
 	PaStreamParameters outputParameters;
-	PaStream *stream;
 	PaError err;
 
-	userData.pkt = av_packet_alloc();
-
-	/* find the MPEG audio decoder */
-	codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
-	if (!codec) {
-		fprintf(stderr, "Codec not found\n");
-		exit(1);
+	if (_streamInfo.status != StreamStatus::EMPTY) {
+		Close();
 	}
 
-	userData.parser = av_parser_init(codec->id);
-	if (!userData.parser) {
-		fprintf(stderr, "Parser not found\n");
-		exit(1);
-	}
-
-	userData.codec_ctx = avcodec_alloc_context3(codec);
-	if (!userData.codec_ctx) {
-		fprintf(stderr, "Could not allocate audio codec context\n");
-		exit(1);
-	}
-
-	/* open it */
-	if (avcodec_open2(userData.codec_ctx, codec, NULL) < 0) {
-		fprintf(stderr, "Could not open codec\n");
-		exit(1);
-	}
-
-	userData.f = fopen(filename.c_str(), "rb");
-	if (!userData.f) {
-		fprintf(stderr, "Could not open %s\n", filename.c_str());
-		exit(1);
-	}
-
-	// initialize PortAudio
-	err = Pa_Initialize();
-	if (err != paNoError) {
-		fprintf(stderr, "Error: Portaudio not initialized.\n");
-		fprintf(stderr, Pa_GetErrorText(err));
+	if (int ret = avformat_open_input(&_streamInfo.ctx_format, filename.c_str(), nullptr, nullptr) != 0) {
 		return;
 	}
+	if (avformat_find_stream_info(_streamInfo.ctx_format, nullptr) < 0) {
+		return; // Couldn't find stream information
+	}
+	for (unsigned int i = 0; i < _streamInfo.ctx_format->nb_streams; i++) {
+		if (_streamInfo.ctx_format->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+			_streamInfo.stream_idx = i;
+			aud_stream = _streamInfo.ctx_format->streams[i];
+			break;
+		}
+	}
+	if (aud_stream == nullptr) {
+		return;
+	}
+
+	_streamInfo.codec = avcodec_find_decoder(aud_stream->codecpar->codec_id);
+	if (!_streamInfo.codec) {
+		return;
+	}
+	_streamInfo.ctx_codec = avcodec_alloc_context3(_streamInfo.codec);
+
+	if (avcodec_parameters_to_context(_streamInfo.ctx_codec, aud_stream->codecpar)<0)
+		fprintf(stderr, "Codec not found\n");
+	if (avcodec_open2(_streamInfo.ctx_codec, _streamInfo.codec, nullptr)<0) {
+		fprintf(stderr, "Codec not found\n");
+		return;
+	}	
 
 	outputParameters.device = Pa_GetDefaultOutputDevice();
 	if (outputParameters.device == paNoDevice) {
 		fprintf(stderr, "Error: No default output device.\n");
-		fprintf(stderr, Pa_GetErrorText(err));
 		return;
 	}
-	
-	outputParameters.channelCount = 2;// userData.codec_ctx->channels;
-	outputParameters.sampleFormat = paUInt8; // we always use uint8_t
-	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+
+	auto device = Pa_GetDeviceInfo(outputParameters.device);
+	(void)device;
+	outputParameters.channelCount = aud_stream->codecpar->channels;
+	outputParameters.sampleFormat = GetSampleFormat((AVSampleFormat)aud_stream->codecpar->format); // we always use uint8_t
+	outputParameters.suggestedLatency = device->defaultHighOutputLatency;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
+	/*_streamInfo.f = fopen("output.pcm", "wb");
+	if (!_streamInfo.f) {
+	fprintf(stderr, "codec not found\n");
+	return;
+	}*/
+
 	err = Pa_OpenStream(
-		&stream,
+		&_streamInfo.stream,
 		NULL, // no input
 		&outputParameters,
-		44100,//userData.codec_ctx->sample_rate,
-		0,
-		paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+		aud_stream->codecpar->sample_rate,
+		0, // let PortAudio choose
+		paNoFlag,      // we won't output out of range samples so don't bother clipping them
 		PaCallback,
-		&userData);
+		&_streamInfo);
 	if (err != paNoError) {
 		fprintf(stderr, "Error: Stream wasn't opened.\n");
 		fprintf(stderr, Pa_GetErrorText(err));
 		return;
 	}
-	
-	// load initial data to input buffer
-	userData.data = userData.inbuf;
-	userData.data_size = fread(userData.inbuf, 1, AUDIO_INBUF_SIZE, userData.f);
-	// allocate frame because allocating in callback is forbidden
-	if (!userData.decoded_frame) {
-		userData.decoded_frame = av_frame_alloc();
-		if (!userData.decoded_frame) {
-			fprintf(stderr, "Could not allocate audio frame\n");
-			exit(1);
+
+	_streamInfo.pkt = av_packet_alloc();
+	_streamInfo.frame = av_frame_alloc();
+
+	_streamInfo.status = StreamStatus::OPEN;
+}
+
+void MusicPlayer::Play()
+{
+	if (_streamInfo.status == StreamStatus::OPEN || _streamInfo.status == StreamStatus::PAUSED) {
+		// start the stream
+		PaError err = Pa_StartStream(_streamInfo.stream);
+		if (err != paNoError) {
+			fprintf(stderr, "Error: Stream couldn't start.\n");
+			fprintf(stderr, Pa_GetErrorText(err));
+			return;
 		}
+		_streamInfo.status = StreamStatus::PLAYING;
 	}
+}
 
-	// start the stream
-	err = Pa_StartStream(stream);
-	if (err != paNoError) {
-		fprintf(stderr, "Error: Stream couldn't start.\n");
-		fprintf(stderr, Pa_GetErrorText(err));
-		return;
+void MusicPlayer::Pause()
+{
+	if (_streamInfo.status == StreamStatus::PLAYING) {
+		PaError err = Pa_StopStream(_streamInfo.stream);
+		if (err != paNoError) {
+			fprintf(stderr, "Error: Stream couldn't be stopped.\n");
+			printf(Pa_GetErrorText(err));
+			return;
+		}
+		_streamInfo.status = StreamStatus::PAUSED;
 	}
-	
-	Pa_Sleep(10000);
-	
-	err = Pa_StopStream(stream);
-	if (err != paNoError) {
-		fprintf(stderr, "Error: Stream couldn't be stopped.\n");
-		printf(Pa_GetErrorText(err));
-		return;
+}
+
+void MusicPlayer::Close() {
+	if (_streamInfo.status == StreamStatus::PLAYING) {
+		Pause();
 	}
+	if (_streamInfo.status == StreamStatus::PAUSED || _streamInfo.status == StreamStatus::OPEN) {
+		CleanStreamInfo();
+	}
+}
 
-	/* flush the decoder */
-	/*pkt->data = NULL;
-	pkt->size = 0;
-	decode(c, pkt, decoded_frame, outfile);*/
+void MusicPlayer::CleanStreamInfo() {
+	avformat_close_input(&_streamInfo.ctx_format);
+	av_packet_free(&_streamInfo.pkt);
+	av_frame_free(&_streamInfo.frame);
+	avcodec_free_context(&_streamInfo.ctx_codec);
+	avformat_free_context(_streamInfo.ctx_format);
 
-	fclose(userData.f);
+	_streamInfo.stream_idx = 0;
+	_streamInfo.nextDataIndex = 0;
+	_streamInfo.status = StreamStatus::EMPTY;
 
-	avcodec_free_context(&userData.codec_ctx);
-	av_parser_close(userData.parser);
-	av_frame_free(&userData.decoded_frame);
-	av_packet_free(&userData.pkt);
-
-	err = Pa_CloseStream(stream);
+	PaError err = Pa_CloseStream(_streamInfo.stream);
 	if (err != paNoError) {
 		fprintf(stderr, "Error: Stream wasn't closed.\n");
 		fprintf(stderr, Pa_GetErrorText(err));
 		return;
 	}
+	_streamInfo.stream = NULL;
+}
 
-	Pa_Terminate();
-	printf("Test finished.\n");
-
-	return;
+PaSampleFormat MusicPlayer::GetSampleFormat(AVSampleFormat format) {
+	switch (format)
+	{
+	case AV_SAMPLE_FMT_U8:
+	case AV_SAMPLE_FMT_U8P:
+		return paUInt8;
+	case AV_SAMPLE_FMT_S16:
+	case AV_SAMPLE_FMT_S16P:
+		return paInt16;
+	case AV_SAMPLE_FMT_S32:
+	case AV_SAMPLE_FMT_S32P:
+		return paInt32;
+	case AV_SAMPLE_FMT_FLT:
+	case AV_SAMPLE_FMT_FLTP:
+		return paFloat32;
+	default:
+		return 0;
+	}
 }
 
 static int Decode2(paUserData2 *userData, uint8_t *outbuffer, uint8_t ** bufferEnd, size_t nSamples, FILE *f)
@@ -468,6 +510,12 @@ void MusicPlayer::Play2(std::string filename) {
 
 	return;
 }
+
+
+
+
+
+
 
 static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
 	FILE *outfile)

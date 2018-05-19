@@ -1,16 +1,14 @@
 #ifndef JUKEIT_SQLITE_HANDLER_H_
 #define JUKEIT_SQLITE_HANDLER_H_
 
-#include "include/wrapper/cef_helpers.h"
-#include "include/wrapper/cef_message_router.h"
-#include "MusicPlayer.h"
+#include "abstract_message_handler.h"
 
 extern "C" {
 	#include "sqlite3/include/sqlite3.h"
 }
 
 
-class SqliteHandler : public CefMessageRouterBrowserSide::Handler {
+class SqliteHandler : public AbstractMessageHandler {
 public:
 	explicit SqliteHandler(const CefString& startup_url);
 
@@ -29,6 +27,8 @@ private:
 		LOAD_ARTISTS,
 		LOAD_GENRES,		
 		LOAD_SONGS,
+		LOAD_LIBRARY,
+		SONGVIEW_BY_ID,
 
 		NOT_SUPPORTED
 	};
@@ -38,15 +38,12 @@ private:
 	std::string LoadArtists();
 	std::string LoadAlbums();
 	std::string LoadSongs();
-
-	static bool StartsWith(const std::string& s, const std::string& prefix);
-	static void AppendString(std::stringstream& stream, const unsigned char* str);
-	static void SqliteHandler::AppendInt(std::stringstream& stream, const unsigned char* str);
+	std::string SongviewById(std::unordered_map<std::string, std::string>& params);
+	std::string LoadLibraryForPlayback(std::unordered_map<std::string, std::string>& params);
 
 	const CefString startup_url_;
 	sqlite3* db_handle_;
 	static const char * DATABASE_NAME_;
-	static const char QUOTES;
 
 	DISALLOW_COPY_AND_ASSIGN(SqliteHandler);
 };
