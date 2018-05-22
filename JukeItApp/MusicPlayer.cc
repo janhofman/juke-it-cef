@@ -67,7 +67,15 @@ static int Decode(StreamInfo *streamInfo, uint8_t *outbuffer, uint8_t ** bufferE
 			// we need to read another packet
 			av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
 			ret = avcodec_send_packet(streamInfo->ctx_codec, streamInfo->pkt);
-			ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
+			ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);			
+			if (streamInfo->timeUpdate) {
+				double time = streamInfo->frame->pts * av_q2d(streamInfo->ctx_format->streams[streamInfo->stream_idx]->time_base) * 1000.;
+				int millis = (int)floor(time);
+				if (millis - streamInfo->playbackTime > 200) {
+					streamInfo->timeUpdate(millis);
+					streamInfo->playbackTime = millis;
+				}
+			}
 		}
 		else if (ret == AVERROR_EOF) {
 			// we got to the end of file
@@ -101,6 +109,11 @@ static int PaCallback(const void *inputBuffer, void *outputBuffer,
 	(void)timeInfo; /* Prevent unused variable warnings. */
 	(void)statusFlags;
 	(void)inputBuffer;
+
+	/*if (streamInfo->timeUpdate) {
+		int millis = (int)floor(timeInfo->currentTime * 1000);
+		streamInfo->timeUpdate(millis);
+	}*/
 
 	int decodedFrames = Decode(streamInfo, out, &out, framesCount/*, streamInfo->f*/);
 	if ((unsigned int)decodedFrames < framesCount) {
@@ -230,6 +243,11 @@ void MusicPlayer::Close() {
 	}
 }
 
+void MusicPlayer::SetTimeUpdateCallback(std::function<void(int)> callback)
+{
+	_streamInfo.timeUpdate = callback;
+}
+
 void MusicPlayer::CleanStreamInfo() {
 	avformat_close_input(&_streamInfo.ctx_format);
 	av_packet_free(&_streamInfo.pkt);
@@ -240,6 +258,7 @@ void MusicPlayer::CleanStreamInfo() {
 	_streamInfo.stream_idx = 0;
 	_streamInfo.nextDataIndex = 0;
 	_streamInfo.status = StreamStatus::EMPTY;
+	_streamInfo.playbackTime = 0;
 
 	PaError err = Pa_CloseStream(_streamInfo.stream);
 	if (err != paNoError) {

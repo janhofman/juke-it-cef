@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <functional>
 
 extern "C" {
 #include "ffmpeg/include/libavcodec/avcodec.h"
@@ -57,6 +58,8 @@ typedef struct {
 	int nextDataIndex;
 	StreamStatus status;
 	PaStream *stream;
+	std::function<void(int)>timeUpdate = nullptr;
+	int playbackTime = 0;
 } StreamInfo;
 
 int DecodeFile(std::string input, std::string output);
@@ -69,6 +72,7 @@ public:
 	void Pause();
 	void Open(std::string& filename);
 	void Close();
+	void SetTimeUpdateCallback(std::function<void(int)> callback);
 
 	void Play2(std::string filename);
 private:

@@ -8,6 +8,7 @@ import {
     open,
     updateTime,
     seekTo,
+    registerTimeUpdateCallback,
 } from './../../actions/playerActions';
 import {
     nextSong,
@@ -26,6 +27,7 @@ class PlayerStrip extends Component {
 
   componentDidMount() {
     const { currentSong, dispatch } = this.props;
+    dispatch(registerTimeUpdateCallback());
     if (currentSong && currentSong.path && currentSong.path.length > 0) {
       dispatch(open(currentSong));
     }

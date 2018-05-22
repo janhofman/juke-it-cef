@@ -37,6 +37,11 @@ void AbstractMessageHandler::AppendJSONInt(std::stringstream& stream, const char
 	}
 }
 
+void AbstractMessageHandler::AppendJSONInt(std::stringstream& stream, const char * key, int value) {
+	stream << QUOTES << key << QUOTES << ':';
+	stream << value;
+}
+
 std::unordered_map<std::string, std::string> AbstractMessageHandler::GetParams(const std::string& command) {
 	std::unordered_map<std::string, std::string> map;
 	size_t start = command.find('?');
@@ -94,4 +99,10 @@ std::unordered_map<std::string, std::string> AbstractMessageHandler::GetParams(c
 		}
 	}
 	return map;
+}
+
+bool AbstractMessageHandler::FileExists(const char *filename)
+{
+	std::ifstream ifile(filename);
+	return ifile.good();
 }

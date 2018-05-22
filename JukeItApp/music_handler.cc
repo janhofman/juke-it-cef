@@ -24,6 +24,9 @@ MusicHandler::CommandName MusicHandler::GetCommandName(const std::string & comma
 		else if (StartsWith(command, "PLAY_CLOSE")) {
 			return CommandName::CLOSE;
 		}
+		else if (StartsWith(command, "PLAY_TIME_UPDATE")) {
+			return CommandName::TIME_UPDATE;
+		}
 		else {
 			return CommandName::NOT_SUPPORTED;
 		}
@@ -80,7 +83,34 @@ bool MusicHandler::OnQuery(CefRefPtr<CefBrowser> browser,
 		callback->Success("OK");
 		return true;
 	}
+	case CommandName::TIME_UPDATE: {
+		if (persistent) {
+			timeUpdateCallback_ = callback;
+			timeUpdateQueryId_ = query_id;
+			player_.SetTimeUpdateCallback(std::bind(&MusicHandler::OnTimeUpdate, this, std::placeholders::_1));
+		}
+		return true;
+	}
 
 	}
 	return false;
+}
+
+void MusicHandler::OnTimeUpdate(int millis) {
+	if (timeUpdateCallback_ != NULL) {
+		std::stringstream ss;
+		ss << '{';
+		AppendJSONInt(ss, "time", millis);
+		ss << '}';
+		timeUpdateCallback_->Success(ss.str());
+	}
+}
+
+void MusicHandler::OnQueryCanceled(CefRefPtr<CefBrowser> browser,
+	CefRefPtr<CefFrame> frame,
+	int64 query_id) {
+	if (query_id == timeUpdateQueryId_) {
+		timeUpdateCallback_ = NULL;
+		player_.SetTimeUpdateCallback(nullptr);
+	}
 }

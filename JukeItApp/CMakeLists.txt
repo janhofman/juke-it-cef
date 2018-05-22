@@ -8,6 +8,9 @@
 
 # JukeItApp sources.
 set(JUKEITAPP_SRCS
+  abstract_message_handler.h
+  abstract_message_handler.cc
+  
   app_browser_impl.h
   app_browser_impl.cc
   app_factory.h
@@ -36,6 +39,8 @@ set(JUKEITAPP_SRCS
   simple_handler.cc
   sqlite_handler.h
   sqlite_handler.cc
+  tinyfiledialogs.h
+  tinyfiledialogs.c
   )
 set(JUKEITAPP_SRCS_LINUX
   cefsimple_linux.cc

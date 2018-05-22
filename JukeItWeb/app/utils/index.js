@@ -1,10 +1,10 @@
-export function makeCancelable(promise){
-  var hasCanceled_ = false;
+export function makeCancelable(promise) {
+  let hasCanceled_ = false;
 
   const wrappedPromise = new Promise((resolve, reject) => {
     promise.then(
-      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
-      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+      (val) => hasCanceled_ ? reject({ isCanceled: true }) : resolve(val),
+      (error) => hasCanceled_ ? reject({ isCanceled: true }) : reject(error)
     );
   });
 
@@ -14,7 +14,7 @@ export function makeCancelable(promise){
       hasCanceled_ = true;
     },
   };
-};
+}
 
 export const EntityEnum = {
   GENRE: 'genre',
@@ -23,13 +23,34 @@ export const EntityEnum = {
 };
 
 export class Song {
-  constructor(){
-      this.album =  null;
-      this.artist = null;
-      this.genre = null;
-      this.title = null;
-      this.length = null;
-      this.path = null;
-      this.id = null;
-  };
+  constructor() {
+    this.album = null;
+    this.artist = null;
+    this.genre = null;
+    this.title = null;
+    this.length = null;
+    this.path = null;
+    this.id = null;
+  }
+}
+
+export function sanitizeQueryParameter(parameter) {
+  if (parameter && parameter.length) {
+    let sanitized = '';
+    for (let i = 0; i < parameter.length; i++) {
+      const char = parameter[i];
+      switch (char) {
+        case '\\':
+        case '=':
+        case '&':
+          sanitized += '\\';
+          break;
+        default:
+          break;
+      }
+      sanitized += char;
+    }
+    return sanitized;
+  }
+  return parameter;
 }

@@ -1,6 +1,6 @@
 import * as fb from 'firebase';
 import { nextSong } from './playbackActions';
-import { makeCancelable } from '../utils';
+import { makeCancelable, sanitizeQueryParameter } from '../utils';
 
 export function play() {
   return (dispatch, getState) => {
@@ -30,7 +30,7 @@ export function play() {
 export function open(song) {
   return (dispatch, getState) => {
     const { cefQuery } = getState();
-    const request = `PLAY_OPEN?path=${song.path}`; // sanitize path
+    const request = `PLAY_OPEN?path=${sanitizeQueryParameter(song.path)}`; // sanitize path
     const promise = new Promise((resolve, reject) => {
       cefQuery({
         request,
@@ -78,6 +78,25 @@ export function pause() {
     promise.then(() => dispatch({
       type: 'PLAYER_PAUSE',
     }));
+  };
+}
+
+export function registerTimeUpdateCallback() {
+  return (dispatch, getState) => {
+    const { cefQuery } = getState();
+    const request = 'PLAY_TIME_UPDATE';
+    cefQuery({
+      request,
+      persistent: true,
+      onSuccess(response) {
+        console.log(response);
+        const data = JSON.parse(response);
+        dispatch(updateTime(data.time));
+      },
+      onFailure(errorCode, errorMessage) {
+        // catch here
+      },
+    });
   };
 }
 

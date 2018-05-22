@@ -1,10 +1,14 @@
 #ifndef JUKEIT_SQLITE_HANDLER_H_
 #define JUKEIT_SQLITE_HANDLER_H_
 
+#include <experimental/filesystem>
+
 #include "abstract_message_handler.h"
+#include "AudioInspector.h"
 
 extern "C" {
 	#include "sqlite3/include/sqlite3.h"
+	#include "tinyfiledialogs.h"
 }
 
 
@@ -40,9 +44,13 @@ private:
 	std::string LoadSongs();
 	std::string SongviewById(std::unordered_map<std::string, std::string>& params);
 	std::string LoadLibraryForPlayback(std::unordered_map<std::string, std::string>& params);
+	void CreateDatabase();
+	sqlite3* GetDbHandle();
+	void AddFiles();
+	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
 
 	const CefString startup_url_;
-	sqlite3* db_handle_;
+	sqlite3* db_handle_ = NULL;
 	static const char * DATABASE_NAME_;
 
 	DISALLOW_COPY_AND_ASSIGN(SqliteHandler);

@@ -105,6 +105,7 @@ class Player extends Component {
     const { formatMessage } = this.props.intl;
     const { queue, toggleQueue, queueOpen, currentSong } = this.props;
     const song = currentSong !== null ? currentSong : {};
+    const sliderMax = this.props.currentSong && this.props.currentSong.length > 0 ? this.props.currentSong.length : 100;
     return (
       <div style={Object.assign(styles.base, { height: this.props.height })}>
         <div style={styles.imageBox}>
@@ -132,9 +133,9 @@ class Player extends Component {
           <Slider
             sliderStyle={styles.slider}
             min={0}
-            max={this.props.length > 0 ? this.props.length : 100}
+            max={sliderMax}
             defaultValue={0}
-            value={this.props.seeking ? this.state.sliderValue : this.props.currentTime}
+            value={this.props.seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax)}
             onDragStart={this.props.onSeekStart}
             onDragStop={() => this.props.onSeekEnd(this.state.sliderValue)}
             onChange={this.handleSlider}
