@@ -59,6 +59,7 @@ typedef struct {
 	StreamStatus status;
 	PaStream *stream;
 	std::function<void(int)>timeUpdate = nullptr;
+	std::function<void(void)>playbackFinished = nullptr;
 	int playbackTime = 0;
 } StreamInfo;
 
@@ -73,6 +74,7 @@ public:
 	void Open(std::string& filename);
 	void Close();
 	void SetTimeUpdateCallback(std::function<void(int)> callback);
+	void SetPlaybackFinishedCallback(std::function<void(void)> callback);
 
 	void Play2(std::string filename);
 private:

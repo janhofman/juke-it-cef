@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 import Albums from '../../components/Albums';
 import LoadScreen from '../../components/LoadScreen';
 import { loadAlbums } from './../../actions/libraryActions';
@@ -19,7 +20,8 @@ class AlbumsPage extends Component {
   }
 
   showDetail(albumId) {
-    this.props.router.push(`/home/detail/album?albumId=${albumId}`);
+    const { dispatch } = this.props;
+    dispatch(push(`/home/detail/album/${albumId}`));
   }
 
   render() {

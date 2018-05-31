@@ -85,7 +85,7 @@ void SimpleApp::OnContextInitialized() {
 #if _DEBUG
 	  url = "http://localhost:3000";
 #else
-	  url = "http://www.google.com";
+	  url = "http://localhost:3000";
 #endif
   if (use_views) {
     // Create the BrowserView.

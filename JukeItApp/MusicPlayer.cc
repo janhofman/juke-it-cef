@@ -40,7 +40,7 @@ static int Decode(StreamInfo *streamInfo, uint8_t *outbuffer, uint8_t ** bufferE
 	if (data_size < 0) {
 		/* This should not occur, checking just for paranoia */
 		fprintf(stderr, "Failed to calculate data size\n");
-		exit(1);
+		return 0;
 	}
 
 	// first write remaining samples from last loaded frame
@@ -56,22 +56,26 @@ static int Decode(StreamInfo *streamInfo, uint8_t *outbuffer, uint8_t ** bufferE
 		}
 		// mark where we ended
 		streamInfo->nextDataIndex = i;
-		/*if (i >= streamInfo->frame->nb_samples) {
-		av_packet_unref(userData->pkt);
-		}*/
 	}
 	// continue decoding until we write enough data
 	while (rtc < nSamples) {
 		ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
 		if (ret == AVERROR(EAGAIN)) {
 			// we need to read another packet
-			av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
+			ret = av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
+			if (ret < 0) {
+				// end of file
+				if (streamInfo->playbackFinished) {
+					streamInfo->playbackFinished();
+				}
+				break;
+			}
 			ret = avcodec_send_packet(streamInfo->ctx_codec, streamInfo->pkt);
 			ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);			
 			if (streamInfo->timeUpdate) {
 				double time = streamInfo->frame->pts * av_q2d(streamInfo->ctx_format->streams[streamInfo->stream_idx]->time_base) * 1000.;
 				int millis = (int)floor(time);
-				if (millis - streamInfo->playbackTime > 200) {
+				if (millis - streamInfo->playbackTime > 500 || millis == 0) {
 					streamInfo->timeUpdate(millis);
 					streamInfo->playbackTime = millis;
 				}
@@ -118,10 +122,10 @@ static int PaCallback(const void *inputBuffer, void *outputBuffer,
 	int decodedFrames = Decode(streamInfo, out, &out, framesCount/*, streamInfo->f*/);
 	if ((unsigned int)decodedFrames < framesCount) {
 		// stream finished, zero out the remaining buffer
-		auto ctx = streamInfo->ctx_codec;
+		/*auto ctx = streamInfo->ctx_codec;
 		size_t dataSize = av_get_bytes_per_sample(ctx->sample_fmt);
 		auto end = out + decodedFrames * dataSize;
-		memset(end, 0, (framesCount - decodedFrames) * ctx->channels * dataSize);
+		memset(end, 0, (framesCount - decodedFrames) * ctx->channels * dataSize);*/
 		return paComplete;
 	}
 
@@ -247,6 +251,12 @@ void MusicPlayer::SetTimeUpdateCallback(std::function<void(int)> callback)
 {
 	_streamInfo.timeUpdate = callback;
 }
+
+void MusicPlayer::SetPlaybackFinishedCallback(std::function<void(void)> callback)
+{
+	_streamInfo.playbackFinished = callback;
+}
+
 
 void MusicPlayer::CleanStreamInfo() {
 	avformat_close_input(&_streamInfo.ctx_format);
@@ -394,8 +404,8 @@ static int PaCallback2(const void *inputBuffer, void *outputBuffer,
 	(void)inputBuffer;
 
 	if ((unsigned int)Decode2(userData, out, &out, framesCount, userData->f) < framesCount - 1) {
-		auto ctx = userData->ctx_codec;
-		memset(out, 0, framesCount * ctx->channels * av_get_bytes_per_sample(ctx->sample_fmt));
+		/*auto ctx = userData->ctx_codec;
+		memset(out, 0, framesCount * ctx->channels * av_get_bytes_per_sample(ctx->sample_fmt));*/
 		return paComplete;
 	}
 

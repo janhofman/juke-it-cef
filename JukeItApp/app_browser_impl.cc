@@ -11,7 +11,7 @@ namespace message_router {
 #if _DEBUG
 			return std::string("http://localhost:3000");
 #else
-			return startup_url = "http://www.google.com";
+			return std::string("http://localhost:3000");
 #endif
 		}
 

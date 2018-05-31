@@ -29,21 +29,30 @@ private:
 	enum CommandName {
 		LOAD_ALBUMS,
 		LOAD_ARTISTS,
-		LOAD_GENRES,		
+		LOAD_GENRES,
+		LOAD_PLAYLISTS,
 		LOAD_SONGS,
 		LOAD_LIBRARY,
-		SONGVIEW_BY_ID,
+		SONGVIEW,
+		ALBUMVIEW,
+		ADD_FILES,
+		ADD_PLAYLIST,
+		ADD_TO_PLAYLIST,
 
 		NOT_SUPPORTED
 	};
 
 	CommandName GetCommandName(const std::string& command);
-	std::string LoadGenres();
-	std::string LoadArtists();
+	std::string LoadGenres(std::unordered_map<std::string, std::string>& params);
+	std::string LoadArtists(std::unordered_map<std::string, std::string>& params);
+	std::string LoadPlaylists(std::unordered_map<std::string, std::string>& params);
 	std::string LoadAlbums();
 	std::string LoadSongs();
-	std::string SongviewById(std::unordered_map<std::string, std::string>& params);
+	std::string SongView(std::unordered_map<std::string, std::string>& params);
+	std::string AlbumView(std::unordered_map<std::string, std::string>& params);
 	std::string LoadLibraryForPlayback(std::unordered_map<std::string, std::string>& params);
+	void AddPlaylist(std::unordered_map<std::string, std::string>& params);
+	void AddSongToPlaylist(std::unordered_map<std::string, std::string>& params);
 	void CreateDatabase();
 	sqlite3* GetDbHandle();
 	void AddFiles();

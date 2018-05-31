@@ -105,21 +105,19 @@ export function clear() {
 
 export function loadSongsForPlaylist(playlistId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearSongs());
     let newPromise = new Promise((resolve, reject) => {
-      sqlite.all('SELECT s.* FROM songView AS s INNER JOIN playlistSong AS ps ON (ps.songId = s.id) WHERE ps.playlistId = ?',
-                { 1: playlistId },
-                (err, rows) => {
-                  if (err) {
-                    reject(err);
-                  } else if (rows) {
-                    resolve(rows);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_SONGVIEW?playlistId=${playlistId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          resolve(data);
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     newPromise = makeCancelable(newPromise);
     newPromise.promise
@@ -131,21 +129,24 @@ export function loadSongsForPlaylist(playlistId) {
 
 export function loadMetadataForPlaylist(playlistId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearMetadata());
     let infoPromise = new Promise((resolve, reject) => {
-      sqlite.get('SELECT name, description FROM playlist WHERE id = ?',
-                { 1: playlistId },
-                (err, row) => {
-                  if (err) {
-                    reject(err);
-                  } else if (row) {
-                    resolve(row);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_LOAD_PLAYLISTS?id=${playlistId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            // TODO: make proper catch
+            reject(100, 'no playlist matches query');
+          }
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
@@ -157,21 +158,19 @@ export function loadMetadataForPlaylist(playlistId) {
 
 export function loadSongsForGenre(genreId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearSongs());
     let newPromise = new Promise((resolve, reject) => {
-      sqlite.all('SELECT sv.* FROM songView AS sv INNER JOIN song AS s ON (s.id = sv.id) WHERE s.genreId = ?',
-                { 1: genreId },
-                (err, rows) => {
-                  if (err) {
-                    reject(err);
-                  } else if (rows) {
-                    resolve(rows);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_SONGVIEW?genreId=${genreId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          resolve(data);
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     newPromise = makeCancelable(newPromise);
     newPromise.promise
@@ -183,21 +182,24 @@ export function loadSongsForGenre(genreId) {
 
 export function loadMetadataForGenre(genreId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearMetadata());
     let infoPromise = new Promise((resolve, reject) => {
-      sqlite.get('SELECT name FROM genre WHERE id = ?',
-                { 1: genreId },
-                (err, row) => {
-                  if (err) {
-                    reject(err);
-                  } else if (row) {
-                    resolve(row);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_LOAD_GENRES?id=${genreId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            // TODO: make proper catch
+            reject(100, 'no genre matches query');
+          }
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
@@ -209,21 +211,19 @@ export function loadMetadataForGenre(genreId) {
 
 export function loadSongsForArtist(artistId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearSongs());
     let newPromise = new Promise((resolve, reject) => {
-      sqlite.all('SELECT sv.* FROM songView AS sv INNER JOIN song AS s ON (s.id = sv.id) WHERE s.artistId = ?',
-                { 1: artistId },
-                (err, rows) => {
-                  if (err) {
-                    reject(err);
-                  } else if (rows) {
-                    resolve(rows);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_SONGVIEW?artistId=${artistId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          resolve(data);
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     newPromise = makeCancelable(newPromise);
     newPromise.promise
@@ -235,21 +235,24 @@ export function loadSongsForArtist(artistId) {
 
 export function loadMetadataForArtist(artistId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearMetadata());
     let infoPromise = new Promise((resolve, reject) => {
-      sqlite.get('SELECT name FROM artist WHERE id = ?',
-                { 1: artistId },
-                (err, row) => {
-                  if (err) {
-                    reject(err);
-                  } else if (row) {
-                    resolve(row);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_LOAD_ARTISTS?id=${artistId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            // TODO: make proper catch
+            reject(100, 'no album matches query');
+          }
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
@@ -261,21 +264,19 @@ export function loadMetadataForArtist(artistId) {
 
 export function loadSongsForAlbum(albumId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearSongs());
     let newPromise = new Promise((resolve, reject) => {
-      sqlite.all('SELECT sv.* FROM songView AS sv INNER JOIN song AS s ON (s.id = sv.id) WHERE s.albumId = ?',
-                { 1: albumId },
-                (err, rows) => {
-                  if (err) {
-                    reject(err);
-                  } else if (rows) {
-                    resolve(rows);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_SONGVIEW?albumId=${albumId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          resolve(data);
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     newPromise = makeCancelable(newPromise);
     newPromise.promise
@@ -287,25 +288,28 @@ export function loadSongsForAlbum(albumId) {
 
 export function loadMetadataForAlbum(albumId) {
   return ((dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(clearMetadata());
     let infoPromise = new Promise((resolve, reject) => {
-      sqlite.get('SELECT alb.name, a.name as artistName FROM album AS alb INNER JOIN artist AS a ON(alb.artistId = a.id) WHERE alb.id = ?',
-                { 1: albumId },
-                (err, row) => {
-                  if (err) {
-                    reject(err);
-                  } else if (row) {
-                    resolve(row);
-                  } else {
-                    reject('Null or undefined');
-                  }
-                }
-            );
+      cefQuery({
+        request: `SQL_ALBUMVIEW?id=${albumId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            // TODO: make proper catch
+            reject(100, 'no album matches query');
+          }
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
+      });
     });
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
-            .then((info) => dispatch(metadataChange(true, info.name, info.artistName)))
+            .then((info) => dispatch(metadataChange(true, info.name, info.artist)))
             .catch((err) => console.log(err)); // TODO: add catch
     dispatch(setMetadataPromise(infoPromise));
   });

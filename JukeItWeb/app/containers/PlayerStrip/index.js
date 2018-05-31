@@ -9,6 +9,8 @@ import {
     updateTime,
     seekTo,
     registerTimeUpdateCallback,
+    registerPlaybackFinishedCallback,
+    setOnFinishAction,
 } from './../../actions/playerActions';
 import {
     nextSong,
@@ -27,28 +29,45 @@ class PlayerStrip extends Component {
 
   componentDidMount() {
     const { currentSong, dispatch } = this.props;
+    dispatch(setOnFinishAction((dispatch) => {
+      // remove finished song
+      dispatch(removeTopOfQueue());
+      // ask for next song
+      dispatch(nextSong());
+    }));
     dispatch(registerTimeUpdateCallback());
+    dispatch(registerPlaybackFinishedCallback());
     if (currentSong && currentSong.path && currentSong.path.length > 0) {
       dispatch(open(currentSong));
     }
   }
 
   componentDidUpdate(prevProps) {
-    const { currentSong, dispatch } = this.props;
+    const { currentSong, dispatch, playing } = this.props;
     // song was closed and cancelled
     if (prevProps.currentSong && !currentSong) {
       // dispatch(close)
     } else if (prevProps.currentSong !== currentSong) {
       dispatch(open(currentSong));
+      if (playing) {
+        dispatch(play());
+      }
     }
   }
 
-  playbackFinished() {
-    this.props.dispatch((dispatch) => {
-            // remove finished song
+  onNext() {
+    const { dispatch, playing } = this.props;
+    dispatch((dispatch) => {
+      /*if (playing) {
+        dispatch(pause());
+      }*/
+      // remove finished song
       dispatch(removeTopOfQueue());
-            // ask for next song
+      // ask for next song
       dispatch(nextSong());
+      /*if (playing) {
+        dispatch(play());
+      }*/
     });
   }
 
@@ -99,6 +118,7 @@ class PlayerStrip extends Component {
         seeking={this.state.seeking}
         onPlay={this.onPlay.bind(this)}
         onPause={this.onPause.bind(this)}
+        onNext={this.onNext.bind(this)}
         // onSeekStart={this.onSeekStart.bind(this)}
         // onSeekEnd={this.onSeekEnd.bind(this)}
         toggleQueue={this.toggleQueue.bind(this)}

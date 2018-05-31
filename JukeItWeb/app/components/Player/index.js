@@ -38,6 +38,14 @@ const messages = defineMessages({
     id: 'Player.pauseTooltip',
     defaultMessage: 'Pause',
   },
+  nextTooltip: {
+    id: 'Player.nextTooltip',
+    defaultMessage: 'Next',
+  },
+  shuffleTooltip: {
+    id: 'Player.shuffleTooltip',
+    defaultMessage: 'Shuffle',
+  },
 });
 
 const styles = {
@@ -103,9 +111,9 @@ class Player extends Component {
 
   render() {
     const { formatMessage } = this.props.intl;
-    const { queue, toggleQueue, queueOpen, currentSong } = this.props;
+    const { queue, toggleQueue, queueOpen, currentSong, onNext } = this.props;
     const song = currentSong !== null ? currentSong : {};
-    const sliderMax = this.props.currentSong && this.props.currentSong.length > 0 ? this.props.currentSong.length : 100;
+    const sliderMax = song && song.length > 0 ? song.length : 100;
     return (
       <div style={Object.assign(styles.base, { height: this.props.height })}>
         <div style={styles.imageBox}>
@@ -135,14 +143,14 @@ class Player extends Component {
             min={0}
             max={sliderMax}
             defaultValue={0}
-            value={this.props.seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax)}
+            value={this.props.seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax - 1)}
             onDragStart={this.props.onSeekStart}
             onDragStop={() => this.props.onSeekEnd(this.state.sliderValue)}
             onChange={this.handleSlider}
           />
         </div>
         <div>
-          <IconButton><Previous /></IconButton>
+          {/*<IconButton><Previous /></IconButton>*/}
           <IconButton
             onTouchTap={this.props.playing ? this.props.onPause : this.props.onPlay}
             tooltip={formatMessage(this.props.playing ? messages.pauseTooltip : messages.playTooltip)}
@@ -151,9 +159,21 @@ class Player extends Component {
           >
             {this.props.playing ? <Pause /> : <Play />}
           </IconButton>
-          <IconButton><Next /></IconButton>
-          <IconButton><Repeat /></IconButton>
-          <IconButton><Shuffle /></IconButton>
+          <IconButton
+            onTouchTap={onNext}
+            tooltip={formatMessage(messages.nextTooltip)}
+            tooltipPosition={'top-center'}
+          >
+            <Next />
+          </IconButton>
+          {/*<IconButton><Repeat /></IconButton>*/}
+          <IconButton
+            onTouchTap={toggleQueue}
+            tooltip={formatMessage(messages.shuffleTooltip)}
+            tooltipPosition={'top-center'}
+          >
+            <Shuffle />
+          </IconButton>
           <IconButton
             onTouchTap={toggleQueue}
             tooltip={formatMessage(messages.queueTooltip)}
@@ -181,6 +201,7 @@ class Player extends Component {
 Player.propTypes = {
   onPlay: PropTypes.func.isRequired,
   onPause: PropTypes.func.isRequired,
+  onNext: PropTypes.func.isRequired,
   playing: PropTypes.bool.isRequired,
 };
 

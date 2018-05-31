@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 import { loadArtists } from './../../actions/libraryActions';
 import Artists from '../../components/Artists';
 import LoadScreen from '../../components/LoadScreen';
@@ -19,7 +20,8 @@ class ArtistsPage extends Component {
   }
 
   showDetail(artistId) {
-    this.props.router.push(`/home/detail/artist?artistId=${artistId}`);
+    const { dispatch } = this.props;
+    dispatch(push(`/home/detail/artist/${artistId}`));
   }
 
   render() {

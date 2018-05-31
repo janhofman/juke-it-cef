@@ -1,27 +1,21 @@
 import * as fb from 'firebase';
-import { nextSong } from './playbackActions';
 import { makeCancelable, sanitizeQueryParameter } from '../utils';
 
 export function play() {
   return (dispatch, getState) => {
     const { player, cefQuery } = getState();
-    const { currentSong, playing } = player;
-    if (!playing && currentSong) {
-      const promise = new Promise((resolve, reject) => {
-        cefQuery({
-          request: 'PLAY_PLAY',
-          onSuccess(response) {
-            resolve(response);
-          },
-          onFailure(errorCode, errorMessage) {
-            reject(errorCode, errorMessage);
-          },
-        });
-      });
-      promise.then(() => {
-        dispatch({ type: 'PLAYER_PLAY' });
-        // upload startedPlayingAt on firebase
-        dispatch(startedPlaying());
+    const { currentSong } = player;
+    if (currentSong) {
+      cefQuery({
+        request: 'PLAY_PLAY',
+        onSuccess() {
+          dispatch({type: 'PLAYER_PLAY'});
+          // upload startedPlayingAt on firebase
+          dispatch(startedPlaying());
+        },
+        onFailure(errorCode, errorMessage) {
+          reject(errorCode, errorMessage);
+        },
       });
     }
   };
@@ -89,7 +83,6 @@ export function registerTimeUpdateCallback() {
       request,
       persistent: true,
       onSuccess(response) {
-        console.log(response);
         const data = JSON.parse(response);
         dispatch(updateTime(data.time));
       },
@@ -98,6 +91,32 @@ export function registerTimeUpdateCallback() {
       },
     });
   };
+}
+
+export function registerPlaybackFinishedCallback() {
+  return (dispatch, getState) => {
+    const { cefQuery, player } = getState();
+    const request = 'PLAY_PLAYBACK_FINISHED';
+    cefQuery({
+      request,
+      persistent: true,
+      onSuccess() {
+        if (player.onFinishAction) {
+          dispatch(player.onFinishAction);
+        }
+      },
+      onFailure(errorCode, errorMessage) {
+        // catch here
+      },
+    });
+  };
+}
+
+export function setOnFinishAction(onFinishAction) {
+  return ({
+    type: 'PLAYER_SET_ONFINISHACTION',
+    payload: onFinishAction,
+  });
 }
 
 export function updateTime(value) {
@@ -116,7 +135,6 @@ export function changeSong(song, key) {
 
 export function stopPlayback() {
   return (dispatch) => {
-    const audioElem = document.getElementById('audioElem');
     dispatch(pause());
     dispatch(stop());
   };

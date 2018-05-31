@@ -29,14 +29,29 @@ SqliteHandler::CommandName SqliteHandler::GetCommandName(const std::string & com
 		else if (StartsWith(command, "SQL_LOAD_ALBUMS")) {
 			return CommandName::LOAD_ALBUMS;
 		}
+		else if (StartsWith(command, "SQL_LOAD_PLAYLISTS")) {
+			return CommandName::LOAD_PLAYLISTS;
+		}
 		else if (StartsWith(command, "SQL_LOAD_SONGS")) {
 			return CommandName::LOAD_SONGS;
 		}
 		else if (StartsWith(command, "SQL_LOAD_LIBRARY")) {
 			return CommandName::LOAD_LIBRARY;
 		}
-		else if (StartsWith(command, "SQL_SONGVIEW_BY_ID")) {
-			return CommandName::SONGVIEW_BY_ID;
+		else if (StartsWith(command, "SQL_SONGVIEW")) {
+			return CommandName::SONGVIEW;
+		}
+		else if (StartsWith(command, "SQL_ALBUMVIEW")) {
+			return CommandName::ALBUMVIEW;
+		}
+		else if (StartsWith(command, "SQL_ADD_FILES")) {
+			return CommandName::ADD_FILES;
+		}
+		else if (StartsWith(command, "SQL_ADD_PLAYLIST")) {
+			return CommandName::ADD_PLAYLIST;
+		}
+		else if (StartsWith(command, "SQL_ADD_TO_PLAYLIST")) {
+			return CommandName::ADD_TO_PLAYLIST;
 		}
 		else {
 			return CommandName::NOT_SUPPORTED;
@@ -68,17 +83,25 @@ bool SqliteHandler::OnQuery(CefRefPtr<CefBrowser> browser,
 
 	switch (command) {
 	case CommandName::LOAD_GENRES: {
-		std::string result = LoadGenres();
+		auto params = GetParams(message_name);
+		std::string result = LoadGenres(params);
 		callback->Success(result);
 		return true;
 	}
 	case CommandName::LOAD_ARTISTS: {
-		std::string result = LoadArtists();
+		auto params = GetParams(message_name);
+		std::string result = LoadArtists(params);
 		callback->Success(result);
 		return true;
 	}
 	case CommandName::LOAD_ALBUMS: {
 		std::string result = LoadAlbums();
+		callback->Success(result);
+		return true;
+	}
+	case CommandName::LOAD_PLAYLISTS: {
+		auto params = GetParams(message_name);
+		std::string result = LoadPlaylists(params);
 		callback->Success(result);
 		return true;
 	}
@@ -93,10 +116,33 @@ bool SqliteHandler::OnQuery(CefRefPtr<CefBrowser> browser,
 		callback->Success(result);
 		return true;
 	}
-	case CommandName::SONGVIEW_BY_ID: {
+	case CommandName::SONGVIEW: {
 		auto params = GetParams(message_name);
-		std::string result = SongviewById(params);
+		std::string result = SongView(params);
 		callback->Success(result);
+		return true;
+	}
+	case CommandName::ALBUMVIEW: {
+		auto params = GetParams(message_name);
+		std::string result = AlbumView(params);
+		callback->Success(result);
+		return true;
+	}
+	case CommandName::ADD_FILES: {
+		AddFiles();
+		callback->Success("OK");
+		return true;
+	}
+	case CommandName::ADD_PLAYLIST: {
+		auto params = GetParams(message_name);
+		AddPlaylist(params);
+		callback->Success("OK");
+		return true;
+	}
+	case CommandName::ADD_TO_PLAYLIST: {
+		auto params = GetParams(message_name);
+		AddSongToPlaylist(params);
+		callback->Success("OK");
 		return true;
 	}
 
@@ -104,13 +150,32 @@ bool SqliteHandler::OnQuery(CefRefPtr<CefBrowser> browser,
 	return false;
 }
 
-std::string SqliteHandler::LoadGenres() {	
-	AddFiles();
-
-
+std::string SqliteHandler::LoadGenres(std::unordered_map<std::string, std::string>& params) {
 	sqlite3_stmt* statement;
-	auto rtc = sqlite3_prepare_v2(GetDbHandle(), "SELECT id, name FROM genre", -1, &statement, NULL);
 	std::stringstream ss;
+	ss << "SELECT id, name FROM genre";
+	if (params.size() > 0) {
+		bool first = true;
+		for (auto it = params.begin(); it != params.end(); it++)
+		{
+			if (it->first == "id") {
+				if (first) {
+					ss << " WHERE ";
+				}
+				else {
+					ss << " AND ";
+				}
+				ss << it->first << '=' << it->second;
+				first = false;
+			}
+		}
+	}
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+
 	// begin array
 	ss << '[';
 	rtc = sqlite3_step(statement);
@@ -138,10 +203,32 @@ std::string SqliteHandler::LoadGenres() {
 	return ss.str();
 }
 
-std::string SqliteHandler::LoadArtists() {
+std::string SqliteHandler::LoadArtists(std::unordered_map<std::string, std::string>& params) {
 	sqlite3_stmt* statement;
-	auto rtc = sqlite3_prepare_v2(GetDbHandle(), "SELECT id, name FROM artist", -1, &statement, NULL);
 	std::stringstream ss;
+	ss << "SELECT id, name FROM artist";
+	if (params.size() > 0) {
+		bool first = true;
+		for (auto it = params.begin(); it != params.end(); it++)
+		{
+			if (it->first == "id") {
+				if (first) {
+					ss << " WHERE ";
+				}
+				else {
+					ss << " AND ";
+				}
+				ss << it->first << '=' << it->second;
+				first = false;
+			}
+		}
+	}
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	
 	// begin array
 	ss << '[';
 	rtc = sqlite3_step(statement);
@@ -170,6 +257,7 @@ std::string SqliteHandler::LoadArtists() {
 
 std::string SqliteHandler::LoadAlbums() {
 	sqlite3_stmt* statement;
+
 	auto sql = "SELECT alb.id, alb.name, a.name AS artistName FROM album AS alb INNER JOIN artist AS a ON(alb.artistId = a.id)";
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
 	std::stringstream ss;
@@ -191,6 +279,60 @@ std::string SqliteHandler::LoadAlbums() {
 		// append artistName
 		ss << ',';
 		AppendJSONString(ss, "artistName", sqlite3_column_text(statement, 2));
+		// finish object
+		ss << '}';
+		rtc = sqlite3_step(statement);
+		first = false;
+	}
+	// end array
+	ss << ']';
+	sqlite3_finalize(statement);
+	return ss.str();
+}
+
+std::string SqliteHandler::LoadPlaylists(std::unordered_map<std::string, std::string>& params) {
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+	ss << "SELECT id, name, description, usr FROM playlist";
+	if (params.size() > 0) {
+		bool first = true;
+		for (auto it = params.begin(); it != params.end(); it++)
+		{
+			if (it->first == "id") {
+				if (first) {
+					ss << " WHERE ";
+				}
+				else {
+					ss << " AND ";
+				}
+				ss << it->first << '=' << it->second;
+				first = false;
+			}
+		}
+	}
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+
+	// begin array
+	ss << '[';
+	rtc = sqlite3_step(statement);
+	bool first = true;
+	while (SQLITE_ROW == rtc) {
+		// beginning of object
+		if (!first) {
+			ss << ',';
+		}
+		ss << '{';
+		AppendJSONInt(ss, "id", sqlite3_column_text(statement, 0));
+		ss << ',';
+		AppendJSONString(ss, "name", sqlite3_column_text(statement, 1));
+		ss << ',';
+		AppendJSONString(ss, "description", sqlite3_column_text(statement, 2));
+		ss << ',';
+		AppendJSONString(ss, "usr", sqlite3_column_text(statement, 3));
 		// finish object
 		ss << '}';
 		rtc = sqlite3_step(statement);
@@ -248,45 +390,139 @@ std::string SqliteHandler::LoadSongs() {
 	return ss.str();
 }
 
-std::string SqliteHandler::SongviewById(std::unordered_map<std::string, std::string>& params) {
+std::string SqliteHandler::SongView(std::unordered_map<std::string, std::string>& params) {
 	sqlite3_stmt* statement;
+	std::stringstream ss;
+	ss << "SELECT s.id, s.title, s.length, s.path, s.artistId, s.albumId, s.genreId, s.artist, s.album, s.genre FROM songView AS s";
 	if (params.size() > 0) {
-		auto itId = params.find("id");
-		if (itId != params.end()) {
-			auto sql = std::string("SELECT id, title, length, path, artist, album, genre FROM songView");
-			sql += " WHERE id = " + itId->second;
-			auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
-			std::stringstream ss;
-			// begin object
-			ss << '{';
-			rtc = sqlite3_step(statement);
-			if (SQLITE_ROW == rtc) {
-				// append id
-				AppendJSONInt(ss, "id", sqlite3_column_text(statement, 0));
-				//append title
-				ss << ',';
-				AppendJSONString(ss, "title", sqlite3_column_text(statement, 1));
-				// append length
-				ss << ',';
-				AppendJSONInt(ss, "length", sqlite3_column_text(statement, 2));
-				// append path
-				ss << ',';
-				AppendJSONString(ss, "path", sqlite3_column_text(statement, 3));
-				// append artist
-				ss << ',';
-				AppendJSONString(ss, "artist", sqlite3_column_text(statement, 4));
-				// append album
-				ss << ',';
-				AppendJSONString(ss, "album", sqlite3_column_text(statement, 5));
-				// append genre
-				ss << ',';
-				AppendJSONString(ss, "genre", sqlite3_column_text(statement, 6));
-			}
-			// finish object
-			ss << '}';
-			sqlite3_finalize(statement);
-			return ss.str();
+		bool first = true;
+		// playlistId is more difficult, handle it first
+		if (params.find("playlistId") != params.end()) {
+			ss << " INNER JOIN playlistSong AS ps ON (ps.songId = s.id)";
+			auto it = params.find("playlistId");
+			ss << " WHERE ps.playlistId=" << it->second;
+			first = false;
 		}
+		for (auto it = params.begin(); it != params.end(); it++)
+		{
+			if (it->first == "id"
+				|| it->first == "artistId"
+				|| it->first == "albumId"
+				|| it->first == "genreId"
+				) {
+				if (first) {
+					ss << " WHERE ";
+				}
+				else {
+					ss << " AND ";
+				}
+				ss << "s." << it->first << '=' << it->second;
+				first = false;
+			}
+		}
+	}
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		bool first = true;
+		// begin array
+		ss << '[';
+		rtc = sqlite3_step(statement);
+		while (SQLITE_ROW == rtc) {
+			if (first) {
+				first = false;
+			}
+			else {
+				ss << ',';
+			}
+			ss << '{';
+			AppendJSONInt(ss, "id", sqlite3_column_text(statement, 0));
+			ss << ',';
+			AppendJSONString(ss, "title", sqlite3_column_text(statement, 1));
+			ss << ',';
+			AppendJSONInt(ss, "length", sqlite3_column_text(statement, 2));
+			ss << ',';
+			AppendJSONString(ss, "path", sqlite3_column_text(statement, 3));
+			ss << ',';
+			AppendJSONInt(ss, "artistId", sqlite3_column_text(statement, 4));
+			ss << ',';
+			AppendJSONInt(ss, "albumId", sqlite3_column_text(statement, 5));
+			ss << ',';
+			AppendJSONInt(ss, "genreId", sqlite3_column_text(statement, 6));
+			ss << ',';
+			AppendJSONString(ss, "artist", sqlite3_column_text(statement, 7));
+			ss << ',';
+			AppendJSONString(ss, "album", sqlite3_column_text(statement, 8));
+			ss << ',';
+			AppendJSONString(ss, "genre", sqlite3_column_text(statement, 9));
+			ss << '}';
+			// fetch next row
+			rtc = sqlite3_step(statement);
+		}
+		// finish array
+		ss << ']';
+		sqlite3_finalize(statement);
+		return ss.str();
+	}
+	return std::string();
+}
+
+std::string SqliteHandler::AlbumView(std::unordered_map<std::string, std::string>& params) {
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+	ss << "SELECT id, name, artistId, artist FROM albumView";
+	if (params.size() > 0) {
+		bool first = true;
+		for (auto it = params.begin(); it != params.end(); it++)
+		{
+			if (it->first == "id"
+				|| it->first == "artistId"
+				) {
+				if (first) {
+					ss << " WHERE ";
+				}
+				else {
+					ss << " AND ";
+				}
+				ss << it->first << '=' << it->second;
+				first = false;
+			}
+		}
+	}
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		bool first = true;
+		// begin array
+		ss << '[';
+		rtc = sqlite3_step(statement);
+		while (SQLITE_ROW == rtc) {
+			if (first) {
+				first = false;
+			}
+			else {
+				ss << ',';
+			}
+			ss << '{';
+			AppendJSONInt(ss, "id", sqlite3_column_text(statement, 0));
+			ss << ',';
+			AppendJSONString(ss, "name", sqlite3_column_text(statement, 1));
+			ss << ',';
+			AppendJSONInt(ss, "artistId", sqlite3_column_text(statement, 2));
+			ss << ',';
+			AppendJSONString(ss, "artist", sqlite3_column_text(statement, 3));
+			ss << '}';
+			// fetch next row
+			rtc = sqlite3_step(statement);
+		}
+		// finish array
+		ss << ']';
+		sqlite3_finalize(statement);
+		return ss.str();
 	}
 	return std::string();
 }
@@ -474,9 +710,13 @@ void SqliteHandler::CreateDatabase() {
 		"	CONSTRAINT pk_playlistSong PRIMARY KEY(songId, playlistId) ON CONFLICT IGNORE);"
 		"CREATE INDEX ix_playlistId_playlistSong ON playlistSong(playlistId);"
 		"CREATE INDEX ix_usr_playlist ON playlist(usr);"
-		"CREATE VIEW songView AS SELECT s.id, s.title, s.length, s.path, CASE WHEN s.artistId IS NULL THEN NULL ELSE a.name END AS artist,"
-		"	CASE WHEN s.albumId IS NULL THEN NULL ELSE alb.name END AS album, CASE WHEN s.genreId IS NULL THEN NULL ELSE g.name END AS genre"
-		"	FROM song AS s LEFT JOIN artist AS a ON(s.artistId = a.id) LEFT JOIN album AS alb ON(s.albumId = alb.id) LEFT JOIN genre AS g ON(s.genreId = g.id)";
+		"CREATE VIEW songView AS SELECT s.id, s.title, s.length, s.path, s.artistId, s.genreId, s.albumId,"
+		"	CASE WHEN s.artistId IS NULL THEN NULL ELSE a.name END AS artist,"
+		"	CASE WHEN s.albumId IS NULL THEN NULL ELSE alb.name END AS album,"
+		"	CASE WHEN s.genreId IS NULL THEN NULL ELSE g.name END AS genre"
+		"	FROM song AS s LEFT JOIN artist AS a ON(s.artistId = a.id) LEFT JOIN album AS alb ON(s.albumId = alb.id) LEFT JOIN genre AS g ON(s.genreId = g.id);"
+		"CREATE VIEW albumView AS SELECT alb.id, alb.name, alb.artistId, CASE WHEN alb.artistId IS NULL THEN NULL ELSE a.name END AS artist"
+		"	FROM album AS alb LEFT JOIN artist AS a ON (alb.artistId = a.id);";
 	sqlite3_stmt* statement;
 	while (strlen(sql) > 0) {
 		rtc = sqlite3_prepare_v2(db_handle_, sql, -1, &statement, &sql);
@@ -525,6 +765,7 @@ void SqliteHandler::AddFiles() {
 		if (ss.str().size() > 0) {
 			SongMetadata song;
 			inspector.GetMetadata(ss.str().c_str(), &song);
+			AddSongToDatabase(ss.str().c_str(), song);
 		}
 	}
 }
@@ -603,4 +844,121 @@ void SqliteHandler::AddSongToDatabase(const char *filename, SongMetadata& metada
 		rtc = sqlite3_step(statement);
 		rtc = sqlite3_finalize(statement);
 	}
+}
+
+void SqliteHandler::AddPlaylist(std::unordered_map<std::string, std::string>& params) {
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+	ss << "INSERT INTO playlist(name, description, usr) VALUES(";
+	// fill values
+	auto it = params.find("name");
+	if (it != params.end()) {
+		ss << '\'' << it->second << '\'';
+	}
+	else {
+		ss << "NULL";
+	}
+	ss << ',';
+
+	it = params.find("description");
+	if (it != params.end()) {
+		ss << '\'' << it->second << '\'';
+	}
+	else {
+		ss << "NULL";
+	}
+	ss << ',';
+
+	it = params.find("usr");
+	if (it != params.end()) {
+		ss << '\'' << it->second << '\'';
+	}
+	else {
+		ss << "NULL";
+	}
+	ss << ")";
+	std::string sql = ss.str();
+	ss.clear();
+	ss.str(std::string());
+
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			// success
+			return;
+		}
+	}
+	// no success
+	return;
+}
+
+void SqliteHandler::AddSongToPlaylist(std::unordered_map<std::string, std::string>& params) {
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+	ss << "INSERT INTO playlistSong(playlistId, songId) VALUES ";
+
+	auto it = params.find("playlistId");
+	if (it != params.end()) {
+		auto playlistId = it->second;
+
+		it = params.find("songs");
+		if (it != params.end()) {
+			// parse song IDs
+			std::stringstream id;
+			bool first = true;
+			for (auto i = it->second.begin(); i != it->second.end(); i++)
+			{
+				if (isdigit(*i)) {
+					id << *i;
+				}
+				else if (*i == ',') {
+					if (id.str().length() > 0) {
+						// append value
+						if (first) {
+							first = false;
+						}
+						else {
+							ss << ',';
+						}
+						ss << '(' << playlistId << ',' << id.str() << ')';
+						id.clear();
+						id.str(std::string());
+					}
+				}
+			}
+			if (id.str().length() > 0) {
+				// append value
+				if (first) {
+					first = false;
+				}
+				else {
+					ss << ',';
+				}
+				ss << '(' << playlistId << ',' << id.str() << ')';
+				id.clear();
+				id.str(std::string());
+			}
+			std::string sql = ss.str();
+
+			auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+			if (rtc == SQLITE_OK) {
+				rtc = sqlite3_step(statement);
+				if (rtc == SQLITE_DONE) {
+					// success
+					return;
+				}
+			}
+			// no success
+			return;
+		}
+		else {
+			// TODO: report missing param
+			return;
+		}
+	}
+	else {
+		// report missing param
+		return;
+	}	
 }

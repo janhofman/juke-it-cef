@@ -235,68 +235,20 @@ export function loadGenres() {
   };
 }
 
-export function addSongs(songs) {
+export function addSongs() {
   return (dispatch, getState) => {
-    const { sqlite } = getState();
+    const { cefQuery } = getState();
     dispatch(setLoading(true));
-    const operations = [];
-    songs.forEach((element) => {
-      const stats = fs.statSync(element);
-      const fileSizeInBytes = stats.size;
-      const readableStream = fs.createReadStream(element);
-      const song = new Song();
-      operations.push(new Promise((resolve, reject) => {
-        const parser = mm(readableStream, { duration: true, fileSize: fileSizeInBytes }, (err, metadata) => {
-                    // close the stream first
-          readableStream.close();
-
-          if (err) {
-            console.log('An error occured : ', err);
-            song.title = path.parse(element).name;
-            song.path = element;
-          } else {
-            console.log(metadata);
-            song.album = metadata.album;
-            song.artist = metadata.artist.length > 0 ? metadata.artist[0] : null;
-            song.title = metadata.title.length > 0 ? metadata.title : path.parse(element).name;
-            song.length = Math.round(metadata.duration * 1000);
-            song.genre = metadata.genre.length > 0 ? metadata.genre[0] : null;
-            song.path = element;
-          }
-          sqlite.serialize(() => {
-            sqlite.run('INSERT OR IGNORE INTO genre (name) VALUES (?)', { 1: song.genre });
-            sqlite.run('INSERT OR IGNORE INTO artist (name) VALUES (?);', { 1: song.artist });
-            sqlite.run('REPLACE INTO variables(name, intValue) VALUES (\'artist\', NULL);');
-            sqlite.run('UPDATE variables SET intValue = (SELECT id FROM artist WHERE name = ?)'
-                        + ' WHERE name = \'artist\';', { 1: song.artist });
-            sqlite.run('INSERT OR IGNORE INTO album(artistId, name) VALUES ((SELECT intValue '
-                        + 'FROM variables WHERE name = \'artist\'), ?);', { 1: song.album });
-            sqlite.run('REPLACE INTO variables(name, intValue) VALUES (\'album\', NULL);');
-            sqlite.run('REPLACE INTO variables(name, intValue) VALUES (\'genre\', NULL);');
-            sqlite.run('UPDATE variables SET intValue = (SELECT id FROM genre WHERE name = ?) '
-                        + 'WHERE name = \'genre\';', { 1: song.genre });
-            sqlite.run('UPDATE variables SET intValue = (SELECT id FROM album WHERE name = ? '
-                        + 'AND artistId = (SELECT intValue FROM variables WHERE name = \'artist\')) '
-                        + 'WHERE name = \'album\';', { 1: song.album });
-            sqlite.run('INSERT OR IGNORE INTO song(title, artistId, albumId, genreId, length, path) VALUES('
-                        + '$t, (SELECT intValue FROM variables WHERE name = \'artist\'),'
-                        + '(SELECT intValue FROM variables WHERE name = \'album\'),'
-                        + '(SELECT intValue FROM variables WHERE name = \'genre\'), $l, $p);',
-                        { $t: song.title, $l: song.length, $p: song.path });
-            sqlite.run('DELETE FROM variables WHERE name IN (\'artist\', \'genre\', \'album\');', (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
-        });
-      }));
-    }, this);
-    Promise.all(operations).then(() => {
-      dispatch(cleanLibrary());
-      dispatch(setLoading(false));
-    }).catch((err) => console.log(err)); // TODO: handle error
+    cefQuery({
+      request: 'SQL_ADD_FILES',
+      onSuccess: function (response) {
+        console.log(response);
+        dispatch(cleanLibrary());
+        dispatch(setLoading(false));
+      },
+      onFailure: function (errorCode, errorMessage) {
+        // catch error
+      },
+    });
   };
 }

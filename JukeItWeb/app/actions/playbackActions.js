@@ -27,7 +27,7 @@ export function closeContextMenu() {
   };
 }
 
-function uploadLibrary(entityKeyName, entityId){
+function uploadLibrary(entityKeyName, entityId) {
   return (dispatch, getState) => {
     const { firebase, userData, cefQuery } = getState();
     const { spotId } = userData;
@@ -38,12 +38,12 @@ function uploadLibrary(entityKeyName, entityId){
     const promise = new Promise((resolve, reject) => {
       cefQuery({
         request,
-        onSuccess: function (response) {
+        onSuccess(response) {
           console.log(response);
           const data = JSON.parse(response);
           resolve(data);
         },
-        onFailure: function (errorCode, errorMessage) {
+        onFailure(errorCode, errorMessage) {
           reject(errorCode, errorMessage);
         },
       });
@@ -154,155 +154,6 @@ export function uploadSongsLib() {
   return uploadLibrary();
 }
 
-export function uploadPlaylist(songs) {
-  return (dispatch, getState) => {
-    const { firebase, userData, sqlite } = getState();
-    const { spotId } = userData;
-        // get IDs of all songs
-    const ids = [];
-    songs.forEach((song) => ids.push(song.id), this);
-    let comma = false;
-    let sql = 'SELECT * FROM song WHERE id IN (';
-    ids.forEach((id) => {
-      if (comma) {
-        sql += ',';
-      }
-      sql += id.toString();
-      comma = true;
-    }, this);
-    sql += ')';
-    console.log(sql);
-    const library = []; // [songs, artists, genres, albums]
-    library.push(new Promise((resolve, reject) => {
-      sqlite.all(sql,
-            (err, rows) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(rows);
-              }
-            });
-    }));
-    library.push(new Promise((resolve, reject) => {
-      sqlite.all(`SELECT artist.name AS artistName, artist.id AS artistId, song.id AS songId FROM artist INNER JOIN (${sql}) AS song ON artist.id = song.artistId`,
-            // {1: sql},
-            (err, rows) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(rows);
-              }
-            });
-    }));
-    library.push(new Promise((resolve, reject) => {
-      sqlite.all(`SELECT g.name AS genreName, g.id AS genreId, s.id AS songId FROM genre AS g INNER JOIN (${sql}) AS s ON (s.genreId = g.id)`,
-            // {1: sql},
-            (err, rows) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(rows);
-              }
-            });
-    }));
-    library.push(new Promise((resolve, reject) => {
-      sqlite.all(`SELECT a.name AS albumName, a.id AS albumId, s.id AS songId FROM album AS a INNER JOIN (${sql}) AS s ON (s.albumId = a.id)`,
-            // {1: sql},
-            (err, rows) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(rows);
-              }
-            });
-    }));
-    Promise.all(library).then((lib) => {
-      console.log(lib);
-      const libRef = firebase.database().ref('libraries').child(spotId);
-      const updates = {};
-      updates.songs = [];
-      for (var i = 0; i < lib[0].length; i++) {
-        const song = lib[0][i];
-        updates.songs[song.id] = {
-          artistId: song.artistId ? song.artistId.toString() : null,
-          genreId: song.genreId ? song.genreId.toString() : null,
-          length: song.length,
-          name: song.title,
-        };
-      }
-      const artistMap = []; // maps artist's name to corresponding list
-      updates.lists = {};
-      updates.artists = [];
-      const listsRef = libRef.child('lists');
-      for (var i = 0; i < lib[1].length; i++) {
-        const song = lib[1][i];
-        let key;
-        if (artistMap[song.artistName]) {
-                    // artist already present, set key
-          key = artistMap[song.artistName];
-        } else {
-                    // artist not present, get new key
-          key = listsRef.push().key;
-          artistMap[song.artistName] = key;
-          updates.lists[key] = [];
-          updates.artists[song.artistId] = {        // insert artist data
-            name: song.artistName,
-            songListId: key,
-          };
-        }
-        updates.lists[key][song.songId] = true; // append to list
-      }
-      const genreMap = []; // maps genre's name to corresponding list
-      updates.genres = [];
-      for (var i = 0; i < lib[2].length; i++) {
-        const song = lib[2][i];
-        let key;
-        if (genreMap[song.genreName]) {
-                    // genre already present, set key
-          key = genreMap[song.genreName];
-        } else {
-                    // genre not present, get new list key
-          key = listsRef.push().key;
-          genreMap[song.genreName] = key;
-          updates.lists[key] = [];
-          updates.genres[song.genreId] = {        // insert genre data
-            name: song.genreName,
-            songListId: key,
-          };
-        }
-        updates.lists[key][song.songId] = true; // append to list
-      }
-      const albumMap = []; // maps album's id to corresponding list
-      updates.albums = [];
-      for (var i = 0; i < lib[3].length; i++) {
-        const song = lib[3][i];
-        let key;
-        if (albumMap[song.albumId]) {
-                    // album already present, set key
-          key = albumMap[song.albumId];
-        } else {
-                    // album not present, get new key
-          key = listsRef.push().key;
-          albumMap[song.albumId] = key;
-          updates.lists[key] = [];
-          updates.albums[song.albumId] = {        // insert album data
-            name: song.albumName,
-            songListId: key,
-          };
-        }
-        updates.lists[key][song.songId] = true; // append to list
-      }
-
-      console.log(updates);
-      libRef.update(updates);
-                /* .then(() => {
-                    dispatch(loadSongs(sqlite));
-                    dispatch(setLoading(false));
-                }); */
-    });
-  };
-}
-
 export function changePlaylist(title, subtitle, songs) {
   return (dispatch) => {
     // dispatch(uploadPlaylist(songs));
@@ -338,14 +189,18 @@ export function queueUpdate(queue) {
       keys.forEach((key) => {
         operations.push(new Promise((resolve, reject) => {
           cefQuery({
-            request: `SQL_SONGVIEW_BY_ID?id=${queue[key].songId}`,
-            onSuccess: function (response) {
-              console.log(response);
+            request: `SQL_SONGVIEW?id=${queue[key].songId}`,
+            onSuccess(response) {
               const data = JSON.parse(response);
-              queue[key].name = data.title;
-              resolve();
+              if (data.length > 0) {
+                queue[key].name = data[0].title;
+                resolve();
+              } else {
+                // TODO: data problem
+                reject(100, 'data problem');
+              }
             },
-            onFailure: function (errorCode, errorMessage) {
+            onFailure(errorCode, errorMessage) {
               reject(errorCode, errorMessage);
             },
           });
@@ -390,19 +245,19 @@ export function addToEndOfQueueAndPlay(songId) {
       songId: songId.toString(),
       userId: userData.userId,
     }).key;
-    const promise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_SONGVIEW_BY_ID?id=${songId}`,
-        onSuccess: function (response) {
-          const data = JSON.parse(response);
-          resolve(data);
-        },
-        onFailure: function (errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    }).then((song) => {
-      dispatch(changeSong(song, key));
+    cefQuery({
+      request: `SQL_SONGVIEW?id=${songId}`,
+      onSuccess(response) {
+        const data = JSON.parse(response);
+        if (data.length > 0) {
+          dispatch(changeSong(data[0], key));
+        } else {
+          // TODO: data problem
+        }
+      },
+      onFailure(errorCode, errorMessage) {
+        // TODO: catch
+      },
     });
   };
 }
@@ -433,21 +288,21 @@ export function nextSong() {
     const playlist = activePlaylist;
     const keys = queue ? Object.keys(queue) : null;
     if (keys && keys.length > 0) {
-            // play from queue
+      // play from queue
       const key = keys[0];
-      const promise = new Promise((resolve, reject) => {
-        cefQuery({
-          request: `SQL_SONGVIEW_BY_ID?id=${queue[key].songId}`,
-          onSuccess: function (response) {
-            const data = JSON.parse(response);
-            resolve(data);
-          },
-          onFailure: function (errorCode, errorMessage) {
-            reject(errorCode, errorMessage);
-          },
-        });
-      }).then((song) => {
-        dispatch(changeSong(song, key));
+      cefQuery({
+        request: `SQL_SONGVIEW?id=${queue[key].songId}`,
+        onSuccess(response) {
+          const data = JSON.parse(response);
+          if (data.length > 0) {
+            dispatch(changeSong(data[0], key));
+          } else {
+            // TODO: data problem
+          }
+        },
+        onFailure(errorCode, errorMessage) {
+          // catch here
+        },
       });
     } else if (playlist && playlist.songs.length > 0) {
                 // play from playlist

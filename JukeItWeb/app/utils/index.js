@@ -20,6 +20,7 @@ export const EntityEnum = {
   GENRE: 'genre',
   ARTIST: 'artist',
   ALBUM: 'album',
+  PLAYLIST: 'playlist',
 };
 
 export class Song {
@@ -53,4 +54,24 @@ export function sanitizeQueryParameter(parameter) {
     return sanitized;
   }
   return parameter;
+}
+
+export function buildQueryString(params) {
+  if (params) {
+    const keys = Object.keys(params);
+    let first = true;
+    let str = '';
+    keys.forEach((key) => {
+      if (params[key]) {
+        if (first) {
+          str += '?';
+          first = false;
+        } else {
+          str += '&';
+        }
+        str += `${key}=${sanitizeQueryParameter(params[key])}`;
+      }
+    });
+    return str;
+  }
 }

@@ -15,6 +15,10 @@ MusicHandler::CommandName MusicHandler::GetCommandName(const std::string & comma
 		if (StartsWith(command, "PLAY_OPEN")) {
 			return CommandName::OPEN;
 		}
+		// must come before PLAY because of common prefix
+		else if (StartsWith(command, "PLAY_PLAYBACK_FINISHED")) {
+			return CommandName::PLAYBACK_FINISHED;
+		}
 		else if (StartsWith(command, "PLAY_PLAY")) {
 			return CommandName::PLAY;
 		}
@@ -91,6 +95,14 @@ bool MusicHandler::OnQuery(CefRefPtr<CefBrowser> browser,
 		}
 		return true;
 	}
+	case CommandName::PLAYBACK_FINISHED: {
+		if (persistent) {
+			playbackFinishedCallback_ = callback;
+			playbackFinishedQueryId_ = query_id;
+			player_.SetPlaybackFinishedCallback(std::bind(&MusicHandler::OnPlaybackFinished, this));
+		}
+		return true;
+	}
 
 	}
 	return false;
@@ -106,11 +118,21 @@ void MusicHandler::OnTimeUpdate(int millis) {
 	}
 }
 
+void MusicHandler::OnPlaybackFinished() {
+	if (playbackFinishedCallback_ != NULL) {		
+		playbackFinishedCallback_->Success(std::string());
+	}
+}
+
 void MusicHandler::OnQueryCanceled(CefRefPtr<CefBrowser> browser,
 	CefRefPtr<CefFrame> frame,
 	int64 query_id) {
 	if (query_id == timeUpdateQueryId_) {
 		timeUpdateCallback_ = NULL;
 		player_.SetTimeUpdateCallback(nullptr);
+	}
+	else if (query_id == playbackFinishedQueryId_) {
+		playbackFinishedCallback_ = NULL;
+		player_.SetPlaybackFinishedCallback(nullptr);
 	}
 }

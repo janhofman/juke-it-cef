@@ -32,17 +32,21 @@ private:
 		CLOSE,
 		OPEN,
 		TIME_UPDATE,
+		PLAYBACK_FINISHED,
 
 		NOT_SUPPORTED
 	};
 
 	CommandName GetCommandName(const std::string& command);	
 	void OnTimeUpdate(int millis);
+	void OnPlaybackFinished();
 
 	const CefString startup_url_;
 	MusicPlayer player_;
 	CefRefPtr<Callback> timeUpdateCallback_ = NULL;
 	int64 timeUpdateQueryId_ = -1;
+	CefRefPtr<Callback> playbackFinishedCallback_ = NULL;
+	int64 playbackFinishedQueryId_ = -1;
 
 	DISALLOW_COPY_AND_ASSIGN(MusicHandler);
 };

@@ -12,18 +12,19 @@ import CircularProgress from 'material-ui/CircularProgress';
 import Popover from 'material-ui/Popover';
 import { Menu, MenuItem } from 'material-ui/Menu';
 import { grey500, deepOrange500 } from 'material-ui/styles/colors';
-/*import {
+import {
   Table,
   TableHeader,
   TableHeaderColumn,
   TableBody,
   TableRowColumn,
   TableRow,
-} from 'material-ui/Table';*/
-import Table from '../Table';
+} from 'material-ui/Table';
+/*import Table from '../Table';
 import TableBodyRow from '../TableBodyRow';
 import TableHead from '../TableHead';
-import TableHeadCell from '../TableHeadCell';
+import TableHeadCell from '../TableHeadCell';*/
+import ScrollPane from '../../containers/ScrollPane';
 import AutoSizeDiv from '../AutoSizeDiv';
 import LoadScreen from '../LoadScreen';
 import MillisToTime from '../MillisToTime';
@@ -137,7 +138,7 @@ class SongListDumb extends Component {
               // style={{verticalAlign: 'middle'}}
             />
           </div>
-          {/*
+
                       <Table>
                         <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
                           <TableRow>
@@ -160,8 +161,8 @@ class SongListDumb extends Component {
                         </TableHeader>
                       </Table>
                       <ScrollPane>
-                      */}
-          <AutoSizeDiv>
+                        {/*
+                        <AutoSizeDiv>
             <Table
               head={<TableHead>
                 <TableHeadCell>
@@ -176,7 +177,7 @@ class SongListDumb extends Component {
                 <TableHeadCell>
                   {formatMessage(messages.genreColumnHeader)}
                 </TableHeadCell>
-                <TableHeadCell /*style={{ width: '59px' }}*/>
+                <TableHeadCell>
                   {formatMessage(messages.timeColumnHeader)}
                 </TableHeadCell>
               </TableHead>}
@@ -189,14 +190,14 @@ class SongListDumb extends Component {
                     <td>{song.artist}</td>
                     <td>{song.album}</td>
                     <td>{song.genre}</td>
-                    <td /*style={{ width: '50px' }}*/><MillisToTime value={song.length}/></td>
+                    <td><MillisToTime value={song.length}/></td>
                   </TableBodyRow>
                 );
               }}
             >
             </Table>
           </AutoSizeDiv>
-          {/*
+          */}
               <Table multiSelectable={selectable} selectable={selectable} onRowSelection={handleRowSelection}>
                 <TableBody
                   displayRowCheckbox={selectable}
@@ -229,7 +230,7 @@ class SongListDumb extends Component {
                 </TableBody>
               </Table>
             </ScrollPane>
-              */}
+
         </div>
         <Popover
           open={optionsOpen}

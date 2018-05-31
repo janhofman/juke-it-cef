@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Songs from '../../components/Songs';
 import { addToEndOfQueue, changePlaylist } from './../../actions/playbackActions';
-import { play } from './../../actions/playerActions';
 import { loadSongs } from './../../actions/libraryActions';
 
 class SongsPage extends Component {
