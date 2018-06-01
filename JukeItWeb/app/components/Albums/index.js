@@ -5,6 +5,7 @@ import ScrollPane from '../../containers/ScrollPane';
 import GridItem from '../GridItem';
 import OrangeDivider from '../OrangeDivider';
 import messages from './messages';
+import defaultImage from '../../images/logo_negative_no_bg.png';
 
 const styles = {
   header: {
@@ -41,7 +42,7 @@ class Albums extends Component {
                   key={index}
                   onTouchTap={() => showDetail(album.id)}
                 >
-                  <img src={album.img ? album.img : './../resources/images/logo_negative_no_bg.png'} style={styles.image} />
+                  <img src={album.img ? album.img : defaultImage} style={styles.image} />
                 </GridItem>
               ))
             }

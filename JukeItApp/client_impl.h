@@ -12,6 +12,7 @@ namespace message_router {
 
 	// Implementation of client handlers.
 	class Client : public CefClient,
+		public CefContextMenuHandler,
 		public CefDisplayHandler,
 		public CefLifeSpanHandler,
 		public CefRequestHandler {
@@ -19,12 +20,25 @@ namespace message_router {
 		explicit Client(const CefString& startup_url);
 
 		// CefClient methods:
+		CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
 		CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
 		CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
 		CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
 		bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 			CefProcessId source_process,
 			CefRefPtr<CefProcessMessage> message) OVERRIDE;
+
+		// CefContextMenuHandler methods: 
+		void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame,
+			CefRefPtr<CefContextMenuParams> params,
+			CefRefPtr<CefMenuModel> model) OVERRIDE;
+
+		bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame,
+			CefRefPtr<CefContextMenuParams> params,
+			int command_id,
+			EventFlags event_flags) OVERRIDE;
 
 		// CefDisplayHandler methods:
 		void OnTitleChange(CefRefPtr<CefBrowser> browser,

@@ -158,4 +158,28 @@ namespace message_router {
 		message_router_->OnRenderProcessTerminated(browser);
 	}
 
+	// Disable context menu
+	void Client::OnBeforeContextMenu(
+		CefRefPtr<CefBrowser> browser,
+		CefRefPtr<CefFrame> frame,
+		CefRefPtr<CefContextMenuParams> params,
+		CefRefPtr<CefMenuModel> model) {
+		CEF_REQUIRE_UI_THREAD();
+
+		model->Clear();
+	}
+
+	bool Client::OnContextMenuCommand(
+		CefRefPtr<CefBrowser> browser,
+		CefRefPtr<CefFrame> frame,
+		CefRefPtr<CefContextMenuParams> params,
+		int command_id,
+		EventFlags event_flags) {
+		CEF_REQUIRE_UI_THREAD();
+
+		//MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
+		return false;
+	}
+
+
 }  // namespace message_router

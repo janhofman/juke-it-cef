@@ -20,6 +20,7 @@ import {
   TableRow,
   TableRowColumn,
 } from 'material-ui/Table';
+import defaultImage from '../../images/logo_negative_no_bg.png';
 
 const messages = defineMessages({
   queueTitle: {
@@ -119,7 +120,7 @@ class Player extends Component {
         <div style={styles.imageBox}>
           <img
             src={
-              this.props.image ? this.props.image : './../resources/images/logo_negative_no_bg.png'
+              this.props.image ? this.props.image : defaultImage
             }
             style={styles.albumCover}
           />

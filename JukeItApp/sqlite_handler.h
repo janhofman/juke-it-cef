@@ -57,6 +57,8 @@ private:
 	sqlite3* GetDbHandle();
 	void AddFiles();
 	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
+	std::string SqliteHandler::BuildSongViewSQL(std::unordered_map<std::string, std::string>& params);
+	std::string SqliteHandler::RunSongViewSQL(std::string& sql);
 
 	const CefString startup_url_;
 	sqlite3* db_handle_ = NULL;

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from "react-router-redux";
 import PropTypes from 'prop-types';
-import { changePlaylist } from './../../actions/playbackActions';
+import { uploadPlaylistLib } from './../../actions/playbackActions';
 import {
   clear,
   loadMetadataForPlaylist,
@@ -33,8 +33,9 @@ class PlaylistDetailPage extends Component {
   }
 
   playPlaylist() {
-    const { name, description, songs, dispatch } = this.props;
-    dispatch(changePlaylist(name, description, songs));
+    const { name, description, match, dispatch } = this.props;
+    const { playlistId } = match.params;
+    dispatch(uploadPlaylistLib(playlistId, name, description));
   }
 
   render() {
@@ -51,7 +52,7 @@ class PlaylistDetailPage extends Component {
         title={name}
         subtitle={description}
         navigateBack={this.navigateBack.bind(this)}
-        playPlaylist={this.playPlaylist.bind(this)}
+        playAction={this.playPlaylist.bind(this)}
         entityType={EntityEnum.PLAYLIST}
       />
     );

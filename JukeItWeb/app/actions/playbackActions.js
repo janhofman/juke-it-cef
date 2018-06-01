@@ -27,7 +27,8 @@ export function closeContextMenu() {
   };
 }
 
-function uploadLibrary(entityKeyName, entityId) {
+// we do not want to export this raw function, create wrappers around it instead
+function uploadLibrary(entityKeyName, entityId, title, subtitle) {
   return (dispatch, getState) => {
     const { firebase, userData, cefQuery } = getState();
     const { spotId } = userData;
@@ -52,7 +53,7 @@ function uploadLibrary(entityKeyName, entityId) {
       const libRef = firebase.database().ref('libraries').child(spotId);
       const updates = {};
       updates.songs = [];
-      for (var i = 0; i < lib.songs.length; i++) {
+      for (let i = 0; i < lib.songs.length; i++) {
         const song = lib.songs[i];
         updates.songs[song.id] = {
           artistId: song.artistId ? song.artistId.toString() : null,
@@ -65,7 +66,7 @@ function uploadLibrary(entityKeyName, entityId) {
       updates.lists = {};
       updates.artists = [];
       const listsRef = libRef.child('lists');
-      for (var i = 0; i < lib.artists.length; i++) {
+      for (let i = 0; i < lib.artists.length; i++) {
         const song = lib.artists[i];
         let key;
         if (artistMap[song.artistName]) {
@@ -85,7 +86,7 @@ function uploadLibrary(entityKeyName, entityId) {
       }
       const genreMap = []; // maps genre's name to corresponding list
       updates.genres = [];
-      for (var i = 0; i < lib.genres.length; i++) {
+      for (let i = 0; i < lib.genres.length; i++) {
         const song = lib.genres[i];
         let key;
         if (genreMap[song.genreName]) {
@@ -105,7 +106,7 @@ function uploadLibrary(entityKeyName, entityId) {
       }
       const albumMap = []; // maps album's id to corresponding list
       updates.albums = [];
-      for (var i = 0; i < lib.albums.length; i++) {
+      for (let i = 0; i < lib.albums.length; i++) {
         const song = lib.albums[i];
         let key;
         if (albumMap[song.albumId]) {
@@ -125,33 +126,38 @@ function uploadLibrary(entityKeyName, entityId) {
       }
 
       console.log(updates);
-      libRef.update(updates);
-      /* .then(() => {
-          dispatch(loadSongs(sqlite));
-          dispatch(setLoading(false));
-      }); */
+      libRef.update(updates)
+        .then(() => {
+          const playlist = {
+            title,
+            subtitle,
+            songs: lib.songs,
+          };
+          dispatch(playlistChanged(playlist));
+          dispatch(push('/home/playback'));
+        });
     });
   };
 }
 
-export function uploadGenreLib(genreId) {
-  return uploadLibrary('genreId', genreId);
+export function uploadGenreLib(genreId, title, subtitle) {
+  return uploadLibrary('genreId', genreId, title, subtitle);
 }
 
-export function uploadPlaylistLib(playlistId) {
-  return uploadLibrary('playlistId', playlistId);
+export function uploadPlaylistLib(playlistId, title, subtitle) {
+  return uploadLibrary('playlistId', playlistId, title, subtitle);
 }
 
-export function uploadArtistLib(artistId) {
-  return uploadLibrary('artistId', artistId);
+export function uploadArtistLib(artistId, title, subtitle) {
+  return uploadLibrary('artistId', artistId, title, subtitle);
 }
 
-export function uploadAlbumLib(albumId) {
-  return uploadLibrary('albumId', albumId);
+export function uploadAlbumLib(albumId, title, subtitle) {
+  return uploadLibrary('albumId', albumId, title, subtitle);
 }
 
-export function uploadSongsLib() {
-  return uploadLibrary();
+export function uploadSongsLib(title, subtitle) {
+  return uploadLibrary(null, null, title, subtitle);
 }
 
 export function changePlaylist(title, subtitle, songs) {

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { push } from 'react-router-redux';
-import { changePlaylist } from '../../actions/playbackActions';
+import { uploadArtistLib } from '../../actions/playbackActions';
 import {
   clear,
   loadMetadataForArtist,
@@ -13,7 +13,6 @@ import { EntityEnum } from '../../utils';
 
 class ArtistDetailPage extends Component {
   constructor(props) {
-    super(props);
     super(props);
     const { match, dispatch } = props;
     const { artistId } = match.params;
@@ -34,8 +33,9 @@ class ArtistDetailPage extends Component {
   }
 
   playAction() {
-    const { name, songs, dispatch } = this.props;
-    dispatch(changePlaylist(name, null, songs));
+    const { name, match, dispatch } = this.props;
+    const { artistId } = match.params;
+    dispatch(uploadArtistLib(artistId, name, null));
   }
 
   render() {

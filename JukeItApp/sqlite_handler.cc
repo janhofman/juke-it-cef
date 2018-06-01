@@ -391,7 +391,12 @@ std::string SqliteHandler::LoadSongs() {
 }
 
 std::string SqliteHandler::SongView(std::unordered_map<std::string, std::string>& params) {
-	sqlite3_stmt* statement;
+	std::string sql = BuildSongViewSQL(params);
+
+	return RunSongViewSQL(sql);
+}
+
+std::string SqliteHandler::BuildSongViewSQL(std::unordered_map<std::string, std::string>& params) {
 	std::stringstream ss;
 	ss << "SELECT s.id, s.title, s.length, s.path, s.artistId, s.albumId, s.genreId, s.artist, s.album, s.genre FROM songView AS s";
 	if (params.size() > 0) {
@@ -422,8 +427,13 @@ std::string SqliteHandler::SongView(std::unordered_map<std::string, std::string>
 		}
 	}
 	std::string sql = ss.str();
-	ss.clear();
-	ss.str(std::string());
+	return sql;
+}
+
+std::string SqliteHandler::RunSongViewSQL(std::string& sql) {
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
 	if (rtc == SQLITE_OK) {
 		bool first = true;
@@ -532,67 +542,24 @@ std::string SqliteHandler::LoadLibraryForPlayback(std::unordered_map<std::string
 {
 	sqlite3_stmt* statement;
 	std::stringstream ss;
-	std::string songSql = "SELECT s.id, s.title, s.artistId, s.albumId, s.genreId, s.length FROM song AS s";
-	// first check our params
-	if (params.size() == 1) {
-		auto it = params.begin();
-		if (it->first == "playlistId") {
-			songSql += " INNER JOIN playlistSong AS ps ON s.id = ps.songId";
-			songSql += " WHERE ps.playlistId = " + it->second;
-		}
-		else if (it->first == "artistId") {
-			songSql += " WHERE s.artistId = " + it->second;
-		}
-		else if (it->first == "genreId") {
-			songSql += " WHERE s.genreId = " + it->second;
-		}
-		else if (it->first == "albumId") {
-			songSql += " WHERE s.albumId = " + it->second;
-		}
-	}
+	std::string songSql = BuildSongViewSQL(params);
+	
 	// begin library object
 	ss << '{';
 
 	// create songs
-	ss << QUOTES << "songs" << QUOTES << ':' << '[';
-	auto rtc = sqlite3_prepare_v2(GetDbHandle(), songSql.c_str(), -1, &statement, NULL);
-	rtc = sqlite3_step(statement);
-	bool first = true;
-	while (SQLITE_ROW == rtc) {
-		// beginning of object
-		if (!first) {
-			ss << ',';
-		}
-		ss << '{';
-		AppendJSONInt(ss, "id", sqlite3_column_text(statement, 0));
-		ss << ',';
-		AppendJSONString(ss, "title", sqlite3_column_text(statement, 1));
-		ss << ',';
-		AppendJSONInt(ss, "artistId", sqlite3_column_text(statement, 2));
-		ss << ',';
-		AppendJSONInt(ss, "albumId", sqlite3_column_text(statement, 3));
-		ss << ',';
-		AppendJSONInt(ss, "genreId", sqlite3_column_text(statement, 4));
-		ss << ',';
-		AppendJSONInt(ss, "length", sqlite3_column_text(statement, 5));
-		// finish object
-		ss << '}';
-		rtc = sqlite3_step(statement);
-		first = false;
-	}
-	// end songs array
-	ss << ']' << ',';
-	sqlite3_finalize(statement);
+	ss << QUOTES << "songs" << QUOTES << ':' << RunSongViewSQL(songSql);
+	ss << ',';
 
 	// create artists
 	std::string artistSql = "SELECT art.name AS artistName, art.id AS artistId, s.id AS songId FROM artist AS art INNER JOIN (";
 	artistSql += songSql;
 	artistSql += ") AS s ON art.id = s.artistId";
-	rtc = sqlite3_prepare_v2(GetDbHandle(), artistSql.c_str(), -1, &statement, NULL);
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), artistSql.c_str(), -1, &statement, NULL);
 	// begin artists
 	ss << QUOTES << "artists" << QUOTES << ':' << '[';
 	rtc = sqlite3_step(statement);
-	first = true;
+	bool first = true;
 	while (SQLITE_ROW == rtc) {
 		// beginning of object
 		if (!first) {
@@ -833,7 +800,7 @@ void SqliteHandler::AddSongToDatabase(const char *filename, SongMetadata& metada
 		ss << ",";
 		albumId > 0 ? ss << albumId : ss << "NULL";
 		ss << ",";
-		artistId > 0 ? ss << artistId : ss << "NULL";
+		genreId > 0 ? ss << genreId : ss << "NULL";
 		ss << ",";
 		ss << metadata.duration;
 		ss << ",";

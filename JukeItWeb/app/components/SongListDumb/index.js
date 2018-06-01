@@ -29,6 +29,7 @@ import AutoSizeDiv from '../AutoSizeDiv';
 import LoadScreen from '../LoadScreen';
 import MillisToTime from '../MillisToTime';
 import messages from './messages';
+import defaultImage from '../../images/logo_negative_no_bg.png';
 
 const styles = {
   base: {
@@ -93,7 +94,7 @@ class SongListDumb extends Component {
     return <div>
       <LoadScreen loading={!loaded}>
         <img
-          src={image || './../resources/images/logo_negative_no_bg.png'}
+          src={image || defaultImage}
           style={styles.image}
         />
 

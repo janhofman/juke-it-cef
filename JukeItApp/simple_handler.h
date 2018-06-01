@@ -27,7 +27,9 @@ class SimpleHandler : public CefClient,
   virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE {
     return this;
   }
-  virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
+  virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { 
+	  return this; 
+  }
 
   // CefDisplayHandler methods:
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,

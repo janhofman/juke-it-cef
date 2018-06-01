@@ -93,7 +93,7 @@ namespace shared {
 #if defined(OS_WIN)
 			// On Windows we need to specify certain flags that will be passed to
 			// CreateWindowEx().
-			window_info.SetAsPopup(NULL, "examples");
+			window_info.SetAsPopup(NULL, "JukeIt");
 #endif
 
 			// Create the browser window.
