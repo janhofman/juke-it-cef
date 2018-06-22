@@ -10,11 +10,13 @@
 set(JUKEITAPP_SRCS
   abstract_message_handler.h
   abstract_message_handler.cc
-  
+  AbstractFileServerHandler.h
   app_browser_impl.h
   app_browser_impl.cc
   app_factory.h
   app_renderer_impl.cc
+  AudioInspector.h
+  AudioInspector.cc
   browser_util.h
   browser_util.cc
   client_impl.h
@@ -33,6 +35,8 @@ set(JUKEITAPP_SRCS
   MusicPlayer.cc
   resource_util.h
   resource_util.cc  
+  rest.h
+  rest.cpp
   simple_app.h
   simple_app.cc
   simple_handler.h
@@ -224,8 +228,11 @@ if(OS_WINDOWS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avutil.lib
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
      )
+  set(CPPRESTSDK_LIB_LOCATION
+    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/build.x64v141/Binaries/Release/cpprest141_2_10.lib
+  )
   
-  target_link_libraries(${CEF_TARGET} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_LIB_LOCATION} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
