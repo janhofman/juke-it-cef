@@ -49,7 +49,7 @@ void FileServerAPI::handle_get(web::http::http_request message)
 				}
 
 				web::json::value result;
-				auto rtc = fsHandler_->Songs(start, limit, &result);
+				auto rtc = true;//fsHandler_->Songs(start, limit, &result);
 				if (rtc) {
 					message.reply(web::http::status_codes::OK, result);
 				}
