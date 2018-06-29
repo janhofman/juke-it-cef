@@ -4,10 +4,13 @@
 #include "AbstractFileServerHandler.h"
 #include "SqliteAPI.h"
 
+#include "cpprestsdk/include/cpprest/json.h"
+#include "cpprestsdk/include/cpprest/details/basic_types.h"
+
 class FileServerHandler : public AbstractFileServerHandler {
 public:
 	FileServerHandler(SqliteAPI *database) : db_ptr_(database) {};
-	~FileServerHandler() {};
+	~FileServerHandler() {} ;
 	// interface methods
 	virtual ResponseCode v1_Songs(std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) override;
 	virtual ResponseCode v1_Song(const std::string& songId, web::json::value& response) override;
@@ -21,10 +24,10 @@ public:
 	virtual ResponseCode v1_Genre(const std::string& genreId, web::json::value& response) override;
 	virtual ResponseCode v1_GenreSongs(const std::string& genreId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) override;
 	virtual ResponseCode v1_Playlists(const std::string& userId, std::uint32_t limit, std::uint32_t page, bool desc, const std::string& filter, web::json::value& response) override;
-	virtual ResponseCode v1_Playlists_Create(const std::string& userId, const std::string& name, const std::string& description, web::json::value& response) = 0;
+	virtual ResponseCode v1_Playlists_Create(const std::string& userId, const std::string& name, const std::string& description, web::json::value& response) override;
 	virtual ResponseCode v1_Playlist(const std::string& userId, const std::string& playlistId, web::json::value& response) override;
-	virtual ResponseCode v1_Playlist_Modify(const std::string& userId, const std::string& playlistId, const std::string& newName, const std::string& newDescription, web::json::value& response) = 0;
-	virtual ResponseCode v1_Playlist_Delete(const std::string& userId, const std::string& playlistId) = 0;
+	virtual ResponseCode v1_Playlist_Modify(const std::string& userId, const std::string& playlistId, const std::string& newName, bool nameChange, const std::string& newDescription, bool descriptionChange, web::json::value& response) override;
+	virtual ResponseCode v1_Playlist_Delete(const std::string& userId, const std::string& playlistId) override;
 	virtual ResponseCode v1_PlaylistSongs(const std::string& userId, const std::string& playlistId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) override;
 	virtual ResponseCode v1_PlaylistSongs_Modify(const std::string& userId, const std::string& playlistId, const std::vector<std::string>& add_vect, const std::vector<std::string>& remove_vect) override;
 

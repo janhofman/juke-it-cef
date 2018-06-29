@@ -25,6 +25,8 @@ set(JUKEITAPP_SRCS
   client_manager.cc
   client_util.h
   client_util.cc
+  FileServerHandler.h
+  FileServerHandler.cc
   main.h
   main_minimal.cc
   main_util.h
@@ -43,6 +45,8 @@ set(JUKEITAPP_SRCS
   simple_handler.cc
   sqlite_handler.h
   sqlite_handler.cc
+  SqliteAPI.h
+  SqliteAPI.cc
   tinyfiledialogs.h
   tinyfiledialogs.c
   )
@@ -229,7 +233,8 @@ if(OS_WINDOWS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
      )
   set(CPPRESTSDK_LIB_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/build.x64v141/Binaries/Release/cpprest141_2_10.lib
+  # ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/build.x64v141/Binaries/Release/cpprest141_2_10.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../build/JukeItApp/Debug/cpprest141d_2_10.lib
   )
   
   target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_LIB_LOCATION} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})

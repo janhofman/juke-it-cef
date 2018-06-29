@@ -294,6 +294,21 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlists(const std::strin
 	return MapErrorCode(errCode);
 }
 
+FileServerHandler::ResponseCode FileServerHandler::v1_Playlists_Create(const std::string& userId, const std::string& name, const std::string& description, web::json::value& response) {
+	auto rtc = VerifyDatabase();
+	if (rtc != ResponseCode::CODE_200_OK) {
+		return rtc;
+	}
+
+	SqliteAPI::PlaylistResult result;
+	auto errCode = db_ptr_->AddPlaylist(userId, name, description, result);
+
+	if (errCode == SqliteAPI::ErrorCode::OK) {
+		response = Fill(result);
+	}
+	return MapErrorCode(errCode);
+}
+
 FileServerHandler::ResponseCode FileServerHandler::v1_Playlist(const std::string& userId, const std::string& playlistId, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
@@ -314,6 +329,43 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlist(const std::string
 		}
 	}
 	return MapErrorCode(errCode);
+}
+
+FileServerHandler::ResponseCode FileServerHandler::v1_Playlist_Modify(const std::string& userId, const std::string& playlistId, const std::string& newName, bool nameChange, const std::string& newDescription, bool descriptionChange, web::json::value& response) {
+	auto rtc = VerifyDatabase();
+	if (rtc != ResponseCode::CODE_200_OK) {
+		return rtc;
+	}
+
+	SqliteAPI::PlaylistResult changes;
+	if (!TryParseUint(playlistId, changes.id)) {
+		// TODO: return fitting error
+		return ResponseCode::CODE_404_NOT_FOUND;
+	}
+	changes.userId = userId;
+	changes.name = newName;
+	changes.description = newDescription;
+	SqliteAPI::PlaylistResult result;
+	auto errCode = db_ptr_->ModifyPlaylist(changes, nameChange, descriptionChange, result);
+
+	if (errCode == SqliteAPI::ErrorCode::OK) {
+		response = Fill(result);
+	}
+	return MapErrorCode(errCode);
+}
+
+FileServerHandler::ResponseCode FileServerHandler::v1_Playlist_Delete(const std::string& userId, const std::string& playlistId) {
+	auto rtc = VerifyDatabase();
+	if (rtc != ResponseCode::CODE_200_OK) {
+		return rtc;
+	}
+
+	std::uint32_t plId = 0;
+	if (TryParseUint(playlistId, plId)) {
+		auto errCode = db_ptr_->RemovePlaylist(plId, userId);
+		return MapErrorCode(errCode);
+	}
+	return ResponseCode::CODE_404_NOT_FOUND;
 }
 
 FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::string& userId, const std::string& playlistId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
@@ -351,8 +403,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs_Modify(const
 	}
 
 	std::uint32_t plId = 0;
-	std::uint32_t uId = 0;
-	if (TryParseUint(userId, uId) && TryParseUint(playlistId, plId)) {
+	if (TryParseUint(playlistId, plId)) {
 		std::vector<std::uint32_t> add;
 		for (size_t i = 0; i < add_vect.size(); i++)
 		{
@@ -369,7 +420,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs_Modify(const
 				remove.push_back(num);
 			}
 		}
-		auto errCode = db_ptr_->ModifyPlaylistSongs(plId, uId, add, remove);
+		auto errCode = db_ptr_->ModifyPlaylistSongs(plId, userId, add, remove);
 		return MapErrorCode(errCode);
 	}
 	else {
@@ -396,10 +447,10 @@ web::json::value FileServerHandler::Fill(SqliteAPI::SongResult& song) {
 web::json::value FileServerHandler::Fill(SqliteAPI::AlbumResult& album) {
 	web::json::value obj;
 
-	obj[U("id")] = IdValue(album.id);
+	/*obj[U("id")] = IdValue(album.id);
 	obj[U("name")] = StringValue(album.name);
 	obj[U("artist")] = StringValue(album.artist);
-	obj[U("artistId")] = IdValue(album.artistId);
+	obj[U("artistId")] = IdValue(album.artistId);*/
 
 	return obj;
 }
@@ -407,8 +458,8 @@ web::json::value FileServerHandler::Fill(SqliteAPI::AlbumResult& album) {
 web::json::value FileServerHandler::Fill(SqliteAPI::ArtistResult& artist) {
 	web::json::value obj;
 
-	obj[U("id")] = IdValue(artist.id);
-	obj[U("name")] = StringValue(artist.name);
+	/*obj[U("id")] = IdValue(artist.id);
+	obj[U("name")] = StringValue(artist.name);*/
 
 	return obj;
 }
@@ -416,8 +467,8 @@ web::json::value FileServerHandler::Fill(SqliteAPI::ArtistResult& artist) {
 web::json::value FileServerHandler::Fill(SqliteAPI::GenreResult& genre) {
 	web::json::value obj;
 
-	obj[U("id")] = IdValue(genre.id);
-	obj[U("name")] = StringValue(genre.name);
+	/*obj[U("id")] = IdValue(genre.id);
+	obj[U("name")] = StringValue(genre.name);*/
 
 	return obj;
 }
@@ -425,10 +476,10 @@ web::json::value FileServerHandler::Fill(SqliteAPI::GenreResult& genre) {
 web::json::value FileServerHandler::Fill(SqliteAPI::PlaylistResult& playlist) {
 	web::json::value obj;
 
-	obj[U("id")] = IdValue(playlist.id);
+	/*obj[U("id")] = IdValue(playlist.id);
 	obj[U("name")] = StringValue(playlist.name);
 	obj[U("description")] = StringValue(playlist.description);
-	obj[U("userId")] = StringValue(playlist.userId);
+	obj[U("userId")] = StringValue(playlist.userId);*/
 
 	return obj;
 }

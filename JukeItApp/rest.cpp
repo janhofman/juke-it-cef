@@ -1,7 +1,23 @@
 #include "rest.h"
 
-FileServerAPI::FileServerAPI(utility::string_t& url, AbstractFileServerHandler *handler) : m_listener(url), fsHandler_(handler)
-{
+FileServerAPI::FileServerAPI(const utility::string_t& url , AbstractFileServerHandler *handler) : m_listener(url), fsHandler_(handler)
+{	
+	/*std::string what;
+	try {
+		bool valid = web::uri::validate(url);
+		(void)valid;
+		auto aaa = utility::conversions::to_utf8string("http://localhost");
+		auto bbb = utility::conversions::to_string_t(aaa);
+		web::uri_builder builder(bbb);
+		auto str = builder.to_uri().to_string();
+		(void)str;
+		m_listener = web::http::experimental::listener::http_listener(builder.to_uri());
+	}
+	catch (std::range_error& e) {
+		what = e.what();
+		(void)what;
+	}
+*/
 	m_listener.support(web::http::methods::GET, std::bind(&FileServerAPI::handle_get, this, std::placeholders::_1));
 	/*m_listener.support(web::http::methods::PUT, std::bind(&FileServerAPI::handle_put, this, std::placeholders::_1));
 	m_listener.support(web::http::methods::POST, std::bind(&FileServerAPI::handle_post, this, std::placeholders::_1));
@@ -21,65 +37,65 @@ void FileServerAPI::handle_get(web::http::http_request message)
 		message.reply(web::http::status_codes::NotFound);
 		return;
 	}
-	auto pathLength = paths.size();
+	//auto pathLength = paths.size();
 
-	if (paths[0] == U("v1")) {
-		if (pathLength > 1) {
-			if (paths[1] == U("songs")) {
-				std::size_t start = 0;
-				auto startIt = queries.find(U("start"));
-				if (startIt != queries.end()) {
-					if (!TryParseSizeT(startIt->second, &start)) {
-						message.reply(web::http::status_codes::NotFound);
-						return;
-					}
-				}
-				std::size_t limit = 100;
-				auto limitIt = queries.find(U("limit"));
-				if (limitIt != queries.end()) {
-					if (!TryParseSizeT(limitIt->second, &limit)) {
-						message.reply(web::http::status_codes::NotFound);
-						return;
-					}
-					else {
-						if (limit > 1000) {
-							limit = 1000;
-						}
-					}
-				}
+	//if (paths[0] == U("v1")) {
+	//	if (pathLength > 1) {
+	//		if (paths[1] == U("songs")) {
+	//			std::size_t start = 0;
+	//			auto startIt = queries.find(U("start"));
+	//			if (startIt != queries.end()) {
+	//				if (!TryParseSizeT(startIt->second, &start)) {
+	//					message.reply(web::http::status_codes::NotFound);
+	//					return;
+	//				}
+	//			}
+	//			std::size_t limit = 100;
+	//			auto limitIt = queries.find(U("limit"));
+	//			if (limitIt != queries.end()) {
+	//				if (!TryParseSizeT(limitIt->second, &limit)) {
+	//					message.reply(web::http::status_codes::NotFound);
+	//					return;
+	//				}
+	//				else {
+	//					if (limit > 1000) {
+	//						limit = 1000;
+	//					}
+	//				}
+	//			}
 
-				web::json::value result;
-				auto rtc = true;//fsHandler_->Songs(start, limit, &result);
-				if (rtc) {
-					message.reply(web::http::status_codes::OK, result);
-				}
-				else {
-					message.reply(web::http::status_codes::NotFound);
-				}
-			}
-			else {
-				message.reply(web::http::status_codes::NotFound);
-				return;
-			}
-		}
-		else {
-			message.reply(web::http::status_codes::NotFound);
-			return;
-		}
+	//			web::json::value result;
+	//			auto rtc = true;//fsHandler_->Songs(start, limit, &result);
+	//			if (rtc) {
+	//				message.reply(web::http::status_codes::OK, result);
+	//			}
+	//			else {
+	//				message.reply(web::http::status_codes::NotFound);
+	//			}
+	//		}
+	//		else {
+	//			message.reply(web::http::status_codes::NotFound);
+	//			return;
+	//		}
+	//	}
+	//	else {
+	//		message.reply(web::http::status_codes::NotFound);
+	//		return;
+	//	}
 
-	}
+	//}
 
-	// Get information on a specific table.
-	auto found = queries.find(U("aaa"));
-	if (found == queries.end())
-	{
-		message.reply(web::http::status_codes::NotFound);
-	}
+	//// Get information on a specific table.
+	//auto found = queries.find(U("aaa"));
+	//if (found == queries.end())
+	//{
+	//	message.reply(web::http::status_codes::NotFound);
+	//}
 
-	else
-	{
-		message.reply(web::http::status_codes::OK, found->second);
-	}
+	//else
+	//{
+	//	message.reply(web::http::status_codes::OK, found->second);
+	//}
 };
 
 bool FileServerAPI::TryParseSizeT(utility::string_t& s, std::size_t* outValue) {

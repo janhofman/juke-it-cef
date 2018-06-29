@@ -1,11 +1,13 @@
 #ifndef SQLITE_API_H_
 #define SQLITE_API_H_
 
+#define _TURN_OFF_PLATFORM_STRING
+
 #include <unordered_map>
 #include <vector>
 #include <fstream>
 
-#include "cpprestsdk/Release/include/cpprest/json.h"
+#include "cpprestsdk/include/cpprest/json.h"
 #include "AudioInspector.h"
 
 extern "C" {
@@ -24,6 +26,7 @@ public:
 		MALFORMED_SQL,
 		DATABASE_ERROR,
 		ARGUMENT_ERROR,
+		DUPLICATE_ENTRY
 	};
 
 	typedef struct {
@@ -70,7 +73,9 @@ public:
 	void AddFiles();
 	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
 	ErrorCode AddPlaylist(const std::string& userId, const std::string& name, const std::string& description, PlaylistResult& result);
-	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, std::uint32_t userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
+	ErrorCode ModifyPlaylist(const PlaylistResult& changes, bool nameChange, bool descriptionChange, PlaylistResult& result);
+	ErrorCode RemovePlaylist(const std::uint32_t playlistId, const std::string& userId);
+	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
 
 private:	
 	ErrorCode AddSongsToPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& add);

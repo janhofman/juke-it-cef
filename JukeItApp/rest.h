@@ -1,19 +1,22 @@
 #ifndef REST_API_H_
 #define REST_API_H_
 
-#include "cpprestsdk/Release/include/cpprest/json.h"
-#include "cpprestsdk/Release/include/cpprest/http_listener.h"
-#include "cpprestsdk/Release/include/cpprest/uri.h"
-#include "cpprestsdk/Release/include/cpprest/asyncrt_utils.h"
+#define _TURN_OFF_PLATFORM_STRING
+
+#include "cpprestsdk/include/cpprest/json.h"
+#include "cpprestsdk/include/cpprest/http_listener.h"
+#include "cpprestsdk/include/cpprest/uri.h"
+#include "cpprestsdk/include/cpprest/asyncrt_utils.h"
 
 #include "AbstractFileServerHandler.h"
+#include <exception>
+#include <string>
 
 class FileServerAPI
 {
 public:
 	FileServerAPI() { }
-	FileServerAPI(utility::string_t& url, AbstractFileServerHandler *handler);
-
+	FileServerAPI(const utility::string_t& url, AbstractFileServerHandler *handler);
 
 	pplx::task<void> open() { return m_listener.open(); }
 	pplx::task<void> close() { return m_listener.close(); }

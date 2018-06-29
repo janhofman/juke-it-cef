@@ -5,8 +5,14 @@
 #ifndef CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
 #define CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
 
+#include <string>
+
 #include "include/cef_client.h"
 #include "include/wrapper/cef_message_router.h"
+
+#include "rest.h"
+#include "FileServerHandler.h"
+#include "SqliteAPI.h"
 
 namespace message_router {
 
@@ -67,6 +73,10 @@ namespace message_router {
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> music_handler_;
+
+		scoped_ptr<FileServerAPI> fileserver_;
+		scoped_ptr<AbstractFileServerHandler> fileserver_handler_;
+		scoped_ptr<SqliteAPI> sqliteAPI_;
 
 		const CefString startup_url_;
 

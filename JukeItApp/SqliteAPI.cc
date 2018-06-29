@@ -722,7 +722,96 @@ SqliteAPI::ErrorCode SqliteAPI::AddPlaylist(const std::string& userId, const std
 	return ErrorCode::DATABASE_ERROR;
 }
 
-SqliteAPI::ErrorCode SqliteAPI::ModifyPlaylistSongs(std::uint32_t playlistId, std::uint32_t userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove) {
+SqliteAPI::ErrorCode SqliteAPI::ModifyPlaylist(const SqliteAPI::PlaylistResult& changes, bool nameChange, bool descriptionChange, SqliteAPI::PlaylistResult& result) {
+	if (changes.userId.empty() || changes.id == 0 || (nameChange && changes.name.empty())) {
+		return ErrorCode::ARGUMENT_ERROR;
+	}
+
+	// verify playlist exists
+	std::unordered_map<std::string, std::string> params;
+	params["userId"] = changes.userId;
+	params["id"] = changes.id;
+	std::vector<PlaylistResult> v_playlist;
+	auto errCode = Playlists(params, 1, 1, false, v_playlist);
+	if (errCode == ErrorCode::OK && v_playlist.size() == 1) {
+
+		if (nameChange || descriptionChange) {			
+			std::stringstream ss;
+			ss << "UPDATE playlist SET ";
+			// fill values
+			if (nameChange) {
+				ss << "name = '" << changes.name << '\'';
+				if (descriptionChange) {
+					ss << ',';
+				}
+			}
+			if (descriptionChange) {
+				ss << "description = '" << changes.description << '\'';
+			}
+			ss << " WHERE id = " << changes.id;
+			std::string sql = ss.str();
+
+			sqlite3_stmt* statement;
+			auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+			if (rtc == SQLITE_OK) {
+				rtc = sqlite3_step(statement);
+				if (rtc == SQLITE_DONE) {
+					sqlite3_finalize(statement);
+
+					v_playlist.clear();
+					errCode = Playlists(params, 1, 1, false, v_playlist);
+					if (errCode == ErrorCode::OK && v_playlist.size() == 1) {
+						result = v_playlist[0];
+						return ErrorCode::OK;
+					}
+					else {
+						return ErrorCode::DATABASE_ERROR;
+					}
+				}
+				else {
+					return ErrorCode::DATABASE_ERROR;
+				}
+			}
+			else {
+				return ErrorCode::MALFORMED_SQL;
+			}
+		}
+	}
+	else {
+		return ErrorCode::ARGUMENT_ERROR;
+	}
+	
+	// no success
+	return ErrorCode::DATABASE_ERROR;
+}
+
+SqliteAPI::ErrorCode SqliteAPI::RemovePlaylist(const std::uint32_t playlistId, const std::string& userId) {
+	if (userId.empty() || playlistId == 0) {
+		return ErrorCode::ARGUMENT_ERROR;
+	}
+
+	std::stringstream ss;
+	ss << "DELETE FROM playlist WHERE id=" << playlistId << " AND userId='" << userId << '\'';
+	std::string sql = ss.str();
+
+	sqlite3_stmt* statement;
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			sqlite3_finalize(statement);			
+			return ErrorCode::OK;
+		}
+		else {
+			return ErrorCode::DATABASE_ERROR;
+		}
+	}
+	else {
+		return ErrorCode::MALFORMED_SQL;
+	}
+}
+
+SqliteAPI::ErrorCode SqliteAPI::ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove) {
 	// verify that playlist exists for user
 	std::unordered_map<std::string, std::string> params;
 	params["userId"] = userId;
