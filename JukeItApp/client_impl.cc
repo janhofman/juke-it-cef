@@ -93,14 +93,8 @@ namespace message_router {
 
 			sqliteAPI_.reset(new SqliteAPI());
 			fileserver_handler_.reset(new FileServerHandler(sqliteAPI_.get()));
-
-
-			CefString address = "http://localhost";
-			auto aaa = address.ToWString();
-			std::string a;
-			web::json::value response;
-			fileserver_handler_->v1_Songs(100, 1, a, true, a, response);
-			fileserver_.reset(new FileServerAPI(aaa, fileserver_handler_.get()));
+			std::string address = "http://localhost:12345/api";
+			fileserver_.reset(new FileServerAPI(address, fileserver_handler_.get()));
 			fileserver_->open().wait();
 		}
 

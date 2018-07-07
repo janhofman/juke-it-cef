@@ -46,14 +46,6 @@ private:
 	bool TryParseUint(const std::string& str, std::uint32_t& result);
 
 	ResponseCode MapErrorCode(SqliteAPI::ErrorCode errCode);
-
-	static const char * FILTER_PARAM;
-	static const char * ORDERBY_PARAM;
-	static const char * ID_PARAM;
-	static const char * ALBUMID_PARAM;
-	static const char * ARTISTID_PARAM;
-	static const char * GENREID_PARAM;
-	static const char * USERID_PARAM;
 };
 
 #endif

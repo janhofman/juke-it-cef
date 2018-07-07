@@ -1,13 +1,7 @@
 #include "FileServerHandler.h"
 #include <sstream>
 
-const char * FileServerHandler::FILTER_PARAM = "filter";
-const char * FileServerHandler::ORDERBY_PARAM = "orderBy";
-const char * FileServerHandler::ID_PARAM = "id";
-const char * FileServerHandler::ALBUMID_PARAM = "albumId";
-const char * FileServerHandler::ARTISTID_PARAM = "artistId";
-const char * FileServerHandler::GENREID_PARAM = "genreId";
-const char * FileServerHandler::USERID_PARAM = "userId";
+
 
 FileServerHandler::ResponseCode FileServerHandler::v1_Songs(std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
@@ -17,10 +11,10 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Songs(std::uint32_t limit,
 
 	std::unordered_map<std::string, std::string> params;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
@@ -42,7 +36,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Song(const std::string& so
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = songId;
+	params[SqliteAPI::ID_PARAM] = songId;
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, 1, 1, true, result);
 
@@ -63,10 +57,10 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Albums(std::uint32_t limit
 
 	std::unordered_map<std::string, std::string> params;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::AlbumResult> result;
 	auto errCode = db_ptr_->AlbumView(params, limit, page, desc, result);
@@ -88,7 +82,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Album(const std::string& a
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = albumId;
+	params[SqliteAPI::ID_PARAM] = albumId;
 	std::vector<SqliteAPI::AlbumResult> result;
 	auto errCode = db_ptr_->AlbumView(params, 1, 1, true, result);
 
@@ -108,12 +102,12 @@ FileServerHandler::ResponseCode FileServerHandler::v1_AlbumSongs(const std::stri
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ALBUMID_PARAM] = albumId;
+	params[SqliteAPI::ALBUMID_PARAM] = albumId;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
@@ -136,7 +130,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Artists(std::uint32_t limi
 
 	std::unordered_map<std::string, std::string> params;
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::ArtistResult> result;
 	auto errCode = db_ptr_->Artist(params, limit, page, desc, result);
@@ -158,7 +152,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Artist(const std::string& 
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = artistId;
+	params[SqliteAPI::ID_PARAM] = artistId;
 	
 	std::vector<SqliteAPI::ArtistResult> result;
 	auto errCode = db_ptr_->Artist(params, 1, 1, true, result);
@@ -179,12 +173,12 @@ FileServerHandler::ResponseCode FileServerHandler::v1_ArtistSongs(const std::str
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ARTISTID_PARAM] = artistId;
+	params[SqliteAPI::ARTISTID_PARAM] = artistId;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
@@ -207,7 +201,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Genres(std::uint32_t limit
 
 	std::unordered_map<std::string, std::string> params;
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::GenreResult> result;
 	auto errCode = db_ptr_->Genres(params, limit, page, desc, result);
@@ -229,7 +223,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Genre(const std::string& g
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = genreId;
+	params[SqliteAPI::ID_PARAM] = genreId;
 
 	std::vector<SqliteAPI::GenreResult> result;
 	auto errCode = db_ptr_->Genres(params, 1, 1, true, result);
@@ -250,12 +244,12 @@ FileServerHandler::ResponseCode FileServerHandler::v1_GenreSongs(const std::stri
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[GENREID_PARAM] = genreId;
+	params[SqliteAPI::GENREID_PARAM] = genreId;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
@@ -277,9 +271,9 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlists(const std::strin
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[USERID_PARAM] = userId;
+	params[SqliteAPI::USERID_PARAM] = userId;
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::PlaylistResult> result;
 	auto errCode = db_ptr_->Playlists(params, limit, page, desc, result);
@@ -316,8 +310,8 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlist(const std::string
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = playlistId;
-	params[USERID_PARAM] = userId;
+	params[SqliteAPI::ID_PARAM] = playlistId;
+	params[SqliteAPI::USERID_PARAM] = userId;
 
 	std::vector<SqliteAPI::PlaylistResult> result;
 	auto errCode = db_ptr_->Playlists(params, 1, 1, true, result);
@@ -375,13 +369,13 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::s
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[ID_PARAM] = playlistId;
-	params[USERID_PARAM] = userId;
+	params[SqliteAPI::ID_PARAM] = playlistId;
+	params[SqliteAPI::USERID_PARAM] = userId;
 	if (!orderBy.empty()) {
-		params[ORDERBY_PARAM] = orderBy;
+		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
 	}
 	if (!filter.empty()) {
-		params[FILTER_PARAM] = filter;
+		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
 	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
@@ -447,10 +441,10 @@ web::json::value FileServerHandler::Fill(SqliteAPI::SongResult& song) {
 web::json::value FileServerHandler::Fill(SqliteAPI::AlbumResult& album) {
 	web::json::value obj;
 
-	/*obj[U("id")] = IdValue(album.id);
+	obj[U("id")] = IdValue(album.id);
 	obj[U("name")] = StringValue(album.name);
 	obj[U("artist")] = StringValue(album.artist);
-	obj[U("artistId")] = IdValue(album.artistId);*/
+	obj[U("artistId")] = IdValue(album.artistId);
 
 	return obj;
 }
@@ -458,8 +452,8 @@ web::json::value FileServerHandler::Fill(SqliteAPI::AlbumResult& album) {
 web::json::value FileServerHandler::Fill(SqliteAPI::ArtistResult& artist) {
 	web::json::value obj;
 
-	/*obj[U("id")] = IdValue(artist.id);
-	obj[U("name")] = StringValue(artist.name);*/
+	obj[U("id")] = IdValue(artist.id);
+	obj[U("name")] = StringValue(artist.name);
 
 	return obj;
 }
@@ -467,8 +461,8 @@ web::json::value FileServerHandler::Fill(SqliteAPI::ArtistResult& artist) {
 web::json::value FileServerHandler::Fill(SqliteAPI::GenreResult& genre) {
 	web::json::value obj;
 
-	/*obj[U("id")] = IdValue(genre.id);
-	obj[U("name")] = StringValue(genre.name);*/
+	obj[U("id")] = IdValue(genre.id);
+	obj[U("name")] = StringValue(genre.name);
 
 	return obj;
 }
@@ -476,10 +470,10 @@ web::json::value FileServerHandler::Fill(SqliteAPI::GenreResult& genre) {
 web::json::value FileServerHandler::Fill(SqliteAPI::PlaylistResult& playlist) {
 	web::json::value obj;
 
-	/*obj[U("id")] = IdValue(playlist.id);
+	obj[U("id")] = IdValue(playlist.id);
 	obj[U("name")] = StringValue(playlist.name);
 	obj[U("description")] = StringValue(playlist.description);
-	obj[U("userId")] = StringValue(playlist.userId);*/
+	obj[U("userId")] = StringValue(playlist.userId);
 
 	return obj;
 }

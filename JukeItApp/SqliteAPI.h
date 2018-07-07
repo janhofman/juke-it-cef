@@ -77,6 +77,14 @@ public:
 	ErrorCode RemovePlaylist(const std::uint32_t playlistId, const std::string& userId);
 	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
 
+	static const char * FILTER_PARAM;
+	static const char * ORDERBY_PARAM;
+	static const char * ID_PARAM;
+	static const char * ALBUMID_PARAM;
+	static const char * ARTISTID_PARAM;
+	static const char * GENREID_PARAM;
+	static const char * USERID_PARAM;
+
 private:	
 	ErrorCode AddSongsToPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& add);
 	ErrorCode RemoveSongsFromPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& remove);

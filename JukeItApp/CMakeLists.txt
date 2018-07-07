@@ -232,12 +232,25 @@ if(OS_WINDOWS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avutil.lib
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
      )
-  set(CPPRESTSDK_LIB_LOCATION
+     
+  #add_library(cpprestsdk_lib STATIC IMPORTED)
+  # set_property(TARGET cpprestsdk_lib PROPERTY
+  #              IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/include/libcpprest140d_2_10.lib)
+  set(CPPRESTSDK_FILES
   # ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/build.x64v141/Binaries/Release/cpprest141_2_10.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/../build/JukeItApp/Debug/cpprest141d_2_10.lib
+  #  ${CMAKE_CURRENT_SOURCE_DIR}/../build/JukeItApp/Debug/cpprest141d_2_10.lib
+  #  ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/include/cpprest140_2_10.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib
   )
+  #find_package(cpprestsdk REQUIRED)
+  #set(CPPRESTSDK_FILES 
+  #      cpprestsdk::cpprest 
+  #      cpprestsdk::cpprestsdk_zlib_internal 
+  #      cpprestsdk::cpprestsdk_boost_internal 
+  #      cpprestsdk::cpprestsdk_openssl_internal
+  #)    
   
-  target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_LIB_LOCATION} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_FILES} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
