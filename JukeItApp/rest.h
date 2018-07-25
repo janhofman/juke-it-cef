@@ -6,6 +6,9 @@
 #include "cpprestsdk/include/cpprest/uri.h"
 #include "cpprestsdk/include/cpprest/asyncrt_utils.h"
 #include "cpprestsdk/include/pplx/pplxtasks.h"
+#include "cpprestsdk/include/cpprest/filestream.h"
+//#include "cpprestsdk/include/cpprest/containerstream.h"
+//#include "cpprestsdk/include/cpprest/producerconsumerstream.h"
 
 #include "AbstractFileServerHandler.h"
 #include <exception>
@@ -20,6 +23,8 @@ public:
 
 	pplx::task<void> open() { return m_listener.open(); }
 	pplx::task<void> close() { return m_listener.close(); }
+	std::string GetAddressUTF8();
+	utility::string_t GetAddress();
 
 private:
 	typedef std::tuple<AbstractFileServerHandler::ResponseCode, web::json::value> ResultTuple;
@@ -33,11 +38,13 @@ private:
 	} QueryParams;
 
 	void handle_get(web::http::http_request message);
-	//void handle_put(web::http::http_request message);
+	void handle_put(web::http::http_request message);
 	void handle_post(web::http::http_request message);
-	//void handle_delete(web::http::http_request message);
+	void handle_delete(web::http::http_request message);
 	void v1_HandleGET(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
+	void v1_HandlePUT(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_HandlePOST(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
+	void v1_HandleDELETE(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 
 	AbstractFileServerHandler *fsHandler_ = NULL;
 	web::http::experimental::listener::http_listener m_listener;
@@ -59,10 +66,11 @@ private:
 	void v1_Playlists(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_Playlists_Create(web::http::http_request message, const std::vector<utility::string_t>& paths);
 	void v1_Playlist(web::http::http_request message, const std::vector<utility::string_t>& paths);
-	//virtual ResponseCode v1_Playlist_Modify(const std::string& userId, const std::string& playlistId, const std::string& newName, bool nameChange, const std::string& newDescription, bool descriptionChange, web::json::value& response) = 0;
-	//virtual ResponseCode v1_Playlist_Delete(const std::string& userId, const std::string& playlistId) = 0;
+	void v1_Playlist_Modify(web::http::http_request message, const std::vector<utility::string_t>& paths);
+	void v1_Playlist_Delete(web::http::http_request message, const std::vector<utility::string_t>& paths);
 	void v1_PlaylistSongs(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
-	//virtual ResponseCode v1_PlaylistSongs_Modify(const std::string& userId, const std::string& playlistId, const std::vector<std::string>& add_vect, const std::vector<std::string>& remove_vect) = 0;*/
+	void v1_PlaylistSongs_Modify(web::http::http_request message, const std::vector<utility::string_t>& paths);
+	void v1_GetSong(web::http::http_request message, const std::vector<utility::string_t>& paths);
 };
 
 #endif

@@ -414,6 +414,34 @@ SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, 
 	}
 }
 
+SqliteAPI::ErrorCode SqliteAPI::GetSongPath(const std::uint32_t songId, std::string& path) {
+	std::stringstream ss;
+	ss << "SELECT path FROM song WHERE id=" << songId;
+	std::string sql = ss.str();
+
+	sqlite3_stmt* statement;
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (SQLITE_ROW == rtc) {
+			path = TextFieldToString(sqlite3_column_text(statement, 0));
+			return ErrorCode::OK;
+		}
+		else {
+			return ErrorCode::NOT_FOUND;
+		}
+		// finish array
+		sqlite3_finalize(statement);
+		return ErrorCode::OK;
+	}
+	else {
+		return ErrorCode::MALFORMED_SQL;
+	}
+
+}
+
+
+
 // one master method to create library for different entity types
 //std::string SqliteHandler::LoadLibraryForPlayback(std::unordered_map<std::string, std::string>& params)
 //{

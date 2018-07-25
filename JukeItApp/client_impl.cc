@@ -91,11 +91,14 @@ namespace message_router {
 			music_handler_.reset(new MusicHandler(startup_url_));
 			message_router_->AddHandler(music_handler_.get(), false);
 
-			sqliteAPI_.reset(new SqliteAPI());
-			fileserver_handler_.reset(new FileServerHandler(sqliteAPI_.get()));
-			std::string address = "http://localhost:12345/api";
-			fileserver_.reset(new FileServerAPI(address, fileserver_handler_.get()));
-			fileserver_->open().wait();
+			fileserver_handler.reset(new MsgHandler_FileServer(startup_url_));
+			message_router_->AddHandler(fileserver_handler.get(), false);
+
+			//sqliteAPI_.reset(new SqliteAPI());
+			//fileserver_handler_.reset(new FileServerHandler(sqliteAPI_.get()));
+			//std::string address = "http://*:12345/api";//"http://localhost:12345/api";
+			//fileserver_.reset(new FileServerAPI(address, fileserver_handler_.get()));
+			//fileserver_->open().wait();
 		}
 
 		browser_ct_++;

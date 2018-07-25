@@ -101,6 +101,16 @@ std::unordered_map<std::string, std::string> AbstractMessageHandler::GetParams(c
 	return map;
 }
 
+bool AbstractMessageHandler::TryParseJSON(const std::string& json, web::json::value& parsedJSON) {
+	auto string_t_JSON = utility::conversions::to_string_t(json);
+	std::error_code error;
+	parsedJSON = web::json::value::parse(string_t_JSON, error);
+	if (error.value() > 0) {
+		return false;
+	}
+	return true;
+}
+
 bool AbstractMessageHandler::FileExists(const char *filename)
 {
 	std::ifstream ifile(filename);

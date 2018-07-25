@@ -7,6 +7,7 @@ import {
     removePlaylist,
     wipeQueue,
 } from './playbackActions';
+import { closeFileServerLocal } from './devicesActions';
 
 export function emptyEmail(empty) {
   return ({
@@ -92,15 +93,17 @@ export function logOut() {
   return ((dispatch, getState) => {
     const { firebase, userData } = getState();
     const { userId, spotId } = userData;
-        // first remove all database callbacks
+    // first remove all database callbacks
     dispatch(removeFirebaseListeners(userId, spotId));
-        // set spot as inactive
+    // set spot as inactive
     firebase.database().ref('spots/public').child(spotId).update({ active: false });
-        // remove playlist
+    // remove playlist
     dispatch(removePlaylist());
-        // wipe queue
+    // wipe queue
     dispatch(wipeQueue());
-        // sign out user from firebase
+    // close fileServer
+    dispatch(closeFileServerLocal());
+    // sign out user from firebase
     firebase.auth().signOut()
             // dispatch event that wipes data
             .then(() => dispatch({ type: 'LOGOUT' }));

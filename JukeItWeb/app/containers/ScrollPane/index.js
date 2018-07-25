@@ -3,6 +3,9 @@ import React, { Component } from 'react';
 export default class ScrollPane extends Component {
   constructor(props) {
     super(props);
+    this.setTopDivRef = element => {
+      this.topDiv = element;
+    };
     this.resize = this.resize.bind(this);
     this.state = {
       height: 0,
@@ -24,11 +27,10 @@ export default class ScrollPane extends Component {
     const viewportHeight = Math.max(docElem.clientHeight, window.innerHeight || 0);
     const height = Math.floor(viewportHeight - top - bottom);
         // console.log('top: ', top, ' bottom: ' , bottom, ' ownHeight: ', ownHeight, ' viewport: ', viewportHeight );
-	    return (height > 0 ? height : 100);
+    return (height > 0 ? height : 100);
   }
   resize() {
-    const elem = document.getElementById('scrollPane');
-    this.setState({ height: this.computeHeight(elem) });
+    this.setState({ height: this.computeHeight(this.topDiv) });
   }
   componentDidMount() {
     this.resize();
@@ -54,7 +56,7 @@ export default class ScrollPane extends Component {
     }
     return (
       <div
-        id={'scrollPane'}
+        ref={this.setTopDivRef}
         style={style}
       >
         {this.props.children}

@@ -26,7 +26,8 @@ public:
 		MALFORMED_SQL,
 		DATABASE_ERROR,
 		ARGUMENT_ERROR,
-		DUPLICATE_ENTRY
+		DUPLICATE_ENTRY,
+		NOT_FOUND
 	};
 
 	typedef struct {
@@ -76,6 +77,7 @@ public:
 	ErrorCode ModifyPlaylist(const PlaylistResult& changes, bool nameChange, bool descriptionChange, PlaylistResult& result);
 	ErrorCode RemovePlaylist(const std::uint32_t playlistId, const std::string& userId);
 	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
+	ErrorCode GetSongPath(const std::uint32_t songId, std::string& path);
 
 	static const char * FILTER_PARAM;
 	static const char * ORDERBY_PARAM;

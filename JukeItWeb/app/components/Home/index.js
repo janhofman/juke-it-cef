@@ -12,6 +12,7 @@ import PlaylistsPage from './../../containers/PlaylistsPage';
 import SettingsPage from './../../containers/SettingsPage';
 import PlaybackPage from './../../containers/PlaybackPage';
 import DetailPage from '../../containers/DetailPage';
+import DevicesPage from '../../containers/DevicesPage';
 
 class Home extends Component {
   render() {
@@ -32,6 +33,9 @@ class Home extends Component {
           <Link to={'/home/playback'}>
             <FlatButton label={formatMessage(messages.playbackTabTitle)} />
           </Link>
+          <Link to="/home/devices">
+            <FlatButton label={formatMessage(messages.devicesTabTitle)} />
+          </Link>
           <Link to="/home/settings">
             <FlatButton label={formatMessage(messages.settingsTabTitle)} />
           </Link>
@@ -48,6 +52,7 @@ class Home extends Component {
             <Route path={`${match.url}/library`} component={LibraryPage} />
             <Route path={`${match.url}/playlists`} component={PlaylistsPage} />
             <Route path={`${match.url}/playback`} component={PlaybackPage} />
+            <Route path={`${match.url}/devices`} component={DevicesPage} />
             <Route path={`${match.url}/settings`} component={SettingsPage} />
           </Switch>
         </div>

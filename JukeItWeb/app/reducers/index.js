@@ -14,6 +14,7 @@ import library from './libraryReducer';
 import playback from './playbackReducer';
 import songList from './songListReducer';
 import playlists from './playlistsReducer';
+import devices from './devicesReducer';
 import languageProviderReducer from './../containers/LanguageProvider/reducer';
 
 /*
@@ -50,7 +51,6 @@ export default function createReducer(injectedReducers) {
   return combineReducers({
     route: routeReducer,
     language: languageProviderReducer,
-    //routing,
     login,
     userData,
     register,
@@ -59,8 +59,8 @@ export default function createReducer(injectedReducers) {
     playback,
     songList,
     playlists,
+    devices,
     firebase: (state = {}) => state,
-    //sqlite: (state = {}) => state,
     cefQuery: (state = {}) => state,
     ...injectedReducers,
   });

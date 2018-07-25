@@ -3,26 +3,30 @@ import { defineMessages } from 'react-intl';
 export default defineMessages({
   libTabTitle: {
     id: 'Home.libTabTitle',
-    defaultMessage: "LIBRARY",
+    defaultMessage: 'LIBRARY',
   },
   playlistsTabTitle: {
-      id: 'Home.playlistsTabTitle',
-      defaultMessage: "PLAYLISTS",
+    id: 'Home.playlistsTabTitle',
+    defaultMessage: 'PLAYLISTS',
   },
   establishmentTabTitle: {
-      id: 'Home.establishmentTabTitle',
-      defaultMessage: "ESTABLISHMENT",
+    id: 'Home.establishmentTabTitle',
+    defaultMessage: 'ESTABLISHMENT',
   },
   settingsTabTitle: {
-      id: 'Home.settingsTabTitle',
-      defaultMessage: "SETTINGS",
+    id: 'Home.settingsTabTitle',
+    defaultMessage: 'SETTINGS',
+  },
+  devicesTabTitle: {
+    id: 'Home.devicesTabTitle',
+    defaultMessage: 'DEVICES',
   },
   playbackTabTitle: {
     id: 'Home.playbackTabTitle',
-    defaultMessage: "PLAYBACK",
+    defaultMessage: 'PLAYBACK',
   },
   logout: {
     id: 'Home.logout',
-    defaultMessage: "LOGOUT",
+    defaultMessage: 'LOGOUT',
   },
 });

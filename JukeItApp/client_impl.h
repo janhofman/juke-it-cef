@@ -10,9 +10,7 @@
 #include "include/cef_client.h"
 #include "include/wrapper/cef_message_router.h"
 
-#include "rest.h"
-#include "FileServerHandler.h"
-#include "SqliteAPI.h"
+#include "MsgHandler_FileServer.h"
 
 namespace message_router {
 
@@ -73,10 +71,7 @@ namespace message_router {
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> music_handler_;
-
-		scoped_ptr<FileServerAPI> fileserver_;
-		scoped_ptr<AbstractFileServerHandler> fileserver_handler_;
-		scoped_ptr<SqliteAPI> sqliteAPI_;
+		scoped_ptr<CefMessageRouterBrowserSide::Handler> fileserver_handler;
 
 		const CefString startup_url_;
 
