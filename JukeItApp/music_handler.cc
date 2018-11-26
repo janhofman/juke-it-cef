@@ -3,12 +3,6 @@
 MusicHandler::MusicHandler(const CefString& startup_url)
 	: startup_url_(startup_url) {}
 
-//SqliteHandler::~SqliteHandler() {
-//	if (db_handle_) {
-//		sqlite3_close_v2(db_handle_);
-//	}
-//}
-
 MusicHandler::CommandName MusicHandler::GetCommandName(const std::string & command)
 {
 	if (StartsWith(command, "PLAY")) {

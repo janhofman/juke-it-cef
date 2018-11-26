@@ -5,12 +5,15 @@
 #ifndef CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
 #define CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
 
+#define _TURN_OFF_PLATFORM_STRING // we need to turn this off, because the U() macro from cpprest it messes up some boost templates
+
 #include <string>
 
 #include "include/cef_client.h"
 #include "include/wrapper/cef_message_router.h"
 
 #include "MsgHandler_FileServer.h"
+#include "MsgHandler_MusicPlayer.h"
 
 namespace message_router {
 
@@ -72,6 +75,7 @@ namespace message_router {
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> music_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> fileserver_handler;
+		scoped_ptr<CefMessageRouterBrowserSide::Handler> musicplayer_handler;
 
 		const CefString startup_url_;
 

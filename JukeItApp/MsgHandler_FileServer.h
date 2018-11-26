@@ -76,7 +76,6 @@ private:
 	scoped_ptr<AbstractFileServerHandler> fileserver_handler_;
 	scoped_ptr<SqliteAPI> sqliteAPI_;
 
-
 	DISALLOW_COPY_AND_ASSIGN(MsgHandler_FileServer);
 };
 

@@ -94,6 +94,9 @@ namespace message_router {
 			fileserver_handler.reset(new MsgHandler_FileServer(startup_url_));
 			message_router_->AddHandler(fileserver_handler.get(), false);
 
+			musicplayer_handler.reset(new MsgHandler_MusicPlayer(startup_url_));
+			message_router_->AddHandler(musicplayer_handler.get(), false);
+
 			//sqliteAPI_.reset(new SqliteAPI());
 			//fileserver_handler_.reset(new FileServerHandler(sqliteAPI_.get()));
 			//std::string address = "http://*:12345/api";//"http://localhost:12345/api";

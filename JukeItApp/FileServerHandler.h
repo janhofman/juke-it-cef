@@ -30,6 +30,7 @@ public:
 	virtual ResponseCode v1_Playlist_Delete(const std::string& userId, const std::string& playlistId) override;
 	virtual ResponseCode v1_PlaylistSongs(const std::string& userId, const std::string& playlistId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) override;
 	virtual ResponseCode v1_PlaylistSongs_Modify(const std::string& userId, const std::string& playlistId, const std::vector<std::string>& add_vect, const std::vector<std::string>& remove_vect) override;
+	virtual ResponseCode v1_GetSong(const std::string& songId, std::string& songPath) override;
 
 private:
 	ResponseCode VerifyDatabase();

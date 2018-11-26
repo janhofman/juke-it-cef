@@ -42,7 +42,7 @@ private:
 	void OnPlaybackFinished();
 
 	const CefString startup_url_;
-	MusicPlayer player_;
+	MusicPlayer::MusicPlayer player_;
 	CefRefPtr<Callback> timeUpdateCallback_ = NULL;
 	int64 timeUpdateQueryId_ = -1;
 	CefRefPtr<Callback> playbackFinishedCallback_ = NULL;

@@ -31,10 +31,16 @@ set(JUKEITAPP_SRCS
   main_minimal.cc
   main_util.h
   main_util.cc
+  MsgHandler_FileServer.h
+  MsgHandler_FileServer.cc
+  MsgHandler_MusicPlayer.h
+  MsgHandler_MusicPlayer.cc
   music_handler.h
   music_handler.cc
   MusicPlayer.h
   MusicPlayer.cc
+  MusicPlayerAPI.h
+  MusicPlayerAPI.cc
   resource_util.h
   resource_util.cc  
   rest.h
@@ -224,6 +230,18 @@ endif()
 
 if(OS_WINDOWS)
   # Executable target.
+  
+  # find Boost and include it
+  set(Boost_USE_STATIC_LIBS OFF) 
+  set(Boost_USE_MULTITHREADED ON)  
+  set(Boost_USE_STATIC_RUNTIME OFF) 
+  find_package(Boost 1.67.0) 
+  
+  if(Boost_FOUND)
+      include_directories(${Boost_INCLUDE_DIRS})   
+      link_directories(${Boost_LIBRARY_DIRS})
+  endif()
+  
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
@@ -241,6 +259,7 @@ if(OS_WINDOWS)
   #  ${CMAKE_CURRENT_SOURCE_DIR}/../build/JukeItApp/Debug/cpprest141d_2_10.lib
   #  ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/include/cpprest140_2_10.lib
     ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib
+    bcrypt.lib
   )
   #find_package(cpprestsdk REQUIRED)
   #set(CPPRESTSDK_FILES 
@@ -248,7 +267,8 @@ if(OS_WINDOWS)
   #      cpprestsdk::cpprestsdk_zlib_internal 
   #      cpprestsdk::cpprestsdk_boost_internal 
   #      cpprestsdk::cpprestsdk_openssl_internal
-  #)    
+  #)
+  add_definitions(-D_NO_ASYNCRTIMP -D_NO_PPLXIMP)   
   
   target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_FILES} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 

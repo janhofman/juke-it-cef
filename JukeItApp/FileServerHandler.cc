@@ -422,6 +422,22 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs_Modify(const
 	}
 }
 
+FileServerHandler::ResponseCode FileServerHandler::v1_GetSong(const std::string& songId, std::string& songPath) {
+	auto rtc = VerifyDatabase();
+	if (rtc != ResponseCode::CODE_200_OK) {
+		return rtc;
+	}
+
+	std::uint32_t songIdUINT = 0;
+	if (TryParseUint(songId, songIdUINT)) {
+		auto errCode = db_ptr_->GetSongPath(songIdUINT, songPath);
+		return MapErrorCode(errCode);
+	}
+	else {
+		return ResponseCode::CODE_404_NOT_FOUND;
+	}
+}
+
 web::json::value FileServerHandler::Fill(SqliteAPI::SongResult& song) {
 	web::json::value obj;
 
@@ -508,6 +524,7 @@ bool FileServerHandler::TryParseUint(const std::string& str, std::uint32_t& resu
 			return false;
 		}
 	}
+	result = num;
 	return true;
 }
 
