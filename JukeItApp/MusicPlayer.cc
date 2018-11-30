@@ -265,6 +265,11 @@ namespace MusicPlayer {
 		av_packet_free(&_streamInfo.pkt);
 		av_frame_free(&_streamInfo.frame);
 		avcodec_free_context(&_streamInfo.ctx_codec);
+		if (_streamInfo.io_context != NULL) {
+			// clean buffer first
+			av_free(&_streamInfo.io_context->buffer);
+			avio_context_free(&_streamInfo.io_context);
+		}
 		avformat_free_context(_streamInfo.ctx_format);
 
 		_streamInfo.stream_idx = 0;
@@ -299,6 +304,128 @@ namespace MusicPlayer {
 		default:
 			return 0;
 		}
+	}
+
+	int readFunction(void* opaque, uint8_t* buf, int buf_size)
+	{
+		std::basic_istream<std::uint8_t>* stream = (std::basic_istream<std::uint8_t>*)opaque;
+		stream->read(buf, buf_size);
+		return stream->gcount();
+	}
+
+	int64_t seekFunction(void* opaque, int64_t offset, int whence)
+	{
+		std::basic_istream<std::uint8_t>* stream = (std::basic_istream<std::uint8_t>*)opaque;
+
+		if (whence == AVSEEK_SIZE) {
+			auto pos = stream->tellg();
+			stream->seekg(0, stream->end);
+			auto end = stream->tellg();
+			stream->seekg(0, stream->beg);
+			auto beg = stream->tellg();
+			stream->seekg(pos, stream->beg);
+			return end - beg;
+		}
+		else if (whence == SEEK_END) {
+			stream->seekg(0, stream->end);
+		}
+		else if (whence == SEEK_SET) {
+			stream->seekg(0, stream->beg);
+		}
+		else if (whence == SEEK_CUR) {
+			stream->seekg(offset, stream->beg);
+		}
+		else {
+			return -1;
+		}
+
+		return stream->tellg();
+	}
+
+	void MusicPlayer::Open(const std::basic_istream<std::uint8_t>& is) {
+		AVStream *aud_stream = NULL;
+		PaStreamParameters outputParameters;
+		PaError err;
+
+		if (_streamInfo.status != StreamStatus::EMPTY) {
+			Close();
+		}
+
+		const int ioBufferSize = 32768;
+		unsigned char * ioBuffer = (unsigned char *)av_malloc(ioBufferSize + AV_INPUT_BUFFER_PADDING_SIZE); // can get av_free()ed by libav
+		_streamInfo.io_context = avio_alloc_context(ioBuffer, ioBufferSize, 0, (void*)(&is), &readFunction, NULL, &seekFunction);
+		_streamInfo.ctx_format = avformat_alloc_context();
+		_streamInfo.ctx_format->pb = _streamInfo.io_context;
+		
+
+		if (int ret = avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL) != 0) {
+			return;
+		}
+		if (avformat_find_stream_info(_streamInfo.ctx_format, nullptr) < 0) {
+			return; // Couldn't find stream information
+		}
+		for (unsigned int i = 0; i < _streamInfo.ctx_format->nb_streams; i++) {
+			if (_streamInfo.ctx_format->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+				_streamInfo.stream_idx = i;
+				aud_stream = _streamInfo.ctx_format->streams[i];
+				break;
+			}
+		}
+		if (aud_stream == nullptr) {
+			return;
+		}
+
+		_streamInfo.codec = avcodec_find_decoder(aud_stream->codecpar->codec_id);
+		if (!_streamInfo.codec) {
+			return;
+		}
+		_streamInfo.ctx_codec = avcodec_alloc_context3(_streamInfo.codec);
+
+		if (avcodec_parameters_to_context(_streamInfo.ctx_codec, aud_stream->codecpar) < 0)
+			fprintf(stderr, "Codec not found\n");
+		if (avcodec_open2(_streamInfo.ctx_codec, _streamInfo.codec, nullptr) < 0) {
+			fprintf(stderr, "Codec not found\n");
+			return;
+		}
+
+		outputParameters.device = Pa_GetDefaultOutputDevice();
+		if (outputParameters.device == paNoDevice) {
+			fprintf(stderr, "Error: No default output device.\n");
+			return;
+		}
+
+		auto device = Pa_GetDeviceInfo(outputParameters.device);
+		(void)device;
+		outputParameters.channelCount = aud_stream->codecpar->channels;
+		outputParameters.sampleFormat = GetSampleFormat((AVSampleFormat)aud_stream->codecpar->format); // we always use uint8_t
+		outputParameters.suggestedLatency = device->defaultHighOutputLatency;
+		outputParameters.hostApiSpecificStreamInfo = NULL;
+
+		/*_streamInfo.f = fopen("output.pcm", "wb");
+		if (!_streamInfo.f) {
+		fprintf(stderr, "codec not found\n");
+		return;
+		}*/
+
+		err = Pa_OpenStream(
+			&_streamInfo.stream,
+			NULL, // no input
+			&outputParameters,
+			aud_stream->codecpar->sample_rate,
+			0, // let PortAudio choose
+			paNoFlag,      // we won't output out of range samples so don't bother clipping them
+			PaCallback,
+			&_streamInfo);
+		if (err != paNoError) {
+			fprintf(stderr, "Error: Stream wasn't opened.\n");
+			fprintf(stderr, Pa_GetErrorText(err));
+			return;
+		}
+
+		_streamInfo.pkt = av_packet_alloc();
+		_streamInfo.frame = av_frame_alloc();
+
+		_streamInfo.status = StreamStatus::OPEN;
 	}
 
 	static int Decode2(paUserData2 *userData, uint8_t *outbuffer, uint8_t ** bufferEnd, size_t nSamples, FILE *f)

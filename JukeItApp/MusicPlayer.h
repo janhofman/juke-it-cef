@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string>
 #include <functional>
+#include <vector>
+
+#include "cpprestsdk/include/cpprest/containerstream.h"
 
 extern "C" {
 #include "ffmpeg/include/libavcodec/avcodec.h"
@@ -15,6 +18,8 @@ extern "C" {
 }
 
 namespace MusicPlayer {
+
+typedef Concurrency::streams::container_buffer<std::vector<uint8_t>> AsyncBuffer;
 
 #define AUDIO_INBUF_SIZE 20480
 #define AUDIO_REFILL_THRESH 4096
@@ -49,6 +54,7 @@ namespace MusicPlayer {
 	};
 
 	typedef struct {
+		AVIOContext * io_context = NULL;
 		AVCodec *codec = NULL;
 		AVFormatContext *ctx_format = NULL;
 		AVCodecContext *ctx_codec = NULL;
@@ -76,6 +82,7 @@ namespace MusicPlayer {
 		void Close();
 		void SetTimeUpdateCallback(std::function<void(int)> callback);
 		void SetPlaybackFinishedCallback(std::function<void(void)> callback);
+		void Open(const std::basic_istream<std::uint8_t>& is);
 
 		void Play2(std::string filename);
 	private:
@@ -83,6 +90,8 @@ namespace MusicPlayer {
 		PaSampleFormat GetSampleFormat(AVSampleFormat format);
 		void CleanStreamInfo();
 	};
+
+	
 
 	void Test(MusicPlayer *player);
 }
