@@ -369,7 +369,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::s
 	}
 
 	std::unordered_map<std::string, std::string> params;
-	params[SqliteAPI::ID_PARAM] = playlistId;
+	params[SqliteAPI::PLAYLISTID_PARAM] = playlistId;
 	params[SqliteAPI::USERID_PARAM] = userId;
 	if (!orderBy.empty()) {
 		params[SqliteAPI::ORDERBY_PARAM] = orderBy;
@@ -505,7 +505,7 @@ web::json::value FileServerHandler::IdValue(std::uint32_t id) {
 	if (id == 0) {
 		return web::json::value::null();
 	}
-	return web::json::value::number(id);
+	return web::json::value::string(utility::conversions::to_string_t(std::to_string(id)));
 }
 
 

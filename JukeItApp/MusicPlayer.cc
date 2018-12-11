@@ -28,6 +28,9 @@ namespace MusicPlayer {
 	}
 
 	MusicPlayer::~MusicPlayer() {
+		if (_streamInfo.status != StreamStatus::EMPTY) {
+			Close();
+		}
 		Pa_Terminate();
 	}
 
@@ -63,6 +66,9 @@ namespace MusicPlayer {
 		while (rtc < nSamples) {
 			ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
 			if (ret == AVERROR(EAGAIN)) {
+				if (streamInfo->pkt != NULL) {
+					av_packet_unref(streamInfo->pkt);
+				}
 				// we need to read another packet
 				ret = av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
 				if (ret < 0) {

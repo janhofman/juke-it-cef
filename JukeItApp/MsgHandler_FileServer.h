@@ -34,6 +34,7 @@ private:
 	enum CommandName {
 		OPEN_SERVER,
 		CLOSE_SERVER,
+		ADD_FILES,
 
 		NOT_SUPPORTED
 	};
@@ -48,24 +49,7 @@ private:
 	CommandName GetCommandName(const web::json::value& request);
 	void OpenServer(web::json::value request, CefRefPtr<Callback> callback);
 	void CloseServer(CefRefPtr<Callback> callback);
-	/*
-	std::string LoadGenres(std::unordered_map<std::string, std::string>& params);
-	std::string LoadArtists(std::unordered_map<std::string, std::string>& params);
-	std::string LoadPlaylists(std::unordered_map<std::string, std::string>& params);
-	std::string LoadAlbums();
-	std::string LoadSongs();
-	std::string SongView(std::unordered_map<std::string, std::string>& params);
-	std::string AlbumView(std::unordered_map<std::string, std::string>& params);
-	std::string LoadLibraryForPlayback(std::unordered_map<std::string, std::string>& params);
-	void AddPlaylist(std::unordered_map<std::string, std::string>& params);
-	void AddSongToPlaylist(std::unordered_map<std::string, std::string>& params);
-	void CreateDatabase();
-	sqlite3* GetDbHandle();
-	void AddFiles();
-	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
-	std::string SqliteHandler::BuildSongViewSQL(std::unordered_map<std::string, std::string>& params);
-	std::string SqliteHandler::RunSongViewSQL(std::string& sql);
-	*/
+	void AddFiles(CefRefPtr<Callback> callback);
 
 	const CefString startup_url_;
 

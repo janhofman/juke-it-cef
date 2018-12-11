@@ -8,6 +8,7 @@ const char * SqliteAPI::ALBUMID_PARAM = "albumId";
 const char * SqliteAPI::ARTISTID_PARAM = "artistId";
 const char * SqliteAPI::GENREID_PARAM = "genreId";
 const char * SqliteAPI::USERID_PARAM = "userId";
+const char * SqliteAPI::PLAYLISTID_PARAM = "playlistId";
 
 SqliteAPI::SqliteAPI() : database_name_(DATABASE_NAME) {};
 
@@ -21,7 +22,9 @@ SqliteAPI::~SqliteAPI() {
 
 SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::GenreResult>& result) {
 	std::stringstream ss;
-	ss << "SELECT id, name FROM genre";
+	std::stringstream queryss;
+	queryss << "SELECT id, name";
+	ss << " FROM genre";
 	bool where = true;
 	if (params.size() > 0) {
 		for (auto it = params.begin(); it != params.end(); it++)
@@ -52,20 +55,22 @@ SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std
 	std::string orderBy = "name";
 	std::string asc_desc = desc ? "DESC" : "ASC";
 
+	queryss << ss.str();
+
 	std::uint32_t offset = (page - 1) * limit;
 	if (offset > 0) {
 		if (where) {
-			ss << " WHERE ";
+			queryss << " WHERE ";
 			where = false;
 		}
 		else {
-			ss << " AND ";
+			queryss << " AND ";
 		}
-		ss << "id NOT IN (SELECT id FROM genre ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
+		queryss << "id NOT IN (SELECT id" << ss.str() << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
 	}
-	ss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
+	queryss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
 
-	std::string sql = ss.str();
+	std::string sql = queryss.str();
 
 	sqlite3_stmt* statement;
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
@@ -89,7 +94,9 @@ SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std
 
 SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::ArtistResult>& result) {
 	std::stringstream ss;
-	ss << "SELECT id, name FROM artist";
+	std::stringstream queryss;
+	queryss << "SELECT id, name ";
+	ss << "FROM artist";
 	bool where = true;
 	if (params.size() > 0) {
 		for (auto it = params.begin(); it != params.end(); it++)
@@ -120,20 +127,22 @@ SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std
 	std::string orderBy = "name";
 	std::string asc_desc = desc ? "DESC" : "ASC";
 
+	queryss << ss.str();
+
 	std::uint32_t offset = (page - 1) * limit;
 	if (offset > 0) {
 		if (where) {
-			ss << " WHERE ";
+			queryss << " WHERE ";
 			where = false;
 		}
 		else {
-			ss << " AND ";
+			queryss << " AND ";
 		}
-		ss << "id NOT IN (SELECT id FROM artist ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
+		queryss << "id NOT IN (SELECT id " << ss.str() << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
 	}
-	ss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
+	queryss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
 
-	std::string sql = ss.str();
+	std::string sql = queryss.str();
 
 	sqlite3_stmt* statement;
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
@@ -157,7 +166,9 @@ SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std
 
 SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::PlaylistResult>& result) {
 	std::stringstream ss;
-	ss << "SELECT id, name, description, userId FROM playlist";
+	std::stringstream queryss;
+	queryss << "SELECT id, name, description, userId ";
+	ss << "FROM playlist";
 	bool where = true;
 	if (params.size() > 0) {
 		for (auto it = params.begin(); it != params.end(); it++)
@@ -199,20 +210,22 @@ SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, 
 	std::string orderBy = "name";
 	std::string asc_desc = desc ? "DESC" : "ASC";
 
+	queryss << ss.str();
+
 	std::uint32_t offset = (page - 1) * limit;
 	if (offset > 0) {
 		if (where) {
-			ss << " WHERE ";
+			queryss << " WHERE ";
 			where = false;
 		}
 		else {
-			ss << " AND ";
+			queryss << " AND ";
 		}
-		ss << "id NOT IN (SELECT id FROM playlist ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
+		queryss << "id NOT IN (SELECT id " << ss.str() << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
 	}
-	ss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
+	queryss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
 
-	std::string sql = ss.str();
+	std::string sql = queryss.str();
 
 	sqlite3_stmt* statement;
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
@@ -238,16 +251,23 @@ SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, 
 
 SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::SongResult>& result) {
 	std::stringstream ss;
-	ss << "SELECT s.id, s.title, s.artist, s.album, s.genre, s.length, s.artistId, s.albumId, s.genreId FROM songView AS s";
+	std::stringstream queryss;
+	queryss << "SELECT s.id, s.title, s.artist, s.album, s.genre, s.length, s.artistId, s.albumId, s.genreId ";
+	ss << "FROM songView AS s";
 	bool where = true;
 	std::string orderBy = "s.id";
 	if (params.size() > 0) {		
 		// playlistId is more difficult, handle it first
-		auto it = params.find("playlistId");
-		if (params.find("playlistId") != params.end()) {
+		auto it = params.find(PLAYLISTID_PARAM);
+		if (it != params.end()) {
 			ss << " INNER JOIN playlistSong AS ps ON (ps.songId = s.id)";
 			ss << " WHERE ps.playlistId=" << it->second;
 			where = false;
+			// we can check if there is such playlist for this user
+			/*it = params.find(USERID_PARAM);
+			if (it != params.end()) {
+				ss << " AND ps.userId='" << it->second << "'";
+			}*/
 		}
 		for (it = params.begin(); it != params.end(); it++)
 		{
@@ -297,18 +317,21 @@ SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, s
 	// add ORDER BY clause and pagination		
 	std::string asc_desc = desc ? "DESC" : "ASC";
 	std::uint32_t offset = (page - 1) * limit;
+
+	queryss << ss.str();
+
 	if (offset > 0) {
 		if (where) {
-			ss << " WHERE ";
+			queryss << " WHERE ";
 			where = false;
 		}
 		else {
-			ss << " AND ";
+			queryss << " AND ";
 		}
-		ss << "s.id NOT IN (SELECT id FROM songview AS s ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
+		queryss << "s.id NOT IN (SELECT s.id " << ss.str() << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
 	}
-	ss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
-	std::string sql = ss.str();
+	queryss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
+	std::string sql = queryss.str();
 
 	sqlite3_stmt* statement;
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
@@ -339,7 +362,9 @@ SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, s
 
 SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::AlbumResult>& result) {
 	std::stringstream ss;
-	ss << "SELECT id, name, artist, artistId FROM albumView";
+	std::stringstream queryss;
+	queryss << "SELECT id, name, artist, artistId ";
+	ss << "FROM albumView";
 	bool where = true;
 	std::string orderBy = "artist, name";
 	if (params.size() > 0) {
@@ -375,21 +400,23 @@ SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, 
 		}
 	}
 	std::string asc_desc = desc ? "DESC" : "ASC";
-
 	std::uint32_t offset = (page - 1) * limit;
+
+	queryss << ss.str();
+
 	if (offset > 0) {
 		if (where) {
-			ss << " WHERE ";
+			queryss << " WHERE ";
 			where = false;
 		}
 		else {
-			ss << " AND ";
+			queryss << " AND ";
 		}
-		ss << "id NOT IN (SELECT id FROM albumView ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
+		queryss << "id NOT IN (SELECT id " << ss.str() << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << offset << ")";
 	}
-	ss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
+	queryss << " ORDER BY " << orderBy << " " << asc_desc << " LIMIT " << limit;
 
-	std::string sql = ss.str();
+	std::string sql = queryss.str();
 
 	sqlite3_stmt* statement;
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
@@ -437,7 +464,6 @@ SqliteAPI::ErrorCode SqliteAPI::GetSongPath(const std::uint32_t songId, std::str
 	else {
 		return ErrorCode::MALFORMED_SQL;
 	}
-
 }
 
 
@@ -766,7 +792,7 @@ SqliteAPI::ErrorCode SqliteAPI::ModifyPlaylist(const SqliteAPI::PlaylistResult& 
 	// verify playlist exists
 	std::unordered_map<std::string, std::string> params;
 	params["userId"] = changes.userId;
-	params["id"] = changes.id;
+	params["id"] = std::to_string(changes.id);
 	std::vector<PlaylistResult> v_playlist;
 	auto errCode = Playlists(params, 1, 1, false, v_playlist);
 	if (errCode == ErrorCode::OK && v_playlist.size() == 1) {
@@ -851,16 +877,27 @@ SqliteAPI::ErrorCode SqliteAPI::ModifyPlaylistSongs(std::uint32_t playlistId, co
 	// verify that playlist exists for user
 	std::unordered_map<std::string, std::string> params;
 	params["userId"] = userId;
-	params["id"] = playlistId;
+	params["id"] = std::to_string(playlistId);
 	std::vector<PlaylistResult> playlist;
 	auto errCode = Playlists(params, 1, 1, false, playlist);
 	if (errCode == ErrorCode::OK && playlist.size() == 1) {
 		// TODO: maybe enclose in a transaction if possible?
-		errCode = AddSongsToPlaylist(playlistId, add);
+		errCode = BeginTransaction();
 		if (errCode == ErrorCode::OK) {
-			errCode = RemoveSongsFromPlaylist(playlistId, remove);
-			return errCode;
-		}
+			if (add.size() > 0) {
+				errCode = AddSongsToPlaylist(playlistId, add);
+			}
+			if (errCode == ErrorCode::OK && remove.size() > 0) {
+				errCode = RemoveSongsFromPlaylist(playlistId, remove);
+			}
+			if (errCode == ErrorCode::OK) {
+				return CommitTransaction();
+			}
+			else {
+				RollbackTransaction();
+				return errCode;
+			}
+		}		
 		else {
 			return ErrorCode::DATABASE_ERROR;
 		}
@@ -946,4 +983,61 @@ bool SqliteAPI::FileExists(const std::string& filename)
 {
 	std::ifstream ifile(filename);
 	return ifile.good();
+}
+
+SqliteAPI::ErrorCode SqliteAPI::BeginTransaction() {
+	auto sql = "BEGIN TRANSACTION";
+
+	sqlite3_stmt* statement;
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			// success
+			return ErrorCode::OK;
+		}
+		else {
+			return ErrorCode::DATABASE_ERROR;
+		}
+	}
+	// no success
+	return ErrorCode::MALFORMED_SQL;
+}
+
+SqliteAPI::ErrorCode SqliteAPI::CommitTransaction() {
+	auto sql = "COMMIT TRANSACTION";
+
+	sqlite3_stmt* statement;
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			// success
+			return ErrorCode::OK;
+		}
+		else {
+			return ErrorCode::DATABASE_ERROR;
+		}
+	}
+	// no success
+	return ErrorCode::MALFORMED_SQL;
+}
+
+SqliteAPI::ErrorCode SqliteAPI::RollbackTransaction() {
+	auto sql = "ROLLBACK TRANSACTION";
+
+	sqlite3_stmt* statement;
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			// success
+			return ErrorCode::OK;
+		}
+		else {
+			return ErrorCode::DATABASE_ERROR;
+		}
+	}
+	// no success
+	return ErrorCode::MALFORMED_SQL;
 }

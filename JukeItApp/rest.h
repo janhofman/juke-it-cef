@@ -41,6 +41,7 @@ private:
 	void handle_put(web::http::http_request message);
 	void handle_post(web::http::http_request message);
 	void handle_delete(web::http::http_request message);
+	void handle_options(web::http::http_request request);
 	void v1_HandleGET(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_HandlePUT(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_HandlePOST(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
@@ -71,6 +72,8 @@ private:
 	void v1_PlaylistSongs(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_PlaylistSongs_Modify(web::http::http_request message, const std::vector<utility::string_t>& paths);
 	void v1_GetSong(web::http::http_request message, const std::vector<utility::string_t>& paths);
+	void Reply(const web::http::http_request& message, web::http::status_code code);
+	void Reply(const web::http::http_request& message, web::http::status_code code, const web::json::value& bodyData);
 };
 
 #endif

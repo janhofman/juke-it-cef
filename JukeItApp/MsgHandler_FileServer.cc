@@ -30,6 +30,9 @@ MsgHandler_FileServer::CommandName MsgHandler_FileServer::GetCommandName(const w
 				else if (StartsWith(command, "FLS_CLOSE_SERVER")) {
 					return CommandName::CLOSE_SERVER;
 				}
+				else if (StartsWith(command, "FLS_ADD_FILES")) {
+					return CommandName::ADD_FILES;
+				}
 				else {
 					return CommandName::NOT_SUPPORTED;
 				}
@@ -74,12 +77,10 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 		CloseServer(callback);
 		return true;
 	}
-	/*case CommandName::LOAD_ARTISTS: {
-		auto params = GetParams(message_name);
-		std::string result = LoadArtists(params);
-		callback->Success(result);
+	case CommandName::ADD_FILES: {
+		AddFiles(callback);
 		return true;
-	}*/
+	}
 
 	}
 	return false;
@@ -150,7 +151,6 @@ void MsgHandler_FileServer::OpenServer(web::json::value request, CefRefPtr<Callb
 	else {
 		callback->Failure(ReturnCode::BAD_REQUEST, "Bad request.");
 	}
-
 }
 
 void MsgHandler_FileServer::CloseServer(CefRefPtr<Callback> callback) {
@@ -186,4 +186,21 @@ void MsgHandler_FileServer::CloseServer(CefRefPtr<Callback> callback) {
 	});
 }
 
+void MsgHandler_FileServer::AddFiles(CefRefPtr<Callback> callback) {
+	pplx::create_task([=]() {
+		sqliteAPI_->AddFiles(); 
+	}).then([=](pplx::task<void> t) {
+		try {
+			t.get();
+
+			web::json::value response;
+			response[U("status")] = web::json::value::number(0);
+
+			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+		}
+		catch (...) {
+			callback->Failure(123, "Adding files failed");
+		}
+	});
+}
 

@@ -41,9 +41,6 @@ private:
 	void ClosePlayer(CefRefPtr<Callback> callback);
 	
 	const CefString startup_url_;
-
-	bool running_ = false;
-	std::mutex mutex;
 	scoped_ptr<MusicPlayer::API> playerApi_;
 
 	DISALLOW_COPY_AND_ASSIGN(MsgHandler_MusicPlayer);

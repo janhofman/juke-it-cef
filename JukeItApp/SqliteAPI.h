@@ -79,6 +79,10 @@ public:
 	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
 	ErrorCode GetSongPath(const std::uint32_t songId, std::string& path);
 
+	ErrorCode BeginTransaction();
+	ErrorCode CommitTransaction();
+	ErrorCode RollbackTransaction();
+
 	static const char * FILTER_PARAM;
 	static const char * ORDERBY_PARAM;
 	static const char * ID_PARAM;
@@ -86,6 +90,7 @@ public:
 	static const char * ARTISTID_PARAM;
 	static const char * GENREID_PARAM;
 	static const char * USERID_PARAM;
+	static const char * PLAYLISTID_PARAM;
 
 private:	
 	ErrorCode AddSongsToPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& add);

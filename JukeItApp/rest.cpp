@@ -18,6 +18,7 @@ FileServerAPI::FileServerAPI(const std::string& url , AbstractFileServerHandler 
 	m_listener.support(web::http::methods::PUT, std::bind(&FileServerAPI::handle_put, this, std::placeholders::_1));
 	m_listener.support(web::http::methods::POST, std::bind(&FileServerAPI::handle_post, this, std::placeholders::_1));
 	m_listener.support(web::http::methods::DEL, std::bind(&FileServerAPI::handle_delete, this, std::placeholders::_1));
+	m_listener.support(web::http::methods::OPTIONS, std::bind(&FileServerAPI::handle_options, this, std::placeholders::_1));
 }
 
 void FileServerAPI::handle_get(web::http::http_request message)
@@ -27,7 +28,7 @@ void FileServerAPI::handle_get(web::http::http_request message)
 	auto queries = web::http::uri::split_query(query);
 	if (paths.empty())
 	{
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
@@ -42,7 +43,7 @@ void FileServerAPI::handle_put(web::http::http_request message) {
 	auto queries = web::http::uri::split_query(query);
 	if (paths.empty())
 	{
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
@@ -57,7 +58,7 @@ void FileServerAPI::handle_post(web::http::http_request message) {
 	auto queries = web::http::uri::split_query(query);
 	if (paths.empty())
 	{
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
@@ -72,13 +73,23 @@ void FileServerAPI::handle_delete(web::http::http_request message) {
 	auto queries = web::http::uri::split_query(query);
 	if (paths.empty())
 	{
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	if (paths[0] == U("v1")) {
 		v1_HandleDELETE(message, paths, queries);
 	}
+}
+
+void FileServerAPI::handle_options(web::http::http_request request)
+{
+	web::http::http_response response(web::http::status_codes::OK);
+	response.headers().add(U("Allow"), U("GET, POST, PUT, DELETE, OPTIONS"));
+	response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+	response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, PUT, DELETE, OPTIONS"));
+	response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
+	request.reply(response);
 }
 
 void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries) {
@@ -93,7 +104,7 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_Song(message, paths);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}			
 		}
 		else if (paths[1] == U("albums")) {
@@ -107,7 +118,7 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_AlbumSongs(message, paths, queries);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else if (paths[1] == U("artists")) {
@@ -121,7 +132,7 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_ArtistSongs(message, paths, queries);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else if (paths[1] == U("genres")) {
@@ -135,7 +146,7 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_GenreSongs(message, paths, queries);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else if (paths[1] == U("playlists")) {
@@ -149,7 +160,7 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_PlaylistSongs(message, paths, queries);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else if (paths[1] == U("download")) {
@@ -157,16 +168,16 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				v1_GetSong(message, paths);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else {
-			message.reply(web::http::status_codes::NotFound);
+			Reply(message, web::http::status_codes::NotFound);
 			return;
 		}
 	}
 	else {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 }
@@ -183,16 +194,16 @@ void FileServerAPI::v1_HandlePUT(web::http::http_request message, const std::vec
 				v1_PlaylistSongs_Modify(message, paths);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else {
-			message.reply(web::http::status_codes::NotFound);
+			Reply(message, web::http::status_codes::NotFound);
 			return;
 		}
 	}
 	else {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 }
@@ -206,16 +217,16 @@ void FileServerAPI::v1_HandlePOST(web::http::http_request message, const std::ve
 				v1_Playlists_Create(message, paths);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else {
-			message.reply(web::http::status_codes::NotFound);
+			Reply(message, web::http::status_codes::NotFound);
 			return;
 		}
 	}
 	else {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 }
@@ -229,16 +240,16 @@ void FileServerAPI::v1_HandleDELETE(web::http::http_request message, const std::
 				v1_Playlist_Delete(message, paths);
 			}
 			else {
-				message.reply(web::http::status_codes::NotFound);
+				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
 		else {
-			message.reply(web::http::status_codes::NotFound);
+			Reply(message, web::http::status_codes::NotFound);
 			return;
 		}
 	}
 	else {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 }
@@ -246,14 +257,14 @@ void FileServerAPI::v1_HandleDELETE(web::http::http_request message, const std::
 void FileServerAPI::v1_Songs(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries) {
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Songs(params.limit, params.page, params.orderBy, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -263,21 +274,21 @@ void FileServerAPI::v1_Song(web::http::http_request message, const std::vector<u
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Song(songId, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
 void FileServerAPI::v1_Albums(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries) {
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Albums(params.limit, params.page, params.orderBy, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -287,7 +298,7 @@ void FileServerAPI::v1_Album(web::http::http_request message, const std::vector<
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Album(albumId, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -295,28 +306,28 @@ void FileServerAPI::v1_AlbumSongs(web::http::http_request message, const std::ve
 	std::string albumId = utility::conversions::to_utf8string(paths[2]);
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_AlbumSongs(albumId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
 void FileServerAPI::v1_Artists(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries) {
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Artists(params.limit, params.page, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -325,7 +336,7 @@ void FileServerAPI::v1_Artist(web::http::http_request message, const std::vector
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Artist(artistId, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -333,28 +344,28 @@ void FileServerAPI::v1_ArtistSongs(web::http::http_request message, const std::v
 	std::string artistId = utility::conversions::to_utf8string(paths[2]);
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_ArtistSongs(artistId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
 void FileServerAPI::v1_Genres(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries) {
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Genres(params.limit, params.page, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -364,7 +375,7 @@ void FileServerAPI::v1_Genre(web::http::http_request message, const std::vector<
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Genre(genreId, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -372,14 +383,14 @@ void FileServerAPI::v1_GenreSongs(web::http::http_request message, const std::ve
 	std::string genreId = utility::conversions::to_utf8string(paths[2]);
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_GenreSongs(genreId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -387,14 +398,14 @@ void FileServerAPI::v1_Playlists(web::http::http_request message, const std::vec
 	std::string userId = utility::conversions::to_utf8string( paths[2]);
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Playlists(userId, params.limit, params.page, params.desc, params.filter, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -418,18 +429,18 @@ void FileServerAPI::v1_Playlists_Create(web::http::http_request message, const s
 
 					web::json::value response;
 					auto rtc = fsHandler_->v1_Playlists_Create(userId, name, description, response);
-					message.reply(MapStatusCode(rtc), response);
+					Reply(message, MapStatusCode(rtc), response);
 				}
 				else {
-					message.reply(web::http::status_codes::BadRequest);
+					Reply(message, web::http::status_codes::BadRequest);
 				}
 			}
 			else {
-				message.reply(web::http::status_codes::BadRequest);
+				Reply(message, web::http::status_codes::BadRequest);
 			}
 		}
 		catch (std::exception) {
-			message.reply(web::http::status_codes::InternalError);
+			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
 }
@@ -441,7 +452,7 @@ void FileServerAPI::v1_Playlist(web::http::http_request message, const std::vect
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_Playlist(userId, playlistId, response);
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -472,14 +483,14 @@ void FileServerAPI::v1_Playlist_Modify(web::http::http_request message, const st
 
 				web::json::value response;
 				auto rtc = fsHandler_->v1_Playlist_Modify(userId, playlistId, name, nameChanged, description, descriptionChanged, response);
-				message.reply(MapStatusCode(rtc), response);
+				Reply(message, MapStatusCode(rtc), response);
 			}
 			else {
-				message.reply(web::http::status_codes::BadRequest);
+				Reply(message, web::http::status_codes::BadRequest);
 			}			
 		}
 		catch (std::exception) {
-			message.reply(web::http::status_codes::InternalError);
+			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
 }
@@ -492,10 +503,10 @@ void FileServerAPI::v1_Playlist_Delete(web::http::http_request message, const st
 		try {
 			auto request = requestTask.get();
 			auto rtc = fsHandler_->v1_Playlist_Delete(userId, playlistId);
-			message.reply(MapStatusCode(rtc));			
+			Reply(message, MapStatusCode(rtc));			
 		}
 		catch (std::exception) {
-			message.reply(web::http::status_codes::InternalError);
+			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
 }
@@ -505,14 +516,14 @@ void FileServerAPI::v1_PlaylistSongs(web::http::http_request message, const std:
 	std::string playlistId = utility::conversions::to_utf8string(paths[3]);
 	QueryParams params;
 	if (!ParseQueryParams(queries, params)) {
-		message.reply(web::http::status_codes::NotFound);
+		Reply(message, web::http::status_codes::NotFound);
 		return;
 	}
 
 	pplx::create_task([=]() {
 		web::json::value response;
 		auto rtc = fsHandler_->v1_PlaylistSongs(userId, playlistId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);		
-		message.reply(MapStatusCode(rtc), response);
+		Reply(message, MapStatusCode(rtc), response);
 	});
 }
 
@@ -553,14 +564,14 @@ void FileServerAPI::v1_PlaylistSongs_Modify(web::http::http_request message, con
 				}
 
 				auto rtc = fsHandler_->v1_PlaylistSongs_Modify(userId, playlistId, add, remove);
-				message.reply(MapStatusCode(rtc));
+				Reply(message, MapStatusCode(rtc));
 			}
 			else {
-				message.reply(web::http::status_codes::BadRequest);
+				Reply(message, web::http::status_codes::BadRequest);
 			}
 		}
 		catch (std::exception) {
-			message.reply(web::http::status_codes::InternalError);
+			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
 }
@@ -591,12 +602,12 @@ void FileServerAPI::v1_GetSong(web::http::http_request message, const std::vecto
 				{
 					// opening the file (open_istream) failed.
 					// Reply with an error.
-					message.reply(web::http::status_codes::InternalError);
+					Reply(message, web::http::status_codes::InternalError);
 				}
 			});
 		}
 		else {
-			message.reply(MapStatusCode(rtc));
+			Reply(message, MapStatusCode(rtc));
 		}
 	});
 }
@@ -661,6 +672,19 @@ bool FileServerAPI::ParseQueryParams(const std::map<utility::string_t, utility::
 	}
 
 	return true;
+}
+
+void FileServerAPI::Reply(const web::http::http_request& message, web::http::status_code code) {
+	web::http::http_response response(code);
+	response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+	message.reply(response);
+}
+
+void FileServerAPI::Reply(const web::http::http_request& message, web::http::status_code code, const web::json::value& bodyData) {
+	web::http::http_response response(code);
+	response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+	response.set_body(bodyData);
+	message.reply(response);
 }
 
 web::http::status_code FileServerAPI::MapStatusCode(AbstractFileServerHandler::ResponseCode responseCode) {
