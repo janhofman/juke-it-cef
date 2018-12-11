@@ -37,4 +37,8 @@ export default defineMessages({
     id: 'SongList.addToQueueOpt',
     defaultMessage: 'Add to queue',
   },
+  playerNotConnectedToolTip: {
+    id: 'SongList.playerNotConnectedToolTip',
+    defaultMessage: 'Player is not connected',
+  },
 });

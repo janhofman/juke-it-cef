@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { push } from 'react-router-redux';
-import { uploadArtistLib } from '../../actions/playbackActions';
+import { removePlaylist, uploadArtistLib } from '../../actions/playbackActions';
 import {
   clear,
   loadMetadataForArtist,
@@ -35,6 +35,7 @@ class ArtistDetailPage extends Component {
   playAction() {
     const { name, match, dispatch } = this.props;
     const { artistId } = match.params;
+    dispatch(removePlaylist());
     dispatch(uploadArtistLib(artistId, name, null));
   }
 

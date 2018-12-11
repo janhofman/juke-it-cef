@@ -21,7 +21,7 @@ class Songs extends Component {
         title={formatMessage(messages.title)}
         selectable={selectable}
         onSongDoubleClick={onSongDoubleClick}
-        playAction={() => playAction(formatMessage(messages.title), null, songs)}
+        playAction={() => playAction(formatMessage(messages.title), null)}
       />
     );
   }

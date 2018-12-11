@@ -17,23 +17,17 @@ import { addToEndOfQueue } from './../../actions/playbackActions';
 class SongList extends Component {
   constructor(props) {
     super(props);
-    props.dispatch(loadPlaylists());
-  }
 
-  componentWillReceiveProps(nextProps) {
-    console.log('WillReceiveProps');
-    const { playlistsLoaded, dispatch } = this.props;
-    if (nextProps.playlistsLoaded === false && playlistsLoaded === true) {
-      console.log('Called update');
-      dispatch(loadPlaylists());
-    }
+    this.handleOpenOptions = this.handleOpenOptions.bind(this);
+    this.handleCloseOptions = this.handleCloseOptions.bind(this);
   }
 
   handleOpenOptions(event) {
     event.preventDefault();
     event.persist();
     const elem = event.currentTarget;
-    this.props.dispatch(openOptions(elem));
+    const { dispatch } = this.props;
+    dispatch(openOptions(elem));
   }
 
   handleCloseOptions() {
@@ -100,6 +94,7 @@ class SongList extends Component {
       image,
       songs,
       loaded,
+      playerConnected,
       playAction,
       onSongDoubleClick,
       playlists,
@@ -119,6 +114,7 @@ class SongList extends Component {
         image={image}
         songs={songs}
         loaded={loaded}
+        playerConnected={playerConnected}
         playlists={playlists}
         selectable={selectable}
 
@@ -130,8 +126,8 @@ class SongList extends Component {
         addSelectionToPlaylistAction={this.addSelectionToPlaylistAction.bind(this)}
         handleAddToPlaylist={this.handleAddToPlaylist.bind(this)}
         handleRowSelection={this.handleRowSelection.bind(this)}
-        openOptions={this.handleOpenOptions.bind(this)}
-        closeOptions={this.handleCloseOptions.bind(this)}
+        openOptions={this.handleOpenOptions}
+        closeOptions={this.handleCloseOptions}
         cancelSelectable={this.cancelSelectable.bind(this)}
 
         contextMenuOpen={contextMenuOpen}
@@ -146,17 +142,19 @@ class SongList extends Component {
 }
 
 SongList.propTypes = {
+  dispatch: PropTypes.func.isRequired,
   title: PropTypes.string,
   subtitle: PropTypes.string,
   image: PropTypes.string,
   songs: PropTypes.arrayOf(PropTypes.object),
   loaded: PropTypes.bool.isRequired,
+  playerConnected: PropTypes.bool.isRequired,
   playAction: PropTypes.func,
   onSongDoubleClick: PropTypes.func,
 };
 
 export default connect((store) => {
-  const { playlists, songList } = store;
+  const { playlists, songList, player } = store;
   return ({
     playlists: playlists.playlists,
     playlistsLoaded: playlists.playlistsLoaded,
@@ -168,6 +166,6 @@ export default connect((store) => {
     contextMenuOpen: songList.contextMenuOpen,
     contextMenuAnchor: songList.contextMenuAnchor,
     songId: songList.songId,
-
+    playerConnected: player.playerConnected,
   });
 })(SongList);

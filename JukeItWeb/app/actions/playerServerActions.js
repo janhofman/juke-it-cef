@@ -17,77 +17,77 @@ function makeRequest(command, payload = null, onSuccess = function () {}, onFail
   };
 }
 
-function fileServerOpened(address) {
+function playerServerOpened(address) {
   return {
-    type: 'FILESERVER_OPEN',
+    type: 'PLAYERSERVER_OPEN',
     payload: address,
   };
 }
 
-function fileServerClosed() {
+function playerServerClosed() {
   return {
-    type: 'FILESERVER_CLOSED',
+    type: 'PLAYERSERVER_CLOSED',
   };
 }
 
-function fileServerOpenError(error) {
+function playerServerOpenError(error) {
   return {
-    type: 'FILESERVER_OPEN_ERROR',
+    type: 'PLAYERSERVER_OPEN_ERROR',
     payload: error,
   };
 }
 
-function fileServerCloseError(error) {
+function playerServerCloseError(error) {
   return {
-    type: 'FILESERVER_CLOSE_ERROR',
+    type: 'PLAYERSERVER_CLOSE_ERROR',
     payload: error,
   };
 }
 
-export function openFileServer(hostName = null, port = null) {
+export function openPlayerServer(ipAddress = null, port = null) {
   return (dispatch) => {
     // TODO: check if server is already opened
     let payload = null;
-    if (hostName || port) {
-      payload = { hostName, port };
+    if (ipAddress || port) {
+      payload = { ipAddress, port };
     }
 
     const onSuccess = (responseStr) => {
       const response = JSON.parse(responseStr);
       if (response.status === 0) {
-        dispatch(fileServerOpened(response.address));
+        dispatch(playerServerOpened(response.address));
       } else {
         // here warnings can be handled
-        dispatch(fileServerOpened(response.address));
+        dispatch(playerServerOpened(response.address));
       }
     };
 
     const onFailure = (errorCode, errorMessage) => {
-      dispatch(fileServerOpenError({ errorCode, errorMessage }));
+      dispatch(playerServerOpenError({ errorCode, errorMessage }));
     };
 
-    dispatch(makeRequest('FLS_OPEN_SERVER', payload, onSuccess, onFailure));
+    dispatch(makeRequest('MPL_OPEN_PLAYER', payload, onSuccess, onFailure));
   };
 }
 
-export function closeFileServer() {
+export function closePlayerServer() {
   return (dispatch) => {
     // TODO: check if server is running
 
     const onSuccess = (responseStr) => {
       const response = JSON.parse(responseStr);
       if (response.status === 0) {
-        dispatch(fileServerClosed());
+        dispatch(playerServerClosed());
       } else {
         // here warnings can be handled
-        dispatch(fileServerClosed());
+        dispatch(playerServerClosed());
       }
     };
 
     const onFailure = (errorCode, errorMessage) => {
-      dispatch(fileServerCloseError({ errorCode, errorMessage }));
+      dispatch(playerServerCloseError({ errorCode, errorMessage }));
     };
 
-    dispatch(makeRequest('FLS_CLOSE_SERVER', null, onSuccess, onFailure));
+    dispatch(makeRequest('MPL_CLOSE_PLAYER', null, onSuccess, onFailure));
   };
 }

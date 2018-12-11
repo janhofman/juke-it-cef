@@ -97,11 +97,10 @@ class Player extends Component {
 
   mapQueue(queue) {
     if (queue) {
-      const keys = Object.keys(queue);
-      const songs = keys.map((key, idx) => (
-        <TableRow key={idx}>
+      const songs = queue.map((queItm) => (
+        <TableRow key={queItm.itemId}>
           <TableRowColumn>
-            {queue[key].name}
+            {queItm.song.title}
           </TableRowColumn>
         </TableRow>
       ));
@@ -112,9 +111,22 @@ class Player extends Component {
 
   render() {
     const { formatMessage } = this.props.intl;
-    const { queue, toggleQueue, queueOpen, currentSong, onNext } = this.props;
+    const {
+      onPlay,
+      onPause,
+      orderQueue,
+      toggleQueue,
+      queueOpen,
+      currentSong,
+      onNext,
+      playerConnected,
+      seeking,
+      playing,
+    } = this.props;
+
     const song = currentSong !== null ? currentSong : {};
     const sliderMax = song && song.length > 0 ? song.length : 100;
+
     return (
       <div style={Object.assign(styles.base, { height: this.props.height })}>
         <div style={styles.imageBox}>
@@ -144,7 +156,7 @@ class Player extends Component {
             min={0}
             max={sliderMax}
             defaultValue={0}
-            value={this.props.seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax - 1)}
+            value={seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax - 1)}
             onDragStart={this.props.onSeekStart}
             onDragStop={() => this.props.onSeekEnd(this.state.sliderValue)}
             onChange={this.handleSlider}
@@ -153,17 +165,18 @@ class Player extends Component {
         <div>
           {/*<IconButton><Previous /></IconButton>*/}
           <IconButton
-            onTouchTap={this.props.playing ? this.props.onPause : this.props.onPlay}
+            onTouchTap={currentSong ? (playing ? onPause : onPlay) : null}
             tooltip={formatMessage(this.props.playing ? messages.pauseTooltip : messages.playTooltip)}
             tooltipPosition={'top-center'}
-            disabled={!currentSong}
+            disabled={!currentSong || !playerConnected}
           >
-            {this.props.playing ? <Pause /> : <Play />}
+            {playing ? <Pause /> : <Play />}
           </IconButton>
           <IconButton
-            onTouchTap={onNext}
+            onTouchTap={currentSong ? onNext : null}
             tooltip={formatMessage(messages.nextTooltip)}
             tooltipPosition={'top-center'}
+            disabled={!currentSong || !playerConnected}
           >
             <Next />
           </IconButton>
@@ -190,7 +203,7 @@ class Player extends Component {
           />
           <Table>
             <TableBody showRowHover displayRowCheckbox={false}>
-              { queue ? this.mapQueue(queue) : null }
+              { orderQueue ? this.mapQueue(orderQueue) : null }
             </TableBody>
           </Table>
         </Drawer>
@@ -203,7 +216,13 @@ Player.propTypes = {
   onPlay: PropTypes.func.isRequired,
   onPause: PropTypes.func.isRequired,
   onNext: PropTypes.func.isRequired,
+  toggleQueue: PropTypes.func.isRequired,
   playing: PropTypes.bool.isRequired,
+  queueOpen: PropTypes.bool.isRequired,
+  seeking: PropTypes.bool.isRequired,
+  playerConnected: PropTypes.bool.isRequired,
+  orderQueue: PropTypes.array.isRequired,
+  currentSong: PropTypes.object,
 };
 
 export default injectIntl(Player);

@@ -1,8 +1,11 @@
+import axios from 'axios';
 import {
   makeCancelable,
-  sanitizeQueryParameter,
   buildQueryString,
 } from './../utils';
+import {
+  getAllPlaylists,
+} from './libraryActions';
 
 export function showDialog(show) {
   return {
@@ -37,23 +40,23 @@ export function cleanPlaylists() {
 
 export function loadPlaylists() {
   return (dispatch, getState) => {
-    const { cefQuery, playlists, userData } = getState();
-    const { playlistsLoaded } = playlists;
-    const { userId } = userData;
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+      userData: {
+        userId,
+      },
+      playlists: {
+        playlistsLoaded,
+      },
+    } = getState();
+
     if (!playlistsLoaded) {
       dispatch(cleanPlaylists());
-      let promise = new Promise((resolve, reject) => {
-        cefQuery({
-          request: `SQL_LOAD_PLAYLISTS?usr=${sanitizeQueryParameter(userId)}`,
-          onSuccess(response) {
-            const data = JSON.parse(response);
-            resolve(data);
-          },
-          onFailure(errorCode, errorMessage) {
-            reject(errorCode, errorMessage);
-          },
-        });
-      });
+      let promise = getAllPlaylists(baseAddress, userId);
       promise = makeCancelable(promise);
       promise.promise
                 .then((playlists) => dispatch(playlistsChange(true, playlists)))
@@ -65,50 +68,72 @@ export function loadPlaylists() {
 
 export function addNewPlaylist(name, description) {
   return (dispatch, getState) => {
-    const { cefQuery, userData } = getState();
-    const { userId } = userData;
-    const params = { name, description, usr: userId };
-    const query = buildQueryString(params)
-    cefQuery({
-      request: `SQL_ADD_PLAYLIST${query}`,
-      onSuccess(response) {
-        //const data = JSON.parse(response);
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    const url = `${baseAddress}/v1/playlists/${userId}`;
+    const newPlaylist = {
+      name,
+      description,
+    };
+
+    axios.post(url, newPlaylist)
+      .then((response) => {
+        console.log('Response: ', response);
         dispatch(cleanPlaylists());
         dispatch(loadPlaylists());
         dispatch(showDialog(false));
-      },
-      onFailure(errorCode, errorMessage) {
-        // TODO: catch
-        console.log(errorCode, errorMessage);
-      },
-    });
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+        dispatch(showDialog(false));
+      });
   };
 }
 
+/**
+ * Adds songs to playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {array(string)} songs Array of song IDs to be added to playlist.
+ * @returns {function} Dispatchable action.
+ */
 export function addSongsToPlaylist(playlistId, songs) {
   return (dispatch, getState) => {
-    const { cefQuery } = getState();
-    let songStr = '';
-    let first = true;
-    for (let i = 0; i < songs.length; i++) {
-      if (first) {
-        first = false;
-      } else {
-        songStr += ',';
-      }
-      songStr += songs[i];
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
     }
-    const params = { playlistId, songs: songStr };
-    cefQuery({
-      request: `SQL_ADD_TO_PLAYLIST${buildQueryString(params)}`,
-      onSuccess(response) {
-        //const data = JSON.parse(response);
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: songs,
+      remove: [],
+    };
+    axios.put(url, data)
+      .then((response) => {
+        console.log('Response: ', response);
         dispatch(cleanPlaylists());
-      },
-      onFailure(errorCode, errorMessage) {
-        // TODO: catch
-        console.log(errorCode, errorMessage);
-      },
-    });
+      }).catch((error) => {
+        console.log('Error: ', error);
+      });
   };
 }

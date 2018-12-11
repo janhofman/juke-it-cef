@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { push } from 'react-router-redux';
-import { uploadAlbumLib } from '../../actions/playbackActions';
+import { removePlaylist, uploadAlbumLib } from '../../actions/playbackActions';
 import {
   clear,
   loadMetadataForAlbum,
@@ -16,10 +16,12 @@ class AlbumDetailPage extends Component {
     super(props);
     const { match, dispatch } = props;
     const { albumId } = match.params;
-    dispatch((dispatch) => {
-      dispatch(loadMetadataForAlbum(albumId));
-      dispatch(loadSongsForAlbum(albumId));
-    });
+
+    this.navigateBack = this.navigateBack.bind(this);
+    this.playAction = this.playAction.bind(this);
+
+    dispatch(loadMetadataForAlbum(albumId));
+    dispatch(loadSongsForAlbum(albumId));
   }
 
   componentWillUnmount() {
@@ -35,6 +37,7 @@ class AlbumDetailPage extends Component {
   playAction() {
     const { name, artist, match, dispatch } = this.props;
     const { albumId } = match.params;
+    dispatch(removePlaylist());
     dispatch(uploadAlbumLib(albumId, name, artist));
   }
 
@@ -51,12 +54,21 @@ class AlbumDetailPage extends Component {
         songs={songs}
         title={name}
         subtitle={artist}
-        navigateBack={this.navigateBack.bind(this)}
-        playAction={this.playAction.bind(this)}
+        navigateBack={this.navigateBack}
+        playAction={this.playAction}
         entityType={EntityEnum.ALBUM}
       />
     );
   }
+}
+
+AlbumDetailPage.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  match: PropTypes.object.isRequired,
+  name: PropTypes.string,
+  artist: PropTypes.string,
+  songs: PropTypes.array.isRequired,
+  loaded: PropTypes.bool.isRequired,
 }
 
 export default connect((store) => {

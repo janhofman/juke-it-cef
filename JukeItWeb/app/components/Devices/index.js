@@ -51,12 +51,46 @@ class Devices extends Component {
       fileServer,
       player,
       pageLayout,
+      playerConnected,
       intl,
       toggleFileServerLocal,
       openFileServerLocal,
       closeFileServerLocal,
+      togglePlayerLocal,
+
+      onOpenPlayerLocal,
+      onClosePlayerLocal,
+      onConnectToLocalPlayer,
+      onDisconnectPlayer,
+      onFsLocalHostnameChange,
+      onFsLocalPortChange,
+      onPlayerLocalHostnameChange,
+      onPlayerLocalPortChange,
     } = this.props;
     const { formatMessage } = intl;
+
+    // Set up button settings
+    const playerLocalStartBtn = {
+      disabled: player.local.busy,
+      label: formatMessage(player.local.running ? messages.playerLocalStopBtn : messages.playerLocalStartBtn),
+      backgroundColor: player.local.running ? '#ff2400' : '#4cbb17',
+    };
+    if (playerLocalStartBtn.disabled) {
+      playerLocalStartBtn.onTouchTap = null;
+    } else {
+      playerLocalStartBtn.onTouchTap = player.local.running ? onClosePlayerLocal : onOpenPlayerLocal;
+    }
+
+    const playerLocalConnectBtn = {
+      label: formatMessage(playerConnected ? messages.playerLocalDisconnectBtn : messages.playerLocalConnectBtn),
+      disabled: player.local.busy,
+    };
+    if (playerLocalConnectBtn.disabled) {
+      playerLocalConnectBtn.onTouchTap = null;
+    } else {
+      playerLocalConnectBtn.onTouchTap = playerConnected ? onDisconnectPlayer : onConnectToLocalPlayer;
+    }
+
     return (
       <ScrollPane>
         <div style={styles.fileServerDiv}>
@@ -81,14 +115,15 @@ class Devices extends Component {
                   hintText={formatMessage(messages.fsLocalHostnameHint)}
                   floatingLabelText={formatMessage(messages.fsLocalHostnameLabel)}
                   disabled={fileServer.local.running || fileServer.local.busy}
-                  // onChange={this.onNameChange.bind(this)}
+                  onChange={onFsLocalHostnameChange}
                   value={fileServer.local.hostname}
                 />
                 <StyledTextField
                   hintText={formatMessage(messages.fsLocalPortHint)}
                   floatingLabelText={formatMessage(messages.fsLocalPortLabel)}
                   disabled={fileServer.local.running || fileServer.local.busy}
-                  // onChange={this.onNameChange.bind(this)}
+                  onChange={onFsLocalPortChange}
+                  type={'number'}
                   value={fileServer.local.port}
                 />
                 <RaisedButton
@@ -124,12 +159,42 @@ class Devices extends Component {
             labelPosition={'after'}
             // icon={<Star />}
             // style={{}}
-            // onTouchTap={this.toggleName.bind(this)}
+            onTouchTap={togglePlayerLocal}
           />
           <ExpandTransition
             {...this.transitionProps}
             open={pageLayout.player.localOpen}
           >
+            <div style={styles.expansion}>
+              <div style={styles.textfield}>
+                <StyledTextField
+                  hintText={formatMessage(messages.playerLocalHostnameHint)}
+                  floatingLabelText={formatMessage(messages.playerLocalHostnameLabel)}
+                  disabled={player.local.running || player.local.busy}
+                  onChange={onPlayerLocalHostnameChange}
+                  value={player.local.hostname}
+                />
+                <StyledTextField
+                  hintText={formatMessage(messages.playerLocalPortHint)}
+                  floatingLabelText={formatMessage(messages.playerLocalPortLabel)}
+                  disabled={player.local.running || player.local.busy}
+                  onChange={onPlayerLocalPortChange}
+                  type={'number'}
+                  value={player.local.port}
+                />
+                <RaisedButton
+                  label={playerLocalStartBtn.label}
+                  backgroundColor={playerLocalStartBtn.backgroundColor}
+                  disabled={playerLocalStartBtn.disabled}
+                  onTouchTap={playerLocalStartBtn.onTouchTap}
+                />
+                <FlatButton
+                  label={playerLocalConnectBtn.label}
+                  disabled={playerLocalConnectBtn.disabled}
+                  onTouchTap={playerLocalConnectBtn.onTouchTap}
+                />
+              </div>
+            </div>
           </ExpandTransition>
           <FlatButton
             label={formatMessage(messages.playerRemote)}
@@ -153,10 +218,21 @@ Devices.propTypes = {
   intl: PropTypes.shape(IntlProvider.propTypes.intl),
   fileServer: PropTypes.object.isRequired,
   player: PropTypes.object.isRequired,
+  pageLayout: PropTypes.object.isRequired,
+  playerConnected: PropTypes.bool.isRequired,
 
   toggleFileServerLocal: PropTypes.func.isRequired,
   openFileServerLocal: PropTypes.func.isRequired,
   closeFileServerLocal: PropTypes.func.isRequired,
+  togglePlayerLocal: PropTypes.func.isRequired,
+  onOpenPlayerLocal: PropTypes.func.isRequired,
+  onClosePlayerLocal: PropTypes.func.isRequired,
+  onDisconnectPlayer: PropTypes.func.isRequired,
+  onConnectToLocalPlayer: PropTypes.func.isRequired,
+  onFsLocalHostnameChange: PropTypes.func.isRequired,
+  onFsLocalPortChange: PropTypes.func.isRequired,
+  onPlayerLocalHostnameChange: PropTypes.func.isRequired,
+  onPlayerLocalPortChange: PropTypes.func.isRequired,
 };
 
 

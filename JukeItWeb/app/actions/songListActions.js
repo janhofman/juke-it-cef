@@ -1,4 +1,12 @@
-import { makeCancelable } from './../utils';
+import { makeCancelable, EntityEnum } from './../utils';
+import {
+  getAllEntitySongs,
+  apiGenrePromise,
+  apiAlbumPromise,
+  apiArtistPromise,
+  apiPlaylistPromise,
+} from './libraryActions';
+import { loadPlaylists } from './playlistsActions';
 
 export function makeStatic() {
   return {
@@ -20,9 +28,12 @@ export function closeOptions() {
 }
 
 export function openOptions(target) {
-  return {
-    type: 'SONGLIST_OPEN_OPTIONS',
-    payload: target,
+  return (dispatch) => {
+    dispatch(loadPlaylists());
+    dispatch({
+      type: 'SONGLIST_OPEN_OPTIONS',
+      payload: target,
+    });
   };
 }
 
@@ -48,9 +59,12 @@ export function setSongsPromise(songsPromise) {
 }
 
 export function openContextMenu(target, songId) {
-  return {
-    type: 'SONGLIST_OPEN_CONTEXT_MENU',
-    payload: { anchor: target, songId },
+  return (dispatch) => {
+    dispatch(loadPlaylists());
+    dispatch({
+      type: 'SONGLIST_OPEN_CONTEXT_MENU',
+      payload: { anchor: target, songId },
+    });
   };
 }
 
@@ -103,8 +117,31 @@ export function clear() {
   };
 }
 
-export function loadSongsForPlaylist(playlistId) {
+function loadSongsForEntity(entity, entityId) {
   return ((dispatch, getState) => {
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+      userData: {
+        userId,
+      },
+    } = getState();
+
+    dispatch(clearSongs());
+    let newPromise = getAllEntitySongs(baseAddress, entity, entityId, userId);
+    newPromise = makeCancelable(newPromise);
+    newPromise.promise
+      .then((songs) => dispatch(songsChange(true, songs)))
+      .catch((err) => console.log(err)); // TODO: add catch
+    dispatch(setSongsPromise(newPromise));
+  });
+}
+
+export function loadSongsForPlaylist(playlistId) {
+  /* return ((dispatch, getState) => {
     const { cefQuery } = getState();
     dispatch(clearSongs());
     let newPromise = new Promise((resolve, reject) => {
@@ -124,30 +161,25 @@ export function loadSongsForPlaylist(playlistId) {
             .then((songs) => dispatch(songsChange(true, songs)))
             .catch((err) => console.log(err)); // TODO: add catch
     dispatch(setSongsPromise(newPromise));
-  });
+  });*/
+  return loadSongsForEntity(EntityEnum.PLAYLIST, playlistId);
 }
 
 export function loadMetadataForPlaylist(playlistId) {
   return ((dispatch, getState) => {
-    const { cefQuery } = getState();
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+      userData: {
+        userId,
+      },
+    } = getState();
+
     dispatch(clearMetadata());
-    let infoPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_LOAD_PLAYLISTS?id=${playlistId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          if (data.length > 0) {
-            resolve(data[0]);
-          } else {
-            // TODO: make proper catch
-            reject(100, 'no playlist matches query');
-          }
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
+    let infoPromise = apiPlaylistPromise(baseAddress, playlistId, userId);
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
             .then((info) => dispatch(metadataChange(true, info.name, info.description)))
@@ -157,50 +189,21 @@ export function loadMetadataForPlaylist(playlistId) {
 }
 
 export function loadSongsForGenre(genreId) {
-  return ((dispatch, getState) => {
-    const { cefQuery } = getState();
-    dispatch(clearSongs());
-    let newPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_SONGVIEW?genreId=${genreId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          resolve(data);
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
-    newPromise = makeCancelable(newPromise);
-    newPromise.promise
-            .then((songs) => dispatch(songsChange(true, songs)))
-            .catch((err) => console.log(err)); // TODO: add catch
-    dispatch(setSongsPromise(newPromise));
-  });
+  return loadSongsForEntity(EntityEnum.GENRE, genreId);
 }
 
 export function loadMetadataForGenre(genreId) {
   return ((dispatch, getState) => {
-    const { cefQuery } = getState();
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
     dispatch(clearMetadata());
-    let infoPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_LOAD_GENRES?id=${genreId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          if (data.length > 0) {
-            resolve(data[0]);
-          } else {
-            // TODO: make proper catch
-            reject(100, 'no genre matches query');
-          }
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
+    let infoPromise = apiGenrePromise(baseAddress, genreId);
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
             .then((info) => dispatch(metadataChange(true, info.name, null)))
@@ -210,50 +213,21 @@ export function loadMetadataForGenre(genreId) {
 }
 
 export function loadSongsForArtist(artistId) {
-  return ((dispatch, getState) => {
-    const { cefQuery } = getState();
-    dispatch(clearSongs());
-    let newPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_SONGVIEW?artistId=${artistId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          resolve(data);
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
-    newPromise = makeCancelable(newPromise);
-    newPromise.promise
-            .then((songs) => dispatch(songsChange(true, songs)))
-            .catch((err) => console.log(err)); // TODO: add catch
-    dispatch(setSongsPromise(newPromise));
-  });
+  return loadSongsForEntity(EntityEnum.ARTIST, artistId);
 }
 
 export function loadMetadataForArtist(artistId) {
   return ((dispatch, getState) => {
-    const { cefQuery } = getState();
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
     dispatch(clearMetadata());
-    let infoPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_LOAD_ARTISTS?id=${artistId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          if (data.length > 0) {
-            resolve(data[0]);
-          } else {
-            // TODO: make proper catch
-            reject(100, 'no album matches query');
-          }
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
+    let infoPromise = apiArtistPromise(baseAddress, artistId);
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
             .then((info) => dispatch(metadataChange(true, info.name, null)))
@@ -263,50 +237,21 @@ export function loadMetadataForArtist(artistId) {
 }
 
 export function loadSongsForAlbum(albumId) {
-  return ((dispatch, getState) => {
-    const { cefQuery } = getState();
-    dispatch(clearSongs());
-    let newPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_SONGVIEW?albumId=${albumId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          resolve(data);
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
-    newPromise = makeCancelable(newPromise);
-    newPromise.promise
-            .then((songs) => dispatch(songsChange(true, songs)))
-            .catch((err) => console.log(err)); // TODO: add catch
-    dispatch(setSongsPromise(newPromise));
-  });
+  return loadSongsForEntity(EntityEnum.ALBUM, albumId);
 }
 
 export function loadMetadataForAlbum(albumId) {
   return ((dispatch, getState) => {
-    const { cefQuery } = getState();
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
     dispatch(clearMetadata());
-    let infoPromise = new Promise((resolve, reject) => {
-      cefQuery({
-        request: `SQL_ALBUMVIEW?id=${albumId}`,
-        onSuccess(response) {
-          const data = JSON.parse(response);
-          if (data.length > 0) {
-            resolve(data[0]);
-          } else {
-            // TODO: make proper catch
-            reject(100, 'no album matches query');
-          }
-        },
-        onFailure(errorCode, errorMessage) {
-          reject(errorCode, errorMessage);
-        },
-      });
-    });
+    let infoPromise = apiAlbumPromise(baseAddress, albumId);
     infoPromise = makeCancelable(infoPromise);
     infoPromise.promise
             .then((info) => dispatch(metadataChange(true, info.name, info.artist)))

@@ -20,7 +20,7 @@ import {
   TableRowColumn,
   TableRow,
 } from 'material-ui/Table';
-/*import Table from '../Table';
+/* import Table from '../Table';
 import TableBodyRow from '../TableBodyRow';
 import TableHead from '../TableHead';
 import TableHeadCell from '../TableHeadCell';*/
@@ -74,6 +74,7 @@ class SongListDumb extends Component {
       loaded,
       playAction,
       onSongDoubleClick,
+      playerConnected,
       optionsOpen,
       optionsAnchor,
       selectable,
@@ -91,7 +92,10 @@ class SongListDumb extends Component {
       addSongToPlaylistAction,
       addSongToQueueAction,
     } = this.props;
-    return <div>
+
+    const playButtonDisabled = !loaded || !playerConnected;
+
+    return (<div>
       <LoadScreen loading={!loaded}>
         <img
           src={image || defaultImage}
@@ -106,22 +110,23 @@ class SongListDumb extends Component {
                 label={formatMessage(messages.playButton)}
                 labelPosition="after"
                 containerElement="label"
-                icon={<PlayButton/>}
-                onTouchTap={playAction}
-                style={{verticalAlign: 'middle'}}
+                icon={<PlayButton />}
+                onTouchTap={playButtonDisabled ? null : playAction}
+                style={{ verticalAlign: 'middle' }}
+                disabled={playButtonDisabled}
               />
               <IconButton
-                style={{verticalAlign: 'middle'}}
+                style={{ verticalAlign: 'middle' }}
                 onTouchTap={openOptions}
               >
-                <Options/>
+                <Options />
               </IconButton>
             </div>
             <p>{subtitle || null}</p>
           </div>
         </div>
         <div style={styles.datagrid}>
-          <div style={{display: selectable ? 'block' : 'none'}}>
+          <div style={{ display: selectable ? 'block' : 'none' }}>
             <FlatButton
               label={'Add'}
               // abelPosition='after'
@@ -140,29 +145,29 @@ class SongListDumb extends Component {
             />
           </div>
 
-                      <Table>
-                        <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
-                          <TableRow>
-                            <TableHeaderColumn>
-                              {formatMessage(messages.nameColumnHeader)}
-                            </TableHeaderColumn>
-                            <TableHeaderColumn>
-                              {formatMessage(messages.artistColumnHeader)}
-                            </TableHeaderColumn>
-                            <TableHeaderColumn>
-                              {formatMessage(messages.albumColumnHeader)}
-                            </TableHeaderColumn>
-                            <TableHeaderColumn>
-                              {formatMessage(messages.genreColumnHeader)}
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{ width: '59px' }}>
-                              {formatMessage(messages.timeColumnHeader)}
-                            </TableHeaderColumn>
-                          </TableRow>
-                        </TableHeader>
-                      </Table>
-                      <ScrollPane>
-                        {/*
+          <Table>
+            <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
+              <TableRow>
+                <TableHeaderColumn>
+                  {formatMessage(messages.nameColumnHeader)}
+                </TableHeaderColumn>
+                <TableHeaderColumn>
+                  {formatMessage(messages.artistColumnHeader)}
+                </TableHeaderColumn>
+                <TableHeaderColumn>
+                  {formatMessage(messages.albumColumnHeader)}
+                </TableHeaderColumn>
+                <TableHeaderColumn>
+                  {formatMessage(messages.genreColumnHeader)}
+                </TableHeaderColumn>
+                <TableHeaderColumn style={{ width: '59px' }}>
+                  {formatMessage(messages.timeColumnHeader)}
+                </TableHeaderColumn>
+              </TableRow>
+            </TableHeader>
+          </Table>
+          <ScrollPane>
+            {/*
                         <AutoSizeDiv>
             <Table
               head={<TableHead>
@@ -199,17 +204,16 @@ class SongListDumb extends Component {
             </Table>
           </AutoSizeDiv>
           */}
-              <Table multiSelectable={selectable} selectable={selectable} onRowSelection={handleRowSelection}>
-                <TableBody
-                  displayRowCheckbox={selectable}
-                  showRowHover
-                  preScanRows={false}
-                >
-                  {
-                    songs ? songs.map((song) => (
+            <Table multiSelectable={selectable} selectable={selectable} onRowSelection={handleRowSelection}>
+              <TableBody
+                displayRowCheckbox={selectable}
+                showRowHover
+                preScanRows={false}
+              >
+                {
+                    songs ? songs.map((song, idx) => (
                       <TableRow
-                        key={song.id}
-                        rowNumber={song.id}
+                        key={idx}
                         onDoubleClick={
                           onSongDoubleClick ?
                             (event) => {
@@ -224,13 +228,13 @@ class SongListDumb extends Component {
                         <TableRowColumn>{song.artist}</TableRowColumn>
                         <TableRowColumn>{song.album}</TableRowColumn>
                         <TableRowColumn>{song.genre}</TableRowColumn>
-                        <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.length} /></TableRowColumn>
+                        <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.duration} /></TableRowColumn>
                       </TableRow>
                     )) : null
                   }
-                </TableBody>
-              </Table>
-            </ScrollPane>
+              </TableBody>
+            </Table>
+          </ScrollPane>
 
         </div>
         <Popover
@@ -241,7 +245,7 @@ class SongListDumb extends Component {
           <Menu>
             <MenuItem
               primaryText={formatMessage(messages.addToPlaylistOpt)}
-              rightIcon={<ArrowDropRight/>}
+              rightIcon={<ArrowDropRight />}
               menuItems={playlists.map((playlist, idx) =>
                 (<MenuItem
                   primaryText={playlist.name} key={idx}
@@ -254,8 +258,8 @@ class SongListDumb extends Component {
           open={contextMenuOpen}
           anchorEl={contextMenuAnchor}
           onRequestClose={handleCloseContextMenu}
-          anchorOrigin={{horizontal: 'middle', vertical: 'bottom'}}
-          targetOrigin={{horizontal: 'left', vertical: 'top'}}
+          anchorOrigin={{ horizontal: 'middle', vertical: 'bottom' }}
+          targetOrigin={{ horizontal: 'left', vertical: 'top' }}
         >
           <Menu>
             <MenuItem
@@ -264,7 +268,7 @@ class SongListDumb extends Component {
             />
             <MenuItem
               primaryText={formatMessage(messages.addToPlaylistOpt)}
-              rightIcon={<ArrowDropRight/>}
+              rightIcon={<ArrowDropRight />}
               menuItems={playlists.map((playlist, idx) =>
                 (<MenuItem
                   primaryText={playlist.name} key={idx}
@@ -274,7 +278,7 @@ class SongListDumb extends Component {
           </Menu>
         </Popover>
       </LoadScreen>
-    </div>;
+    </div>);
   }
 }
 
@@ -284,6 +288,7 @@ SongListDumb.propTypes = {
   image: PropTypes.string,
   songs: PropTypes.arrayOf(PropTypes.object),
   loaded: PropTypes.bool.isRequired,
+  playerConnected: PropTypes.bool.isRequired,
   playAction: PropTypes.func,
   onSongDoubleClick: PropTypes.func,
 };

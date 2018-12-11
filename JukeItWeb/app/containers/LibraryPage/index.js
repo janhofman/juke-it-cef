@@ -3,8 +3,6 @@ import { connect } from 'react-redux';
 import Library from './../../components/Library';
 
 import {
-    setLoading,
-    loadSongs,
     addSongs,
 } from './../../actions/libraryActions';
 

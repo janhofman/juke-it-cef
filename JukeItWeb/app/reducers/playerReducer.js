@@ -5,6 +5,8 @@ const initialState = {
   length: -1,
   queueKey: null,
   onFinishAction: null,
+  webSocket: null,
+  playerConnected: false,
 };
 
 export default function reducer(state = initialState, action) {
@@ -23,6 +25,23 @@ export default function reducer(state = initialState, action) {
       return initialState;
     case 'PLAYER_SET_ONFINISHACTION':
       return { ...state, onFinishAction: action.payload };
+    case 'PLAYER_SET_WEBSOCKET': {
+      if (state.webSocket) {
+        state.webSocket.close();
+      }
+      return { ...state, webSocket: action.payload };
+    }
+    case 'PLAYER_RESET':
+      return {
+        ...state,
+        currentSong: null,
+        playing: false,
+        currentTime: 0,
+        length: -1,
+        queueKey: null,
+      };
+    case 'PLAYER_CONNECTION':
+      return { ...state, playerConnected: action.payload }
     case 'LOGOUT':
       return initialState;
     default:

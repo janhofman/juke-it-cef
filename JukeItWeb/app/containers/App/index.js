@@ -20,6 +20,7 @@ import {
   grey500,
   fullWhite,
   deepOrange500,
+  grey700,
   grey800,
 } from 'material-ui/styles/colors';
 import spacing from 'material-ui/styles/spacing';
@@ -65,6 +66,10 @@ const muiTheme = getMuiTheme({
   },
   flatButton: {
     primaryTextColor: fullWhite,
+  },
+  raisedButton: {
+    primaryTextColor: fullWhite,
+    disabledColor: grey700,
   },
   timePicker: {
     headerColor: deepOrange500,

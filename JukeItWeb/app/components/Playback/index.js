@@ -100,14 +100,14 @@ class Playback extends Component {
         <FlatButton
           label={formatMessage(messages.removePlaylist)}
           containerElement="div"
-          onTouchTap={removePlaylist}
+          onTouchTap={active ? null : removePlaylist}
           disabled={active}
           style={styles.actionButton}
         />
         <FlatButton
           label={formatMessage(messages.startPlaying)}
           containerElement="div"
-          onTouchTap={startPlaying}
+          onTouchTap={!active || playerEnabled ? null : startPlaying}
           disabled={!active || playerEnabled}
           style={styles.actionButton}
         />
@@ -163,28 +163,27 @@ class Playback extends Component {
                 showRowHover
               >
                 {
-                                    songs ? songs.map((song) => (
-                                      <TableRow
-                                        key={song.id}
-                                        rowNumber={song.id}
-                                        onDoubleClick={
-                                                onSongDoubleClick ?
-                                                    (event) => {
-                                                      event.stopPropagation();
-                                                      onSongDoubleClick(song.id);
-                                                    }
-                                                    : null
-                                            }
-                                        onMouseUp={songOnMouseUp ? (event) => songOnMouseUp(event, song.id) : null}
-                                      >
-                                        <TableRowColumn>{song.title}</TableRowColumn>
-                                        <TableRowColumn>{song.artist}</TableRowColumn>
-                                        <TableRowColumn>{song.album}</TableRowColumn>
-                                        <TableRowColumn>{song.genre}</TableRowColumn>
-                                        <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.length} /></TableRowColumn>
-                                      </TableRow>
-                                    )) : null
-                                }
+                  songs ? songs.map((song) => (
+                    <TableRow
+                      key={song.id}
+                      onDoubleClick={
+                              onSongDoubleClick ?
+                                  (event) => {
+                                    event.stopPropagation();
+                                    onSongDoubleClick(song.id);
+                                  }
+                                  : null
+                          }
+                      onMouseUp={songOnMouseUp ? (event) => songOnMouseUp(event, song.id) : null}
+                    >
+                      <TableRowColumn>{song.title}</TableRowColumn>
+                      <TableRowColumn>{song.artist}</TableRowColumn>
+                      <TableRowColumn>{song.album}</TableRowColumn>
+                      <TableRowColumn>{song.genre}</TableRowColumn>
+                      <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.duration} /></TableRowColumn>
+                    </TableRow>
+                  )) : null
+                }
               </TableBody>
             </Table>
           </ScrollPane>

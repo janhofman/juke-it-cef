@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
+import PropTypes from 'prop-types';
 import Genres from '../../components/Genres';
 import LoadScreen from '../../components/LoadScreen';
 import { loadGenres } from './../../actions/libraryActions';
@@ -9,6 +10,9 @@ class GenresPage extends Component {
   constructor(props) {
     super(props);
     const { dispatch } = props;
+
+    this.showDetail = this.showDetail.bind(this);
+
     dispatch(loadGenres());
   }
 
@@ -20,8 +24,8 @@ class GenresPage extends Component {
   }
 
   showDetail(genreId) {
-    const { dispatch } = this.props
-      dispatch(push(`/home/detail/genre/${genreId}`));
+    const { dispatch } = this.props;
+    dispatch(push(`/home/detail/genre/${genreId}`));
   }
 
   render() {
@@ -31,12 +35,18 @@ class GenresPage extends Component {
         <Genres
           {...this.props}
           genres={genres}
-          showDetail={this.showDetail.bind(this)}
+          showDetail={this.showDetail}
         />
       </LoadScreen>
     );
   }
 }
+
+GenresPage.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  loaded: PropTypes.bool.isRequired,
+  genres: PropTypes.array.isRequired,
+};
 
 export default connect((store) => {
   const { library } = store;

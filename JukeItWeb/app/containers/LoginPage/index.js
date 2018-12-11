@@ -1,95 +1,48 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
 
 import Login from './../../components/Login';
 import {
     emptyEmail,
     emptyPasswd,
-    loggingIn,
-    logInSuccessful,
-    logInError,
-    addFirebaseListeners,
+  logIn,
 } from './../../actions/loginActions';
-import {
-    spotUpdate,
-    userUpdate,
-    setUserId,
-    setSpotId,
-} from './../../actions/userDataActions';
-import { openFileServerLocal } from './../../actions/devicesActions';
 
 class LoginPage extends Component {
-  fetchUserDataOnce(firebase, userId) {
-    const userRef = firebase.database().ref('users');
-    const ops = [];
-    ops.push(userRef.child('private').child(userId).once('value'));
-    ops.push(userRef.child('public').child(userId).once('value'));
-    return Promise.all(ops).then((snapshots) => ({ ...snapshots[0].val(), ...snapshots[1].val() }));
+  constructor(props) {
+    super(props);
+
+    this.logIn = this.logIn.bind(this);
   }
 
-  fetchSpotDataOnce(firebase, spotId) {
-    const spotRef = firebase.database().ref('spots');
-    const ops = [];
-    ops.push(spotRef.child('private').child(spotId).once('value'));
-    ops.push(spotRef.child('public').child(spotId).once('value'));
-    return Promise.all(ops).then((snapshots) => ({ ...snapshots[0].val(), ...snapshots[1].val() }));
-  }
-
-  logIn = function () {
-        // get email and password
+  logIn() {
+    // get email and password
     const email = document.getElementById('email').value;
     const passwd = document.getElementById('password').value;
+    const { dispatch } = this.props;
 
-        // dispatch events
-    this.props.dispatch((dispatch) => {
-            // verify input
-      dispatch(emptyEmail(!email.length));
-      dispatch(emptyPasswd(!passwd.length));
-      if (email.length > 0 && passwd.length > 0) {
-        const { firebase } = this.props;
-        dispatch(loggingIn());
-        firebase.auth()
-          .signInWithEmailAndPassword(email, passwd)
-          .then((user) => {
-            const userId = user.uid;
-            dispatch(logInSuccessful(user));
-            dispatch(setUserId(userId));
-              // fetch all user data
-            this.fetchUserDataOnce(firebase, userId).then((userData) => {
-              dispatch(userUpdate(userData));
-              // check if user has spot
-              if (!userData.adminForSpot) {
-                // user doesn't have a spot yet
-                dispatch(push('/spotregister'));
-              } else {
-                const spotId = userData.adminForSpot;
-                // user has spot, log them in
-                const spotPromise = this.fetchSpotDataOnce(firebase, spotId);
-                dispatch(setSpotId(spotId));
-                spotPromise.then((spotData) => {
-                  dispatch(spotUpdate(spotData));
-                  dispatch(addFirebaseListeners(userId, spotId));
-                  dispatch(openFileServerLocal());
-                  dispatch(push('/home'));// history.push('/home');
-                });
-              }
-            });
-          })
-          .catch((error) => dispatch(logInError(error)));
-      }
-    });
+    // verify input
+    dispatch(emptyEmail(!email.length));
+    dispatch(emptyPasswd(!passwd.length));
+    if (email.length > 0 && passwd.length > 0) {
+      dispatch(logIn(email, passwd));
+    }
   }
 
   render() {
     return (
       <Login
         {...this.props}
-        logIn={this.logIn.bind(this)}
+        logIn={this.logIn}
       />
     );
   }
 }
+
+LoginPage.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+};
 
 export default connect((store) => {
   const { login, firebase } = store;

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { push } from 'react-router-redux';
-import { uploadGenreLib } from '../../actions/playbackActions';
+import { removePlaylist, uploadGenreLib } from '../../actions/playbackActions';
 import {
   clear,
   loadMetadataForGenre,
@@ -35,6 +35,7 @@ class GenreDetailPage extends Component {
   playPlaylist() {
     const { name, match, dispatch } = this.props;
     const { genreId } = match.params;
+    dispatch(removePlaylist());
     dispatch(uploadGenreLib(genreId, name, null));
   }
 

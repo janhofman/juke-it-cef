@@ -31,7 +31,7 @@ export default defineMessages({
   },
   fsLocalHostnameLabel: {
     id: 'Devices.fsLocalHostnameLabel',
-    defaultMessage: 'Hostname',
+    defaultMessage: 'Hostname / IP address',
   },
   fsLocalPortHint: {
     id: 'Devices.fsLocalPortHint',
@@ -48,5 +48,37 @@ export default defineMessages({
   fsLocalStopBtn: {
     id: 'Devices.fsLocalStopBtn',
     defaultMessage: 'Stop',
+  },
+  playerLocalHostnameHint: {
+    id: 'Devices.playerLocalHostnameHint',
+    defaultMessage: 'default: localhost',
+  },
+  playerLocalHostnameLabel: {
+    id: 'Devices.playerLocalHostnameLabel',
+    defaultMessage: 'IP address',
+  },
+  playerLocalPortHint: {
+    id: 'Devices.playerLocalPortHint',
+    defaultMessage: 'default: 26341',
+  },
+  playerLocalPortLabel: {
+    id: 'Devices.playerLocalPortLabel',
+    defaultMessage: 'Port number',
+  },
+  playerLocalStartBtn: {
+    id: 'Devices.playerLocalStartBtn',
+    defaultMessage: 'Start',
+  },
+  playerLocalStopBtn: {
+    id: 'Devices.playerLocalStopBtn',
+    defaultMessage: 'Stop',
+  },
+  playerLocalConnectBtn: {
+    id: 'Devices.playerLocalConnectBtn',
+    defaultMessage: 'Connect',
+  },
+  playerLocalDisconnectBtn: {
+    id: 'Devices.playerLocalDisconnectBtn',
+    defaultMessage: 'Disconnect',
   },
 });

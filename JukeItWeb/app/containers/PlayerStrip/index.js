@@ -1,20 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-
+import PropTypes from 'prop-types';
 import Player from '../../components/Player';
 import {
     play,
     pause,
-    open,
+    next,
     updateTime,
     seekTo,
-    registerTimeUpdateCallback,
-    registerPlaybackFinishedCallback,
-    setOnFinishAction,
 } from './../../actions/playerActions';
 import {
-    nextSong,
-    removeTopOfQueue,
     toggleQueue,
 } from './../../actions/playbackActions';
 
@@ -25,50 +20,15 @@ class PlayerStrip extends Component {
     this.state = {
       seeking: false,
     };
-  }
-
-  componentDidMount() {
-    const { currentSong, dispatch } = this.props;
-    dispatch(setOnFinishAction((dispatch) => {
-      // remove finished song
-      dispatch(removeTopOfQueue());
-      // ask for next song
-      dispatch(nextSong());
-    }));
-    dispatch(registerTimeUpdateCallback());
-    dispatch(registerPlaybackFinishedCallback());
-    if (currentSong && currentSong.path && currentSong.path.length > 0) {
-      dispatch(open(currentSong));
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { currentSong, dispatch, playing } = this.props;
-    // song was closed and cancelled
-    if (prevProps.currentSong && !currentSong) {
-      // dispatch(close)
-    } else if (prevProps.currentSong !== currentSong) {
-      dispatch(open(currentSong));
-      if (playing) {
-        dispatch(play());
-      }
-    }
+    this.onPlay = this.onPlay.bind(this);
+    this.onPause = this.onPause.bind(this);
+    this.toggleQueue = this.toggleQueue.bind(this);
+    this.onNext = this.onNext.bind(this);
   }
 
   onNext() {
-    const { dispatch, playing } = this.props;
-    dispatch((dispatch) => {
-      /*if (playing) {
-        dispatch(pause());
-      }*/
-      // remove finished song
-      dispatch(removeTopOfQueue());
-      // ask for next song
-      dispatch(nextSong());
-      /*if (playing) {
-        dispatch(play());
-      }*/
-    });
+    const { dispatch } = this.props;
+    dispatch(next());
   }
 
   onLoadedMetadata() {
@@ -116,28 +76,32 @@ class PlayerStrip extends Component {
       <Player
         {...this.props}
         seeking={this.state.seeking}
-        onPlay={this.onPlay.bind(this)}
-        onPause={this.onPause.bind(this)}
-        onNext={this.onNext.bind(this)}
-        // onSeekStart={this.onSeekStart.bind(this)}
-        // onSeekEnd={this.onSeekEnd.bind(this)}
-        toggleQueue={this.toggleQueue.bind(this)}
+        onPlay={this.onPlay}
+        onPause={this.onPause}
+        onNext={this.onNext}
+        toggleQueue={this.toggleQueue}
       />
     );
   }
 }
+
+PlayerStrip.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  playing: PropTypes.bool.isRequired,
+};
 
 export default connect((store) => {
   const { player, playback, firebase } = store;
   return ({
     playing: player.playing,
     currentSong: player.currentSong,
-    audioContext: player.audioContext,
     length: player.length,
     currentTime: player.currentTime,
     queueKey: player.queueKey,
+    playerConnected: player.playerConnected,
     firebase,
     spotId: store.userData.user.adminForSpot,
+    orderQueue: playback.orderQueue,
     queue: playback.queue,
     queueOpen: playback.queueOpen,
   });

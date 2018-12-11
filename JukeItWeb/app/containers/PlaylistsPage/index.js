@@ -1,7 +1,7 @@
-// @flow
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
+import PropTypes from 'prop-types';
 import Playlists from './../../components/Playlists';
 import LoadScreen from './../../components/LoadScreen';
 import {
@@ -14,6 +14,15 @@ class PlaylistsPage extends Component {
   constructor(props) {
     super(props);
     props.dispatch(loadPlaylists());
+  }
+
+  componentWillReceiveProps(nextProps) {
+    console.log('WillReceiveProps');
+    const { loaded, dispatch } = this.props;
+    if (nextProps.loaded === false && loaded === true) {
+      console.log('Called update');
+      dispatch(loadPlaylists());
+    }
   }
 
   showDetail(playlistId) {
@@ -53,6 +62,11 @@ class PlaylistsPage extends Component {
     );
   }
 }
+
+PlaylistsPage.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  loaded: PropTypes.bool.isRequired,
+};
 
 export default connect((store) => {
   const { playlists } = store;
