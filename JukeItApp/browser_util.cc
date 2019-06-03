@@ -48,7 +48,7 @@ namespace shared {
 
 			CefSize GetMinimumSize(CefRefPtr<CefView> view) OVERRIDE {
 				// Minimum window size.
-				return CefSize(200, 100);
+				return CefSize(600, 400);
 			}
 
 		private:

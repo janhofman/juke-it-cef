@@ -35,8 +35,6 @@ set(JUKEITAPP_SRCS
   MsgHandler_FileServer.cc
   MsgHandler_MusicPlayer.h
   MsgHandler_MusicPlayer.cc
-  music_handler.h
-  music_handler.cc
   MusicPlayer.h
   MusicPlayer.cc
   MusicPlayerAPI.h
@@ -45,12 +43,8 @@ set(JUKEITAPP_SRCS
   resource_util.cc  
   rest.h
   rest.cpp
-  simple_app.h
-  simple_app.cc
-  simple_handler.h
-  simple_handler.cc
-  sqlite_handler.h
-  sqlite_handler.cc
+  SongCache.h
+  SongCache.cpp
   SqliteAPI.h
   SqliteAPI.cc
   tinyfiledialogs.h
@@ -77,7 +71,6 @@ set(JUKEITAPP_SRCS_WINDOWS
   resource.h
   resource_util_win.cc
   resource_util_win_impl.cc
-  simple_handler_win.cc
   )
 APPEND_PLATFORM_SOURCES(JUKEITAPP_SRCS)
 source_group(JukeItApp FILES ${JUKEITAPP_SRCS})

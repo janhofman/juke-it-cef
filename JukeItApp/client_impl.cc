@@ -1,10 +1,4 @@
-// Copyright (c) 2017 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
-
 #include "client_impl.h"
-#include "sqlite_handler.h"
-#include "music_handler.h"
 
 #include "include/wrapper/cef_helpers.h"
 
@@ -12,48 +6,6 @@
 #include "resource_util.h"
 
 namespace message_router {
-
-	namespace {
-
-		const char kTestMessageName[] = "MessageRouterTest";
-
-		// Handle messages in the browser process.
-		class MessageHandler : public CefMessageRouterBrowserSide::Handler {
-		public:
-			explicit MessageHandler(const CefString& startup_url)
-				: startup_url_(startup_url) {}
-
-			// Called due to cefQuery execution in message_router.html.
-			bool OnQuery(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame,
-				int64 query_id,
-				const CefString& request,
-				bool persistent,
-				CefRefPtr<Callback> callback) OVERRIDE {
-				// Only handle messages from the startup URL.
-				const std::string& url = frame->GetURL();
-				if (url.find(startup_url_) != 0)
-					return false;
-
-				const std::string& message_name = request;
-				if (message_name.find(kTestMessageName) == 0) {
-					// Reverse the string and return.
-					std::string result = message_name.substr(sizeof(kTestMessageName));
-					std::reverse(result.begin(), result.end());
-					callback->Success(result);
-					return true;
-				}
-
-				return false;
-			}
-
-		private:
-			const CefString startup_url_;
-
-			DISALLOW_COPY_AND_ASSIGN(MessageHandler);
-		};
-
-	}  // namespace
 
 	Client::Client(const CefString& startup_url)
 		: startup_url_(startup_url), browser_ct_(0) {}
@@ -81,27 +33,12 @@ namespace message_router {
 			CefMessageRouterConfig config;
 			message_router_ = CefMessageRouterBrowserSide::Create(config);
 
-			// Register handlers with the router.
-			message_handler_.reset(new MessageHandler(startup_url_));
-			message_router_->AddHandler(message_handler_.get(), false);
-
-			sqlite_handler_.reset(new SqliteHandler(startup_url_));
-			message_router_->AddHandler(sqlite_handler_.get(), false);
-
-			music_handler_.reset(new MusicHandler(startup_url_));
-			message_router_->AddHandler(music_handler_.get(), false);
-
+			//// Register handlers with the router.
 			fileserver_handler.reset(new MsgHandler_FileServer(startup_url_));
 			message_router_->AddHandler(fileserver_handler.get(), false);
 
 			musicplayer_handler.reset(new MsgHandler_MusicPlayer(startup_url_));
 			message_router_->AddHandler(musicplayer_handler.get(), false);
-
-			//sqliteAPI_.reset(new SqliteAPI());
-			//fileserver_handler_.reset(new FileServerHandler(sqliteAPI_.get()));
-			//std::string address = "http://*:12345/api";//"http://localhost:12345/api";
-			//fileserver_.reset(new FileServerAPI(address, fileserver_handler_.get()));
-			//fileserver_->open().wait();
 		}
 
 		browser_ct_++;
@@ -120,13 +57,11 @@ namespace message_router {
 
 		if (--browser_ct_ == 0) {
 			// Free the router when the last browser is closed.
-			message_router_->RemoveHandler(message_handler_.get());
-			message_router_->RemoveHandler(sqlite_handler_.get());
-			message_router_->RemoveHandler(music_handler_.get());
-
-			message_handler_.reset();
-			sqlite_handler_.reset();
-			music_handler_.reset();
+			message_router_->RemoveHandler(fileserver_handler.get());
+			message_router_->RemoveHandler(musicplayer_handler.get());
+			 
+			fileserver_handler.reset();
+			musicplayer_handler.reset();
 			message_router_ = NULL;
 		}
 
@@ -192,6 +127,4 @@ namespace message_router {
 		//MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
 		return false;
 	}
-
-
 }  // namespace message_router

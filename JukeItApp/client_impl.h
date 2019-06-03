@@ -1,9 +1,5 @@
-// Copyright (c) 2017 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
-
-#ifndef CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
-#define CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
+#ifndef CEF_MESSAGE_ROUTER_CLIENT_IMPL_H_
+#define CEF_MESSAGE_ROUTER_CLIENT_IMPL_H_
 
 #define _TURN_OFF_PLATFORM_STRING // we need to turn this off, because the U() macro from cpprest it messes up some boost templates
 
@@ -48,8 +44,7 @@ namespace message_router {
 			EventFlags event_flags) OVERRIDE;
 
 		// CefDisplayHandler methods:
-		void OnTitleChange(CefRefPtr<CefBrowser> browser,
-			const CefString& title) OVERRIDE;
+		void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) OVERRIDE;
 
 		// CefLifeSpanHandler methods:
 		void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -61,19 +56,16 @@ namespace message_router {
 			CefRefPtr<CefFrame> frame,
 			CefRefPtr<CefRequest> request,
 			bool is_redirect) OVERRIDE;
+
 		CefRefPtr<CefResourceHandler> GetResourceHandler(
 			CefRefPtr<CefBrowser> browser,
 			CefRefPtr<CefFrame> frame,
 			CefRefPtr<CefRequest> request) OVERRIDE;
-		void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-			TerminationStatus status) OVERRIDE;
+
+		void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status) OVERRIDE;
 
 	private:
-		// Handles the browser side of query routing.
 		CefRefPtr<CefMessageRouterBrowserSide> message_router_;
-		scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
-		scoped_ptr<CefMessageRouterBrowserSide::Handler> sqlite_handler_;
-		scoped_ptr<CefMessageRouterBrowserSide::Handler> music_handler_;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> fileserver_handler;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> musicplayer_handler;
 
@@ -85,7 +77,5 @@ namespace message_router {
 		IMPLEMENT_REFCOUNTING(Client);
 		DISALLOW_COPY_AND_ASSIGN(Client);
 	};
-
-}  // namespace message_router
-
-#endif  // CEF_EXAMPLES_MESSAGE_ROUTER_CLIENT_IMPL_H_
+}
+#endif
