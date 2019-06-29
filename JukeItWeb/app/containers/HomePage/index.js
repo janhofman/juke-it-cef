@@ -7,8 +7,9 @@ import {logOut} from './../../actions/loginActions';
 
 class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
   logout(){
-    this.props.dispatch(push('/'));
-    this.props.dispatch(logOut());
+    const { dispatch } = this.props;
+    dispatch(push('/'));
+    dispatch(logOut());
   }
 
   render() {

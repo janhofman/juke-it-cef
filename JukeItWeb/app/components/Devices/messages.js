@@ -25,6 +25,14 @@ export default defineMessages({
     id: 'Devices.playerRemote',
     defaultMessage: 'Remote',
   },
+  fsReloadSettings: {
+    id: 'Devices.fsReloadSettings',
+    defaultMessage: 'Reload settings',
+  },
+  playerReloadSettings: {
+    id: 'Devices.playerReloadSettings',
+    defaultMessage: 'Reload settings',
+  },
   fsLocalHostnameHint: {
     id: 'Devices.fsLocalHostnameHint',
     defaultMessage: 'default: localhost',
@@ -79,6 +87,26 @@ export default defineMessages({
   },
   playerLocalDisconnectBtn: {
     id: 'Devices.playerLocalDisconnectBtn',
+    defaultMessage: 'Disconnect',
+  },
+  playerRemoteHostnameLabel: {
+    id: 'Devices.playerRemoteHostnameLabel',
+    defaultMessage: 'IP address',
+  },
+  playerRemotePortHint: {
+    id: 'Devices.playerRemotePortHint',
+    defaultMessage: 'default: 26341',
+  },
+  playerRemotePortLabel: {
+    id: 'Devices.playerRemotePortLabel',
+    defaultMessage: 'Port number',
+  },
+  playerRemoteConnectBtn: {
+    id: 'Devices.playerRemoteConnectBtn',
+    defaultMessage: 'Connect',
+  },
+  playerRemoteDisconnectBtn: {
+    id: 'Devices.playerRemoteConnectBtn',
     defaultMessage: 'Disconnect',
   },
 });

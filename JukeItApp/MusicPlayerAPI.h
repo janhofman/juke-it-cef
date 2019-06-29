@@ -105,6 +105,7 @@ namespace MusicPlayer {
 		void AddPlaylistAction(const web::json::object& payload);
 
 		void RequestPlaylistSong();
+		void SendStatus(bool playing, int timestamp);
 		bool TryParseAddAction(const web::json::object& payload, std::string& outSongId, std::string& outItemId);
 		// this function just handles raw song opening, calling function must verify 
 		// cache existence and catch exception caused by empty cache

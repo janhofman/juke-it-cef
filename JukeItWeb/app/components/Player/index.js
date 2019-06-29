@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 import { injectIntl, FormattedMessage, defineMessages } from 'react-intl';
 import PropTypes from 'prop-types';
 import IconButton from 'material-ui/IconButton';
+import Popover from 'material-ui/Popover';
 import Slider from 'material-ui/Slider';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import Play from 'material-ui/svg-icons/av/play-arrow';
 import Pause from 'material-ui/svg-icons/av/pause';
 import Repeat from 'material-ui/svg-icons/av/repeat';
+import Volume from 'material-ui/svg-icons/av/volume-up';
 import Next from 'material-ui/svg-icons/av/skip-next';
 import Previous from 'material-ui/svg-icons/av/skip-previous';
 import Shuffle from 'material-ui/svg-icons/av/shuffle';
@@ -21,6 +23,7 @@ import {
   TableRowColumn,
 } from 'material-ui/Table';
 import defaultImage from '../../images/logo_negative_no_bg.png';
+import MillisToTime from './../MillisToTime';
 
 const messages = defineMessages({
   queueTitle: {
@@ -83,18 +86,33 @@ const styles = {
     fontSize: '0.6em',
     margin: 'auto',
   },
+  time1: {
+    color: fullWhite,
+    fontSize: '0.7em',
+    margin: 'auto',
+    marginLeft: '20px',
+  },
+  time2: {
+    color: fullWhite,
+    fontSize: '0.7em',
+    margin: 'auto',
+    marginRight: '10px',
+  },
+  volumePopover: {
+    height: '100px',
+    width: '48px',
+    margin: 'auto',
+    backgroundColor: '#1a1a1a',
+    position: 'relative',
+    display: 'flex',
+    flexFlow: 'column',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
 };
 
 
 class Player extends Component {
-  state={
-    sliderValue: 0,
-  }
-
-  handleSlider = (event, value) => {
-    this.setState({ sliderValue: value });
-  };
-
   mapQueue(queue) {
     if (queue) {
       const songs = queue.map((queItm) => (
@@ -112,20 +130,34 @@ class Player extends Component {
   render() {
     const { formatMessage } = this.props.intl;
     const {
-      onPlay,
-      onPause,
       orderQueue,
-      toggleQueue,
       queueOpen,
       currentSong,
-      onNext,
       playerConnected,
-      seeking,
       playing,
+      currentTime,
+      volume,
+
+      seeking,
+      sliderValue,
+      volumeOpen,
+      volumeValue,
+      volumeDragging,
+      onPlay,
+      onPause,
+      onNext,
+      toggleQueue,
+      toggleVolume,
+      onVolumeDragStart,
+      onVolumeDragStop,
+      onVolumeChange,
+      onSliderChange,
     } = this.props;
 
     const song = currentSong !== null ? currentSong : {};
-    const sliderMax = song && song.length > 0 ? song.length : 100;
+    const sliderMax = song && song.duration > 0 ? song.duration : 100;
+    const elapsed = seeking ? sliderValue : Math.min(currentTime, sliderMax - 1);
+    const volumeSliderValue = volumeDragging ? volumeValue : Math.min(volume, 100);
 
     return (
       <div style={Object.assign(styles.base, { height: this.props.height })}>
@@ -150,17 +182,23 @@ class Player extends Component {
             }
           </p>
         </div>
+        <div style={styles.time1}>
+          <MillisToTime value={elapsed} />
+        </div>
         <div style={styles.sliderBox}>
           <Slider
             sliderStyle={styles.slider}
             min={0}
             max={sliderMax}
             defaultValue={0}
-            value={seeking ? this.state.sliderValue : Math.min(this.props.currentTime, sliderMax - 1)}
+            value={elapsed}
             onDragStart={this.props.onSeekStart}
             onDragStop={() => this.props.onSeekEnd(this.state.sliderValue)}
-            onChange={this.handleSlider}
+            onChange={onSliderChange}
           />
+        </div>
+        <div style={styles.time2}>
+          <MillisToTime value={sliderMax} />
         </div>
         <div>
           {/*<IconButton><Previous /></IconButton>*/}
@@ -181,6 +219,7 @@ class Player extends Component {
             <Next />
           </IconButton>
           {/*<IconButton><Repeat /></IconButton>*/}
+          {/*
           <IconButton
             onTouchTap={toggleQueue}
             tooltip={formatMessage(messages.shuffleTooltip)}
@@ -188,6 +227,40 @@ class Player extends Component {
           >
             <Shuffle />
           </IconButton>
+          */}
+          <div style={{display: "inline-block"}} ref={elem => this.volumeAnchor = elem}>
+            <IconButton
+              onTouchTap={toggleVolume}
+              tooltip={volume + ' %'}
+              tooltipPosition={'top-center'}              
+            >
+              <Volume/>
+            </IconButton>
+          </div>
+          {/*** Volume popover ***/}
+          <Popover
+            open={volumeOpen}
+            anchorEl={this.volumeAnchor}
+            anchorOrigin={{ vertical: 'top', horizontal: 'left',}}
+            targetOrigin={{ vertical: 'bottom', horizontal: 'left',}}
+            onRequestClose={toggleVolume}
+          >
+            <div style={this.volumeAnchor ? {...styles.volumePopover, width: this.volumeAnchor.offsetWidth} : styles.volumePopover}>
+              <Slider
+                axis={'y'}
+                style={{height: '70px'}}
+                min={0}
+                max={100}
+                step={1}
+                defaultValue={0}
+                value={volumeSliderValue}
+                onDragStart={onVolumeDragStart}
+                onDragStop={onVolumeDragStop}
+                onChange={onVolumeChange}
+                sliderStyle={styles.slider}
+              />
+            </div>
+          </Popover>
           <IconButton
             onTouchTap={toggleQueue}
             tooltip={formatMessage(messages.queueTooltip)}
@@ -223,6 +296,8 @@ Player.propTypes = {
   playerConnected: PropTypes.bool.isRequired,
   orderQueue: PropTypes.array.isRequired,
   currentSong: PropTypes.object,
+  currentTime: PropTypes.number.isRequired,
+  volume: PropTypes.number.isRequired,
 };
 
 export default injectIntl(Player);

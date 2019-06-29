@@ -53,9 +53,9 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 	bool persistent,
 	CefRefPtr<Callback> callback) {
 	// Only handle messages from the startup URL.
-	const std::string& url = frame->GetURL();
+	/*const std::string& url = frame->GetURL();
 	if (url.find(startup_url_) != 0)
-		return false;
+		return false;*/
 
 	const std::string& requestString = request;
 	web::json::value requestJSON;

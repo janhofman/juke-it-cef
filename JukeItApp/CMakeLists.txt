@@ -6,17 +6,54 @@
 # Source files.
 #
 
-# JukeItApp sources.
-set(JUKEITAPP_SRCS
+# Player module sources.
+set(PLAYER_SRCS
+  MusicPlayer.h
+  MusicPlayer.cc
+  MusicPlayerAPI.h
+  MusicPlayerAPI.cc
+  SongCache.h
+  SongCache.cpp
+  )
+  
+source_group(JukeItApp\\\\Player FILES ${PLAYER_SRCS})
+
+# Fileserver module sources.
+set(FILESERVER_SRCS
+  AudioInspector.h
+  AudioInspector.cc
+  FileServerHandler.h
+  FileServerHandler.cc
+  rest.h
+  rest.cpp
+  SqliteAPI.h
+  SqliteAPI.cc
+  tinyfiledialogs.h
+  tinyfiledialogs.c
+  )
+  
+source_group(JukeItApp\\\\Fileserver FILES ${FILESERVER_SRCS})
+  
+# Message handler sources.
+set(MSGHANDLER_SRCS
   abstract_message_handler.h
   abstract_message_handler.cc
   AbstractFileServerHandler.h
+  MsgHandler_FileServer.h
+  MsgHandler_FileServer.cc
+  MsgHandler_MusicPlayer.h
+  MsgHandler_MusicPlayer.cc
+  )   
+  
+source_group("JukeItApp\\\\Message Handlers" FILES ${MSGHANDLER_SRCS})
+
+# CEF sources.
+set(CEF_SRCS
   app_browser_impl.h
   app_browser_impl.cc
-  app_factory.h
+  app_factory.h   
+  app_renderer_impl.h
   app_renderer_impl.cc
-  AudioInspector.h
-  AudioInspector.cc
   browser_util.h
   browser_util.cc
   client_impl.h
@@ -25,44 +62,27 @@ set(JUKEITAPP_SRCS
   client_manager.cc
   client_util.h
   client_util.cc
-  FileServerHandler.h
-  FileServerHandler.cc
   main.h
   main_minimal.cc
   main_util.h
   main_util.cc
-  MsgHandler_FileServer.h
-  MsgHandler_FileServer.cc
-  MsgHandler_MusicPlayer.h
-  MsgHandler_MusicPlayer.cc
-  MusicPlayer.h
-  MusicPlayer.cc
-  MusicPlayerAPI.h
-  MusicPlayerAPI.cc
   resource_util.h
-  resource_util.cc  
-  rest.h
-  rest.cpp
-  SongCache.h
-  SongCache.cpp
-  SqliteAPI.h
-  SqliteAPI.cc
-  tinyfiledialogs.h
-  tinyfiledialogs.c
-  )
-set(JUKEITAPP_SRCS_LINUX
+  resource_util.cc
+  )     
+
+set(CEF_SRCS_LINUX
   cefsimple_linux.cc
   simple_handler_linux.cc
   client_util_linux.cc
   resource_util_linux.cc
   )
-set(JUKEITAPP_SRCS_MACOSX
+set(CEF_SRCS_MACOSX
   cefsimple_mac.mm
   simple_handler_mac.mm
   client_util_mac.mm
   resource_util_mac.mm
   )
-set(JUKEITAPP_SRCS_WINDOWS
+set(CEF_SRCS_WINDOWS
   JukeItApp.exe.manifest
   compatibility.manifest
   client_util_win.cc
@@ -72,8 +92,15 @@ set(JUKEITAPP_SRCS_WINDOWS
   resource_util_win.cc
   resource_util_win_impl.cc
   )
-APPEND_PLATFORM_SOURCES(JUKEITAPP_SRCS)
-source_group(JukeItApp FILES ${JUKEITAPP_SRCS})
+APPEND_PLATFORM_SOURCES(CEF_SRCS)   
+source_group(JukeItApp\\\\CEF FILES ${CEF_SRCS})
+
+set(JUKEITAPP_SRCS
+  ${PLAYER_SRCS}     
+  ${FILESERVER_SRCS}
+  ${MSGHANDLER_SRCS}   
+  ${CEF_SRCS}
+ )
 
 set(JUKEITAPP_RES_SRCS_WINDOWS
   res/cefsimple.ico
@@ -244,26 +271,23 @@ if(OS_WINDOWS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
      )
      
-  #add_library(cpprestsdk_lib STATIC IMPORTED)
-  # set_property(TARGET cpprestsdk_lib PROPERTY
-  #              IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/include/libcpprest140d_2_10.lib)
+  
   set(CPPRESTSDK_FILES
-  # ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/build.x64v141/Binaries/Release/cpprest141_2_10.lib
-  #  ${CMAKE_CURRENT_SOURCE_DIR}/../build/JukeItApp/Debug/cpprest141d_2_10.lib
-  #  ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/include/cpprest140_2_10.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib
-    bcrypt.lib
+  bcrypt.lib
+  crypt32.lib
+  winhttp.lib
+  httpapi.lib
   )
-  #find_package(cpprestsdk REQUIRED)
-  #set(CPPRESTSDK_FILES 
-  #      cpprestsdk::cpprest 
-  #      cpprestsdk::cpprestsdk_zlib_internal 
-  #      cpprestsdk::cpprestsdk_boost_internal 
-  #      cpprestsdk::cpprestsdk_openssl_internal
-  #)
+  set(CPPRESTSDK_FILES_DEBUG
+    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib
+  )
+  set(CPPRESTSDK_FILES_RELEASE
+     ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Release/cpprest_2_10.lib
+  )
+  
   add_definitions(-D_NO_ASYNCRTIMP -D_NO_PPLXIMP)   
   
-  target_link_libraries(${CEF_TARGET} ${CPPRESTSDK_FILES} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} general ${CPPRESTSDK_FILES} debug ${CPPRESTSDK_FILES_DEBUG} optimized ${CPPRESTSDK_FILES_RELEASE} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

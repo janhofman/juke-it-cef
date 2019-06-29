@@ -1,3 +1,7 @@
+import{
+  connectToLocalPlayer,
+} from './playerActions';
+
 function makeRequest(command, payload = null, onSuccess = function () {}, onFailure = function () {}) {
   return (dispatch, getState) => {
     const { cefQuery } = getState();
@@ -55,11 +59,12 @@ export function openPlayerServer(ipAddress = null, port = null) {
     const onSuccess = (responseStr) => {
       const response = JSON.parse(responseStr);
       if (response.status === 0) {
-        dispatch(playerServerOpened(response.address));
+        dispatch(playerServerOpened(response.address));        
       } else {
         // here warnings can be handled
         dispatch(playerServerOpened(response.address));
       }
+      dispatch(connectToLocalPlayer());
     };
 
     const onFailure = (errorCode, errorMessage) => {

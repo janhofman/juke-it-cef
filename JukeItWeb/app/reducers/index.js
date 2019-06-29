@@ -1,8 +1,7 @@
 /**
  * Combine all reducers in this file and export the combined reducers.
  */
-import { combineReducers } from 'redux';//immutable';
-import { fromJS } from 'immutable';
+import { combineReducers } from 'redux';
 import { LOCATION_CHANGE } from 'react-router-redux';
 
 //import languageProviderReducer from 'containers/LanguageProvider/reducer';
@@ -15,6 +14,7 @@ import playback from './playbackReducer';
 import songList from './songListReducer';
 import playlists from './playlistsReducer';
 import devices from './devicesReducer';
+import settings from './settingsReducer';
 import languageProviderReducer from './../containers/LanguageProvider/reducer';
 
 /*
@@ -60,6 +60,7 @@ export default function createReducer(injectedReducers) {
     songList,
     playlists,
     devices,
+    settings,
     firebase: (state = {}) => state,
     cefQuery: (state = {}) => state,
     ...injectedReducers,

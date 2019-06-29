@@ -7,7 +7,7 @@ import {
   setSpotId,
   spotUpdate,
 } from './../../actions/userDataActions';
-import { SpotRegister } from './../../components';
+import SpotRegister from '../../components/SpotRegister';
 
 class SpotRegisterPage extends Component {
   constructor(props) {

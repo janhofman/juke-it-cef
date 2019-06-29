@@ -7,6 +7,7 @@ const initialState = {
   onFinishAction: null,
   webSocket: null,
   playerConnected: false,
+  volume: 100,
 };
 
 export default function reducer(state = initialState, action) {
@@ -23,6 +24,8 @@ export default function reducer(state = initialState, action) {
       return { ...state, currentSong: action.payload.song, queueKey: action.payload.key, currentTime: 0 };
     case 'PLAYER_STOP':
       return initialState;
+    case 'PLAYER_VOLUME':
+      return { ...state, volume: action.payload };
     case 'PLAYER_SET_ONFINISHACTION':
       return { ...state, onFinishAction: action.payload };
     case 'PLAYER_SET_WEBSOCKET': {

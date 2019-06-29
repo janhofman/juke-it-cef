@@ -181,11 +181,11 @@ namespace MusicPlayer {
 							/*case Session::SEEK: {
 								response = SeekAction(payload);
 								break;
-							}
-							case Session::VOLUME: {
-								response = VolumeAction(payload);
-								break;
 							}*/
+							case Session::VOLUME: {
+								VolumeAction(payload);
+								break;
+							}
 							default:
 								// we should not need this as there is no other option left
 								Error(ResponseErrorCode::NOT_SUPPORTED_ACTION);
@@ -283,14 +283,29 @@ namespace MusicPlayer {
 				auto url = utility::conversions::to_utf8string(it->second.as_string());
 				cache_ = std::make_unique<SongCache>(url);
 				player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
+				player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
 				// ask for a song
 				RequestPlaylistSong();
 			}	
 		}
 		else {
 			Error(ResponseErrorCode::MALFORMED_REQUEST);
+		}		
+	}
+
+	void Session::VolumeAction(const web::json::object& payload) {
+		auto it = payload.find(String_t("volume"));
+		if (it != payload.end()) {
+			if (it->second.is_number()) {
+				auto volume = it->second.as_number().to_int32();
+				if (volume >= 0 && volume <= 100) {
+					player_.SetVolume(volume);
+					return;
+				}
+			}
 		}
-		
+		// fallback error
+		Error(ResponseErrorCode::MALFORMED_REQUEST);
 	}
 
 	void Session::AddOrderAction(const web::json::object& payload) {
@@ -366,6 +381,14 @@ namespace MusicPlayer {
 		if (!cache_->HasEnoughSongs()) {
 			SendRequest("REQUESTPLAYLIST");
 		}
+	}
+
+	void Session::SendStatus(bool playing, int timestamp) {
+		web::json::value status;
+		status[String_t("timestamp")] = web::json::value::number(timestamp);
+		status[String_t("playing")] = web::json::value::boolean(playing);
+
+		SendRequest("STATUS", status);
 	}
 
 	Session::ActionEnum Session::GetAction(const std::string& action) {

@@ -23,6 +23,10 @@ function nextRequest() {
   return buildRequest('NEXT');
 }
 
+function volumeRequest(volume) {
+  return buildRequest('VOLUME', { volume });
+}
+
 function fileserverRequest(url) {
   return buildRequest('FILESERVER', { url });
 }
@@ -60,6 +64,28 @@ export function stop() {
   return {
     type: 'PLAYER_STOP',
   };
+}
+
+function sendVolume(volume) {
+  return (dispatch, getState) => {
+    const { player: { webSocket } } = getState();
+    console.log("websocket: ", webSocket);
+    if (webSocket) {
+      console.log("sending volume")      
+      const request = volumeRequest(volume);
+      webSocket.send(JSON.stringify(request));      
+    }
+  };
+}
+
+export function setVolume(newVolume){
+  return (dispatch) => {
+    dispatch(sendVolume(newVolume));
+    dispatch({
+      type: 'PLAYER_VOLUME',
+      payload: newVolume,
+    });
+  };  
 }
 
 export function setLength(length) {
@@ -336,6 +362,36 @@ export function resetPlayer() {
   };
 }
 
+function statusUpdate(status) {
+  return (dispatch, getState) => {
+    if (status) {
+      if ("playing" in status) {
+        const {
+          player: {
+            playing,
+          },
+        } = getState();  
+
+        if(status.playing !== playing){  
+          if (status.playing) {
+            dispatch({
+              type: 'PLAYER_PLAY',
+            });
+          } else {
+            dispatch({
+              type: 'PLAYER_PAUSE',
+            });
+          }
+        }
+      };
+
+      if ("timestamp" in status) {
+        dispatch(updateTime(status.timestamp));
+      }
+    }
+  }
+}
+
 function webSocketOnMessage(dispatch, event) {
   console.log(event);
   try {
@@ -358,6 +414,10 @@ function webSocketOnMessage(dispatch, event) {
               }
               case 'SONGSTARTED': {
                 dispatch(songStarted(msg.payload));
+                break;
+              }
+              case 'STATUS': {
+                dispatch(statusUpdate(msg.payload));
                 break;
               }
               default:
@@ -414,6 +474,32 @@ export function connectToLocalPlayer() {
   };
 }
 
+export function connectToRemotePlayer() {
+  return (dispatch, getState) => {
+    const {
+      devices: {
+        player: {
+          remote: {
+            hostname,
+            port,
+          },
+        },
+      },
+    } = getState();
+
+    if (testHostame(hostname) && testPortNumber(port)) {
+      let url = 'ws://';
+      if (hostname.toLowerCase().startsWith('ws://')) {
+        url = hostname;
+      } else {
+        url += hostname;
+      }
+      url += `:${port}`;
+      dispatch(connect(url));
+    }
+  };
+}
+
 function connect(address) {
   return (dispatch, getState) => {
     const {
@@ -422,6 +508,9 @@ function connect(address) {
           baseAddress,
         },
       },
+      player: {
+        volume,
+      }
     } = getState();
 
     if (address) {
@@ -432,6 +521,7 @@ function connect(address) {
           dispatch(playerConnectionChanged(true));
           const fs = fileserverRequest(baseAddress);
           ws.send(JSON.stringify(fs));
+          sendVolume(volume);
         };
         ws.onclose = () => {
           dispatch(playerConnectionChanged(false));

@@ -7,18 +7,14 @@
 
 namespace message_router {
 
-	Client::Client(const CefString& startup_url)
-		: startup_url_(startup_url), browser_ct_(0) {}
+	Client::Client(const CefString& startup_url) : startup_url_(startup_url), browser_ct_(0) {}
 
-	void Client::OnTitleChange(CefRefPtr<CefBrowser> browser,
-		const CefString& title) {
+	void Client::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {
 		// Call the default shared implementation.
 		shared::OnTitleChange(browser, title);
 	}
 
-	bool Client::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
-		CefProcessId source_process,
-		CefRefPtr<CefProcessMessage> message) {
+	bool Client::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {
 		CEF_REQUIRE_UI_THREAD();
 
 		return message_router_->OnProcessMessageReceived(browser, source_process,
@@ -39,6 +35,9 @@ namespace message_router {
 
 			musicplayer_handler.reset(new MsgHandler_MusicPlayer(startup_url_));
 			message_router_->AddHandler(musicplayer_handler.get(), false);
+
+			config_handler.reset(new MsgHandler_Configuration(startup_url_));
+			message_router_->AddHandler(config_handler.get(), false);
 		}
 
 		browser_ct_++;
@@ -59,9 +58,11 @@ namespace message_router {
 			// Free the router when the last browser is closed.
 			message_router_->RemoveHandler(fileserver_handler.get());
 			message_router_->RemoveHandler(musicplayer_handler.get());
+			message_router_->RemoveHandler(config_handler.get());
 			 
 			fileserver_handler.reset();
 			musicplayer_handler.reset();
+			config_handler.reset();
 			message_router_ = NULL;
 		}
 
@@ -72,7 +73,8 @@ namespace message_router {
 	bool Client::OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
 		CefRefPtr<CefFrame> frame,
 		CefRefPtr<CefRequest> request,
-		bool is_redirect) {
+		bool is_redirect)
+	{
 		CEF_REQUIRE_UI_THREAD();
 
 		message_router_->OnBeforeBrowse(browser, frame);
@@ -82,7 +84,8 @@ namespace message_router {
 	CefRefPtr<CefResourceHandler> Client::GetResourceHandler(
 		CefRefPtr<CefBrowser> browser,
 		CefRefPtr<CefFrame> frame,
-		CefRefPtr<CefRequest> request) {
+		CefRefPtr<CefRequest> request)
+	{
 		CEF_REQUIRE_IO_THREAD();
 
 		const std::string& url = request->GetURL();
@@ -98,8 +101,7 @@ namespace message_router {
 		return NULL;
 	}
 
-	void Client::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-		TerminationStatus status) {
+	void Client::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status) {
 		CEF_REQUIRE_UI_THREAD();
 
 		message_router_->OnRenderProcessTerminated(browser);
@@ -110,7 +112,8 @@ namespace message_router {
 		CefRefPtr<CefBrowser> browser,
 		CefRefPtr<CefFrame> frame,
 		CefRefPtr<CefContextMenuParams> params,
-		CefRefPtr<CefMenuModel> model) {
+		CefRefPtr<CefMenuModel> model) 
+	{
 		CEF_REQUIRE_UI_THREAD();
 
 		model->Clear();
@@ -121,7 +124,8 @@ namespace message_router {
 		CefRefPtr<CefFrame> frame,
 		CefRefPtr<CefContextMenuParams> params,
 		int command_id,
-		EventFlags event_flags) {
+		EventFlags event_flags) 
+	{
 		CEF_REQUIRE_UI_THREAD();
 
 		//MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);

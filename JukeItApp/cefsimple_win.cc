@@ -12,6 +12,7 @@
 #include "client_manager.h"
 #include "main_util.h"
 #include "app_browser_impl.h"
+#include "app_renderer_impl.h"
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
 // automatically if using the required compiler version. Pass -DUSE_SANDBOX=OFF

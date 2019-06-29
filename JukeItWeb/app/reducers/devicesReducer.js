@@ -8,7 +8,8 @@ const initialState = {
       error: null,
     },
     remote: {
-      address: null,
+      hostname: '',
+      port: 26331,
       connected: false,
     },
     baseAddress: 'http://localhost:26331/api/',
@@ -22,7 +23,8 @@ const initialState = {
       error: null,
     },
     remote: {
-      address: null,
+      hostname: '',
+      port: 26331,
       connected: false,
     },
     address: null,
@@ -49,6 +51,11 @@ export default function reducer(state = initialState, action) {
     case 'DEVICES_TOGGLE_PLAYER_LOCAL': {
       const pageLayout = { ...state.pageLayout };
       pageLayout.player.localOpen = !(state.pageLayout.player.localOpen);
+      return { ...state, pageLayout };
+    }
+    case 'DEVICES_TOGGLE_PLAYER_REMOTE': {
+      const pageLayout = { ...state.pageLayout };
+      pageLayout.player.remoteOpen = !(state.pageLayout.player.remoteOpen);
       return { ...state, pageLayout };
     }
     case 'DEVICES_FS_LOCAL_BUSY': {
@@ -79,6 +86,16 @@ export default function reducer(state = initialState, action) {
     case 'DEVICES_PLAYER_LOCAL_PORT': {
       const player = { ...state.player };
       player.local.port = action.payload;
+      return { ...state, player };
+    }
+    case 'DEVICES_PLAYER_REMOTE_HOSTNAME': {
+      const player = { ...state.player };
+      player.remote.hostname = action.payload;
+      return { ...state, player };
+    }
+    case 'DEVICES_PLAYER_REMOTE_PORT': {
+      const player = { ...state.player };
+      player.remote.port = action.payload;
       return { ...state, player };
     }
     case 'FILESERVER_OPEN': {

@@ -16,28 +16,46 @@ import DevicesPage from '../../containers/DevicesPage';
 
 class Home extends Component {
   render() {
-    const { match, intl } = this.props;
+    const { match, intl, location: { pathname } } = this.props;
     const { formatMessage } = intl;
+
+    const establishmentPath = match.url;
+    const detailPath = `${match.url}/detail`;
+    const libraryPath = `${match.url}/library`;
+    const playlistPath = `${match.url}/playlists`;
+    const playbackPath = `${match.url}/playback`;
+    const devicesPath = `${match.url}/devices`;
+    const settingsPath = `${match.url}/settings`;
+
+    let establishmentMatch = pathname == establishmentPath; // it is an exact match
+    let libraryMatch  = pathname.startsWith(libraryPath) || pathname.startsWith(detailPath); // detail is displayed through library
+    let playlistMatch  = pathname.startsWith(playlistPath);
+    let playbackMatch  = pathname.startsWith(playbackPath);
+    let devicesMatch  = pathname.startsWith(devicesPath);
+    let settingsMatch  = pathname.startsWith(settingsPath);
+
+
+    console.log('location: ', this.props.location, 'match: ', match);
     return (
       <div>
         <div style={{ backgroundColor: '#1a1a1a' }}>
           <Link to="/home/library">
-            <FlatButton label={formatMessage(messages.libTabTitle)} />
+            <FlatButton label={formatMessage(messages.libTabTitle)} secondary={libraryMatch}/>
           </Link>
           <Link to={'/home/playlists'}>
-            <FlatButton label={formatMessage(messages.playlistsTabTitle)} />
+            <FlatButton label={formatMessage(messages.playlistsTabTitle)} secondary={playlistMatch}/>
           </Link>
           <Link to={'/home'}>
-            <FlatButton label={formatMessage(messages.establishmentTabTitle)} />
+            <FlatButton label={formatMessage(messages.establishmentTabTitle)} secondary={establishmentMatch}/>
           </Link>
           <Link to={'/home/playback'}>
-            <FlatButton label={formatMessage(messages.playbackTabTitle)} />
+            <FlatButton label={formatMessage(messages.playbackTabTitle)} secondary={playbackMatch}/>
           </Link>
           <Link to="/home/devices">
-            <FlatButton label={formatMessage(messages.devicesTabTitle)} />
+            <FlatButton label={formatMessage(messages.devicesTabTitle)} secondary={devicesMatch}/>
           </Link>
           <Link to="/home/settings">
-            <FlatButton label={formatMessage(messages.settingsTabTitle)} />
+            <FlatButton label={formatMessage(messages.settingsTabTitle)} secondary={settingsMatch}/>
           </Link>
           <FlatButton
             label={formatMessage(messages.logout)}

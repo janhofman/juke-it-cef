@@ -1,7 +1,3 @@
-// Copyright (c) 2017 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
-
 #include "browser_util.h"
 
 #include "include/cef_command_line.h"
@@ -12,7 +8,6 @@
 namespace shared {
 
 	namespace {
-
 		// When using the Views framework this object provides the delegate
 		// implementation for the CefWindow that hosts the Views-based browser.
 		class WindowDelegate : public CefWindowDelegate {
@@ -60,9 +55,7 @@ namespace shared {
 
 	}  // namespace
 
-	void CreateBrowser(CefRefPtr<CefClient> client,
-		const CefString& startup_url,
-		const CefBrowserSettings& settings) {
+	void CreateBrowser(CefRefPtr<CefClient> client, const CefString& startup_url, const CefBrowserSettings& settings) {
 		CEF_REQUIRE_UI_THREAD();
 
 #if defined(OS_WIN) || defined(OS_LINUX)
@@ -91,8 +84,7 @@ namespace shared {
 			CefWindowInfo window_info;
 
 #if defined(OS_WIN)
-			// On Windows we need to specify certain flags that will be passed to
-			// CreateWindowEx().
+			// On Windows we need to specify certain flags that will be passed to CreateWindowEx().
 			window_info.SetAsPopup(NULL, "JukeIt");
 #endif
 

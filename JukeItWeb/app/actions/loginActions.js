@@ -20,6 +20,10 @@ import {
 import {
   disconnect as disconnectPlayer,
 } from './playerActions';
+import {
+  load as loadSettings,
+} from './settingsActions'
+
 
 export function emptyEmail(empty) {
   return ({
@@ -169,8 +173,9 @@ export function logIn(email, passwd) {
             spotPromise.then((spotData) => {
               dispatch(spotUpdate(spotData));
               dispatch(addFirebaseListeners(userId, spotId));
-              dispatch(openFileServerLocal());
-              dispatch(openPlayerLocal());
+              // dispatch(openFileServerLocal());
+              // dispatch(openPlayerLocal());
+              dispatch(loadSettings());
               dispatch(push('/home'));// history.push('/home');
             });
           }

@@ -63,6 +63,7 @@ export function openFileServer(hostName = null, port = null) {
     };
 
     const onFailure = (errorCode, errorMessage) => {
+      console.log("Fileserver open error. Code: ", errorCode, ", Message: ", errorMessage);
       dispatch(fileServerOpenError({ errorCode, errorMessage }));
     };
 

@@ -15,6 +15,7 @@ import React, { Component } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import { withRouter } from 'react-router';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import {fade} from 'material-ui/utils/colorManipulator';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import {
   grey500,
@@ -66,6 +67,7 @@ const muiTheme = getMuiTheme({
   },
   flatButton: {
     primaryTextColor: fullWhite,
+    secondaryTextColor: deepOrange500,
   },
   raisedButton: {
     primaryTextColor: fullWhite,
@@ -79,6 +81,18 @@ const muiTheme = getMuiTheme({
     textColor: fullWhite,
     disabledTextColor: grey500,
     hintColor: grey500,
+  },
+  toggle: {
+    thumbOnColor: deepOrange500,
+    thumbOffColor: grey500,
+    //thumbDisabledColor: palette.borderColor,
+    //thumbRequiredColor: palette.primary1Color,
+    trackOnColor: fade(deepOrange500, 0.5),
+    trackOffColor: fade(grey500, 0.5),
+    //trackDisabledColor: palette.primary3Color,
+    //labelColor: palette.textColor,
+    //labelDisabledColor: palette.disabledColor,
+    //trackRequiredColor: fade(palette.primary1Color, 0.5),
   },
 });
 
