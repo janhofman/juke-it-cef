@@ -41,4 +41,12 @@ export default defineMessages({
     id: 'SongList.playerNotConnectedToolTip',
     defaultMessage: 'Player is not connected',
   },
+  searchHint: {
+    id: 'SongList.searchHint',
+    defaultMessage: 'Search...',
+  },
+  searchLabel: {
+    id: 'SongList.searchLabel',
+    defaultMessage: 'Search',
+  },
 });

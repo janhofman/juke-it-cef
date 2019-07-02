@@ -24,8 +24,8 @@ class GenresPage extends Component {
   }
 
   showDetail(genreId) {
-    const { dispatch } = this.props;
-    dispatch(push(`/home/detail/genre/${genreId}`));
+    const { dispatch, match } = this.props;
+    dispatch(push(`${match.url}/${genreId}`));
   }
 
   render() {

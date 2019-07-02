@@ -171,6 +171,14 @@ void FileServerAPI::v1_HandleGET(web::http::http_request message, const std::vec
 				Reply(message, web::http::status_codes::NotFound);
 			}
 		}
+		else if (paths[1] == U("ping")) {
+			if (pathLength == 2) {
+				v1_Ping(message);
+			}
+			else {
+				Reply(message, web::http::status_codes::NotFound);
+			}
+		}
 		else {
 			Reply(message, web::http::status_codes::NotFound);
 			return;
@@ -263,7 +271,7 @@ void FileServerAPI::v1_Songs(web::http::http_request message, const std::vector<
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_Songs(params.limit, params.page, params.orderBy, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_Songs(params.limit, params.start, params.orderBy, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -287,7 +295,7 @@ void FileServerAPI::v1_Albums(web::http::http_request message, const std::vector
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_Albums(params.limit, params.page, params.orderBy, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_Albums(params.limit, params.start, params.orderBy, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -312,7 +320,7 @@ void FileServerAPI::v1_AlbumSongs(web::http::http_request message, const std::ve
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_AlbumSongs(albumId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_AlbumSongs(albumId, params.limit, params.start, params.orderBy, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -326,7 +334,7 @@ void FileServerAPI::v1_Artists(web::http::http_request message, const std::vecto
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_Artists(params.limit, params.page, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_Artists(params.limit, params.start, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -350,7 +358,7 @@ void FileServerAPI::v1_ArtistSongs(web::http::http_request message, const std::v
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_ArtistSongs(artistId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_ArtistSongs(artistId, params.limit, params.start, params.orderBy, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -364,7 +372,7 @@ void FileServerAPI::v1_Genres(web::http::http_request message, const std::vector
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_Genres(params.limit, params.page, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_Genres(params.limit, params.start, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -389,7 +397,7 @@ void FileServerAPI::v1_GenreSongs(web::http::http_request message, const std::ve
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_GenreSongs(genreId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_GenreSongs(genreId, params.limit, params.start, params.orderBy, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -404,7 +412,7 @@ void FileServerAPI::v1_Playlists(web::http::http_request message, const std::vec
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_Playlists(userId, params.limit, params.page, params.desc, params.filter, response);
+		auto rtc = fsHandler_->v1_Playlists(userId, params.limit, params.start, params.desc, params.filter, response);
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -522,7 +530,7 @@ void FileServerAPI::v1_PlaylistSongs(web::http::http_request message, const std:
 
 	pplx::create_task([=]() {
 		web::json::value response;
-		auto rtc = fsHandler_->v1_PlaylistSongs(userId, playlistId, params.limit, params.page, params.orderBy, params.desc, params.filter, response);		
+		auto rtc = fsHandler_->v1_PlaylistSongs(userId, playlistId, params.limit, params.start, params.orderBy, params.desc, params.filter, response);		
 		Reply(message, MapStatusCode(rtc), response);
 	});
 }
@@ -612,6 +620,11 @@ void FileServerAPI::v1_GetSong(web::http::http_request message, const std::vecto
 	});
 }
 
+void FileServerAPI::v1_Ping(web::http::http_request message) {
+	auto rtc = fsHandler_->v1_Ping();
+	Reply(message, MapStatusCode(rtc));
+}
+
 bool FileServerAPI::TryParseUint(const utility::string_t& s, std::uint32_t& outValue) {
 	if (s.size() > 0) {
 		std::uint32_t val = 0;
@@ -631,12 +644,12 @@ bool FileServerAPI::TryParseUint(const utility::string_t& s, std::uint32_t& outV
 }
 
 bool FileServerAPI::ParseQueryParams(const std::map<utility::string_t, utility::string_t>& queries, FileServerAPI::QueryParams& params) {
-	params.page = 1;
-	auto queryIt = queries.find(U("page"));
+	params.start = 1;
+	auto queryIt = queries.find(U("start"));
 	if (queryIt != queries.end()) {
 		std::uint32_t num = 0;
 		if (TryParseUint(queryIt->second, num)) {			
-			params.page = num;
+			params.start = num;
 		}
 		else {
 			return false;

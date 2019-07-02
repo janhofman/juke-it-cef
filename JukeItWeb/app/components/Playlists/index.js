@@ -12,6 +12,7 @@ import OrangeDivider from './../OrangeDivider';
 import StyledTextField from './../StyledTextField';
 import NewPlaylistDialog from './../NewPlaylistDialog';
 import messages from './messages';
+import { randomCoverArtGenerator } from '../../utils';
 import Paper from 'material-ui/Paper';
 
 
@@ -61,6 +62,7 @@ class Playlists extends Component{
             closeDialog,
             saveNewPlaylist,
         } = this.props;
+        const generator = randomCoverArtGenerator();
         return (
             <div style={styles.base}>
                 <ScrollPane>
@@ -83,7 +85,7 @@ class Playlists extends Component{
                                     key={index}
                                     onTouchTap={() => this.props.showDetail(playlist.id)}
                                 >
-                                    <img src={playlist.img ? playlist.img : './../resources/images/logo_negative_no_bg.png'} style={styles.image}/>
+                                    <img src={playlist.img ? playlist.img : generator.next()} style={styles.image}/>
                                 </GridItem>
                             ))
                         }

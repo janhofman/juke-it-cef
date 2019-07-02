@@ -5,10 +5,6 @@ export default defineMessages({
     id: 'Home.libTabTitle',
     defaultMessage: 'LIBRARY',
   },
-  playlistsTabTitle: {
-    id: 'Home.playlistsTabTitle',
-    defaultMessage: 'PLAYLISTS',
-  },
   establishmentTabTitle: {
     id: 'Home.establishmentTabTitle',
     defaultMessage: 'ESTABLISHMENT',

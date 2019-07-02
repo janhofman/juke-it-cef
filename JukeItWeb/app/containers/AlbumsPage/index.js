@@ -19,9 +19,9 @@ class AlbumsPage extends Component {
     }
   }
 
-  showDetail(albumId) {
-    const { dispatch } = this.props;
-    dispatch(push(`/home/detail/album/${albumId}`));
+  showDetail(albumId) {    
+    const { dispatch, match } = this.props;
+    dispatch(push(`${match.url}/${albumId}`));
   }
 
   render() {

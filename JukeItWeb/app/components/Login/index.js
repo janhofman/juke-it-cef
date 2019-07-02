@@ -48,8 +48,23 @@ const styles = {
 class Login extends Component{    
 
     render(){
-        const { formatMessage } = this.props.intl;
-        const { authorizing, emptyEmail, emptyPasswd } = this.props;
+        const { 
+            authorizing, 
+            emptyEmail, 
+            emptyPasswd,
+            logIn,
+            intl: {
+                formatMessage,
+            }
+        } = this.props;
+        const onTextKeyUp = (e) => {
+            // Number 13 is the "Enter" key on the keyboard
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                logIn();
+            }
+        };
+
         return (
             <div>
                 <img src={require('./../../images/logo_negative_no_bg.png')} style={styles.logo} />
@@ -59,7 +74,8 @@ class Login extends Component{
                         hintText={formatMessage(messages.emailHint)}
                         type='email'
                         id='email'
-                        errorText={emptyEmail ? formatMessage(messages.emptyEmail) : null}
+                        errorText={emptyEmail ? formatMessage(messages.emptyEmail) : null}                        
+                        onKeyUp={onTextKeyUp}
                     />
                 </div>
                 <div style={styles.textfield}>
@@ -68,20 +84,23 @@ class Login extends Component{
                         type='password'
                         id='password'
                         errorText={emptyPasswd ? formatMessage(messages.emptyPasswd) : null}
+                        onKeyUp={onTextKeyUp}
                     />
                 </div>
                 <div style={styles.btnWrapper}>
                     <RaisedButton
                         label={formatMessage(messages.signIn)}
                         backgroundColor={deepOrange500}
-                        onTouchTap={ this.props.logIn }
+                        onTouchTap={logIn}
                     />
                 </div>
+                {/*
                 <div style={styles.linkWraper}>
                     <Link to={'/forgotPasswd'} style= { styles.link }>
                         {formatMessage(messages.forgotPasswd)}
                     </Link>
                 </div>
+                */}
                 <div style={styles.linkWraper} >
                     <Link to={ '/register' } style= { styles.link }>
                         {formatMessage(messages.noAccount)}

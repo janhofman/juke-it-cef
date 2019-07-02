@@ -9,6 +9,7 @@ import {
   loadSongsForArtist,
 } from '../../actions/songListActions';
 import MusicEntityDetail from '../../components/MusicEntityDetail';
+import { apiEntitySongsPromise } from '../../actions/libraryActions';
 import { EntityEnum } from '../../utils';
 
 class ArtistDetailPage extends Component {
@@ -18,8 +19,9 @@ class ArtistDetailPage extends Component {
     const { artistId } = match.params;
     dispatch((dispatch) => {
       dispatch(loadMetadataForArtist(artistId));
-      dispatch(loadSongsForArtist(artistId));
     });
+
+    this.loadNextPage = this.loadNextPage.bind(this);
   }
 
   componentWillUnmount() {
@@ -39,6 +41,17 @@ class ArtistDetailPage extends Component {
     dispatch(uploadArtistLib(artistId, name, null));
   }
 
+  loadNextPage(baseUrl, startIndex, stopIndex, orderby = null, desc = false, filter = null) {
+    const {
+      match: {
+        params: {
+          artistId,
+        },
+      },
+    } = this.props;
+    return apiEntitySongsPromise(baseUrl, EntityEnum.ARTIST, artistId, null, stopIndex - startIndex + 1, startIndex, orderby, desc, filter);
+  }
+
   render() {
     const {
       name,
@@ -53,6 +66,7 @@ class ArtistDetailPage extends Component {
         navigateBack={this.navigateBack.bind(this)}
         playAction={this.playAction.bind(this)}
         entityType={EntityEnum.ARTIST}
+        loadNextPage={this.loadNextPage}
       />
     );
   }

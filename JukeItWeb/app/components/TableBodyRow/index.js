@@ -1,15 +1,22 @@
 import React, { Component } from 'react';
-import { deepOrange500, FullWhite, grey500 } from 'material-ui/styles/colors';
+import { deepOrange500, fullWhite } from 'material-ui/styles/colors';
+import CircularProgress from 'material-ui/CircularProgress';
+import defaultRowRenderer from 'react-virtualized/dist/es/Table/defaultRowRenderer';
 
 const styles = {
-  baseStyle: {
-    height: '3em',
-    borderBottom: '1px solid',
-    borderTop: '1px solid',
-    borderColor: FullWhite,
-  },
   hoveredStyle: {
     backgroundColor: deepOrange500,
+  },
+  rowStyle: {
+    boxSizing: 'border-box', // count border as part of the row
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: fullWhite,
+    fontSize: '15px',
+  },
+  progress: {
+    display:'block', 
+    margin: 'auto',
   },
 };
 
@@ -22,7 +29,7 @@ export default class TableBodyRow extends Component {
     };
   }
 
-  onMouseEnter() {
+  onMouseOver() {
     this.setState((state) => ({
       ...state,
       hovered: true,
@@ -40,21 +47,26 @@ export default class TableBodyRow extends Component {
     // prepare props
     const { style } = this.props;
     const { hovered } = this.state;
-    let finalStyle = { ...styles.baseStyle };
+    let finalStyle = { ...styles.rowStyle, ...style };
     if (hovered) {
       finalStyle = { ...finalStyle, ...styles.hoveredStyle };
     }
-    finalStyle = { ...finalStyle, ...style };
+    const finalProps = {
+      ...this.props, 
+      style: finalStyle,
+      onRowMouseOver: this.onMouseOver.bind(this),
+      onRowMouseOut: this.onMouseLeave.bind(this),
+    };
 
-    return (
-      <tr
-        style={finalStyle}
-        onMouseEnter={this.onMouseEnter.bind(this)}
-        onMouseLeave={this.onMouseLeave.bind(this)}
-        {...this.props}
-      >
-        {this.props.children}
-      </tr>
-    );
+    if(finalProps.rowData.loading) {  
+      // show progressbar for loading row
+      return(
+        <div style={finalStyle}>          
+          <CircularProgress size={40} thickness={3} color={deepOrange500} style={styles.progress}/>
+        </div>
+      );
+    } else {      
+      return defaultRowRenderer(finalProps);
+    }
   }
 }

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import {SortDirection} from 'react-virtualized/dist/es/Table';
 import SongListDumb from '../SongListDumb';
 import { loadPlaylists, addSongsToPlaylist } from './../../actions/playlistsActions';
 import {
@@ -13,45 +14,37 @@ import {
   closeContextMenu,
 } from './../../actions/songListActions';
 import { addToEndOfQueue } from './../../actions/playbackActions';
+import { makeCancelable } from './../../utils';
 
 class SongList extends Component {
   constructor(props) {
     super(props);
 
-    this.handleOpenOptions = this.handleOpenOptions.bind(this);
-    this.handleCloseOptions = this.handleCloseOptions.bind(this);
-  }
+    this.state = {
+      rows: [],
+      hasNextPage: true,
+      loadPromise: null,
+      loading: false,
+      selectable: false,
+      playlistId: null,
+      sort: {
+        sortBy: null,
+        desc: false,
+      },
+      search: {
+        value: '',
+        filter: null,        
+      },
+    };
 
-  handleOpenOptions(event) {
-    event.preventDefault();
-    event.persist();
-    const elem = event.currentTarget;
-    const { dispatch } = this.props;
-    dispatch(openOptions(elem));
-  }
-
-  handleCloseOptions() {
-    this.props.dispatch(closeOptions());
-  }
-
-  handleRowSelection(selectedRows) {
-    this.props.dispatch(selectionChanged(selectedRows));
-  }
-
-  handleAddToPlaylist(playlistId) {
-    const { dispatch } = this.props;
-    dispatch(closeOptions());
-    dispatch(makeSelectable(playlistId));
-  }
-
-  addSelectionToPlaylistAction() {
-    const { selected, playlistId, songs, dispatch } = this.props;
-    const selectedSongs = [];
-    for (let i = 0; i < selected.length; i++) {
-      selectedSongs.push(songs[selected[i]].id);
-    }
-    dispatch(addSongsToPlaylist(playlistId, selectedSongs));
-    dispatch(makeStatic());
+    this.loadNextPage = this.loadNextPage.bind(this);
+    this.onRowChecked = this.onRowChecked.bind(this);
+    this.finishAddToPlaylist = this.finishAddToPlaylist.bind(this);
+    this.onAddSelectionToPlaylist = this.onAddSelectionToPlaylist.bind(this);
+    this.onAddToPlaylistMenuClick = this.onAddToPlaylistMenuClick.bind(this);
+    this.onSort= this.onSort.bind(this);
+    this.onSearch = this.onSearch.bind(this);
+    this.onSearchValueChange = this.onSearchValueChange.bind(this);
   }
 
   addSongToPlaylistAction(playlistId) {
@@ -87,55 +80,230 @@ class SongList extends Component {
     }
   }
 
+  // new methods
+  componentWillUnmount() {
+    const {
+      loadPromise,
+    } = this.state;
+    if(loadPromise) {
+      loadPromise.cancel();
+    }
+  }
+
+  rowsLoaded(rows) {
+    this.setState((state) => ({
+      ...state,
+      rows: state.rows.concat(rows),
+    }));
+  }
+
+  noMoreRows() {
+    this.setState((state) => ({
+      ...state,
+      hasNextPage: false,
+    }));
+  }
+
+  setLoadPromise(promise) {
+    this.setState((state) => ({
+      ...state,
+      loadPromise: promise,
+      loading: true,
+    }));
+  }
+
+  loadingFinished() {
+    this.setState((state) => ({
+      ...state,
+      loadPromise: null,
+      loading: false,
+    }));
+  }
+
+  loadNextPage({startIndex, stopIndex}) {
+    console.log(`loadNextPage start: ${startIndex}, stop: ${stopIndex}`);
+    const {
+      loadNextPage,
+      fsBaseAddress,
+    } = this.props;
+
+    const {
+      sort: {
+        sortBy,
+        desc
+      },
+      search: {
+        filter,
+      }
+    } = this.state;
+
+    startIndex += 1; // adjust to start with 1
+    stopIndex += 1; // adjust to start with 1
+
+    // always load at least 20 rows
+    if(stopIndex - startIndex + 1 < 20){
+      stopIndex = startIndex + 19;
+    }
+
+    let promise = loadNextPage(fsBaseAddress, startIndex, stopIndex, sortBy, desc, filter);
+    promise = makeCancelable(promise);
+    promise.promise
+      .then((rows) => {
+        this.rowsLoaded(rows);
+        if(rows.length != stopIndex - startIndex) {
+          this.noMoreRows();
+        }
+        this.loadingFinished();
+      })
+      .catch((err) => {
+        console.log(err);    // TODO: add catch    
+        this.loadingFinished();
+      });  
+    this.setLoadPromise(promise);
+    return promise.promise;
+  }
+
+  onRowChecked(index, checked) {
+    const {
+      rows,
+    } = this.state;
+
+    if(index < rows.length) {
+      rows[index].selected = checked;
+      this.setState((state) => ({
+        ...state,
+        rows,
+      }));
+    }
+  }
+
+  onAddToPlaylistMenuClick(playlistId) {
+    this.setState((state) => ({
+      ...state,
+      selectable: true,
+      playlistId,
+    }));
+  }
+
+  onAddSelectionToPlaylist() {
+    const { 
+      rows,
+      playlistId,
+    } = this.state;    
+    const { dispatch } = this.props;
+
+    const selectedSongs = [];
+    for (let i = 0; i < rows.length; i++) {
+      if(rows[i].selected === true) {
+        selectedSongs.push(rows[i].id);
+      }
+    }
+    dispatch(addSongsToPlaylist(playlistId, selectedSongs));
+    this.finishAddToPlaylist();
+  }
+
+  finishAddToPlaylist() {
+    const { rows } = this.state;  
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].selected = false;
+    }
+
+    this.setState((state) => ({
+      ...state,
+      selectable: false,
+      playlistId: null,
+      rows,
+    }));
+  }
+
+  onSort({sortBy, sortDirection}) {
+    this.setState((state) => ({
+      ...state,
+      sort: {
+        ...state.sort,
+        sortBy,
+        desc: sortDirection === SortDirection.DESC,
+      },
+      rows: [], // clean cache
+      hasNextPage: true, // clean cache
+    }));
+  }
+
+  onSearch() {
+    const { search: { value } } = this.state;
+    this.setState((state) => ({
+      ...state,
+      search: {
+        ...state.search,
+        filter: (value && value.length === 0) ? null : value,
+      },
+      rows: [], // clean cache
+      hasNextPage: true, // clean cache
+    }));
+  }
+
+  onSearchValueChange(event) {
+    const value = event.target.value
+    this.setState((state) => ({
+      ...state,
+      search: {
+        ...state.search,
+        value,
+      },
+    }));
+  }
+
   render() {
     const {
       title,
       subtitle,
       image,
-      songs,
-      loaded,
       playerConnected,
       playAction,
-      onSongDoubleClick,
       playlists,
-      optionsOpen,
-      optionsAnchor,
-      selectable,
-      selected,
-      contextMenuOpen,
-      contextMenuAnchor,
-      songId,
     } = this.props;
+
+    const {
+      selectable,
+      loading,
+      hasNextPage,
+      rows,      
+    } = this.state;
+
+    const sort = {
+      ...this.state.sort,
+      onSort: this.onSort,
+    };
+
+    const search = {
+      ...this.state.search,
+      onSearch: this.onSearch,
+      onSearchValueChange: this.onSearchValueChange,
+    }
+
     return (
       <SongListDumb
         // data
         title={title}
         subtitle={subtitle}
         image={image}
-        songs={songs}
-        loaded={loaded}
         playerConnected={playerConnected}
         playlists={playlists}
+        sort={sort}  
+        search={search}
         selectable={selectable}
+        hasNextPage={hasNextPage}
+        isNextPageLoading={loading}
+        rows={rows}
 
         // actions
         playAction={playAction}
-        onSongDoubleClick={onSongDoubleClick}
-        optionsOpen={optionsOpen}
-        optionsAnchor={optionsAnchor}
-        addSelectionToPlaylistAction={this.addSelectionToPlaylistAction.bind(this)}
-        handleAddToPlaylist={this.handleAddToPlaylist.bind(this)}
-        handleRowSelection={this.handleRowSelection.bind(this)}
-        openOptions={this.handleOpenOptions}
-        closeOptions={this.handleCloseOptions}
-        cancelSelectable={this.cancelSelectable.bind(this)}
-
-        contextMenuOpen={contextMenuOpen}
-        contextMenuAnchor={contextMenuAnchor}
         songOnMouseUp={this.songOnMouseUp.bind(this)}
-        handleCloseContextMenu={this.handleCloseContextMenu.bind(this)}
-        addSongToPlaylistAction={this.addSongToPlaylistAction.bind(this)}
-        addSongToQueueAction={this.addSongToQueueAction.bind(this)}
+        loadNextPage={this.loadNextPage}
+        onRowChecked={this.onRowChecked}
+        onAddSelectionToPlaylist={this.onAddSelectionToPlaylist}
+        onAddToPlaylistMenuClick={this.onAddToPlaylistMenuClick}
+        onCancelSelection={this.finishAddToPlaylist}
       />
     );
   }
@@ -154,7 +322,7 @@ SongList.propTypes = {
 };
 
 export default connect((store) => {
-  const { playlists, songList, player } = store;
+  const { playlists, songList, player, devices } = store;
   return ({
     playlists: playlists.playlists,
     playlistsLoaded: playlists.playlistsLoaded,
@@ -167,5 +335,6 @@ export default connect((store) => {
     contextMenuAnchor: songList.contextMenuAnchor,
     songId: songList.songId,
     playerConnected: player.playerConnected,
+    fsBaseAddress: devices.fileServer.baseAddress,
   });
 })(SongList);

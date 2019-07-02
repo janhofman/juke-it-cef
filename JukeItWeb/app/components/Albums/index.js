@@ -5,7 +5,7 @@ import ScrollPane from '../../containers/ScrollPane';
 import GridItem from '../GridItem';
 import OrangeDivider from '../OrangeDivider';
 import messages from './messages';
-import defaultImage from '../../images/logo_negative_no_bg.png';
+import { randomCoverArtGenerator } from '../../utils';
 
 const styles = {
   header: {
@@ -28,6 +28,7 @@ class Albums extends Component {
       albums,
       showDetail,
     } = this.props;
+    const generator = randomCoverArtGenerator();
     return (
       <ScrollPane>
         <div style={styles.wrapper}>
@@ -42,7 +43,7 @@ class Albums extends Component {
                   key={index}
                   onTouchTap={() => showDetail(album.id)}
                 >
-                  <img src={album.img ? album.img : defaultImage} style={styles.image} />
+                  <img src={album.img ? album.img : generator.next()} style={styles.image} />
                 </GridItem>
               ))
             }

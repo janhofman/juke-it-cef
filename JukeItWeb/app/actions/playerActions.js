@@ -434,8 +434,6 @@ function webSocketOnMessage(dispatch, event) {
   }
 }
 
-
-
 function testHostame(hostname, dispatch) {
   const rtc = true;
 

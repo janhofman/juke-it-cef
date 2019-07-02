@@ -4,39 +4,50 @@ import { connect } from 'react-redux';
 import Devices from '../../components/Devices';
 import {
   toggleFileServerLocal,
+  toggleFileServerRemote,
   openFileServerLocal,
   closeFileServerLocal,
   togglePlayerLocal,
   togglePlayerRemote,
   openPlayerLocal,
   closePlayerLocal,
-  fsLocalHostnameChange,
-  fsLocalPortChange,
-  playerLocalHostnameChange,
-  playerLocalPortChange,
-  playerRemoteHostnameChange,
-  playerRemotePortChange,
+  fsLocalChange,
+  fsRemoteChange,
+  playerLocalChange,
+  playerRemoteChange,
   loadPlayerSettings,
   loadFileServerSettings,
+  toggleFsDialog,
+  togglePlayerDialog,
+  disconnectFileServer,
+  connectFsLocal,
+  connectFsRemote,
 } from '../../actions/devicesActions';
 import {
   connectToLocalPlayer,
   connectToRemotePlayer,
-  disconnect,
+  disconnect as disconnectPlayer,
 } from '../../actions/playerActions';
 
 class DevicesPage extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      fsDialogOpen: false,
-      playerDialogOpen: false,
-    }
-
+    this.onFsLocalChange = this.onFsLocalChange.bind(this);
+    this.onFsRemoteChange = this.onFsRemoteChange.bind(this);
     this.toggleFileServerLocal = this.toggleFileServerLocal.bind(this);
+    this.toggleFileServerRemote = this.toggleFileServerRemote.bind(this);
     this.openFileServerLocal = this.openFileServerLocal.bind(this);
     this.closeFileServerLocal = this.closeFileServerLocal.bind(this);
+    this.onCloseFsDialog = this.onCloseFsDialog.bind(this);
+    this.onReloadFsSettings = this.onReloadFsSettings.bind(this);    
+    this.onFsDialogConfirm = this.onFsDialogConfirm.bind(this);   
+    this.onConnectToLocalFileServer = this.onConnectToLocalFileServer.bind(this);
+    this.onConnectToRemoteFileServer = this.onConnectToRemoteFileServer.bind(this);
+    this.onDisconnectFileServer = this.onDisconnectFileServer.bind(this);
+    
+    this.onPlayerLocalChange = this.onPlayerLocalChange.bind(this);
+    this.onPlayerRemoteChange = this.onPlayerRemoteChange.bind(this);
     this.togglePlayerLocal = this.togglePlayerLocal.bind(this);
     this.togglePlayerRemote = this.togglePlayerRemote.bind(this);
     this.onOpenPlayerLocal = this.onOpenPlayerLocal.bind(this);
@@ -44,52 +55,41 @@ class DevicesPage extends Component {
     this.onConnectToLocalPlayer = this.onConnectToLocalPlayer.bind(this);
     this.onConnectToRemotePlayer = this.onConnectToRemotePlayer.bind(this);
     this.onDisconnectPlayer = this.onDisconnectPlayer.bind(this);
-    this.onFsLocalHostnameChange = this.onFsLocalHostnameChange.bind(this);
-    this.onFsLocalPortChange = this.onFsLocalPortChange.bind(this);
-    this.onPlayerLocalHostnameChange = this.onPlayerLocalHostnameChange.bind(this);
-    this.onPlayerLocalPortChange = this.onPlayerLocalPortChange.bind(this);
-    this.onPlayerRemoteHostnameChange = this.onPlayerRemoteHostnameChange.bind(this);
-    this.onPlayerRemotePortChange = this.onPlayerRemotePortChange.bind(this);
-
-    this.onCloseFsDialog = this.onCloseFsDialog.bind(this);
     this.onPlayerDialog = this.onPlayerDialog.bind(this);
     this.onClosePlayerDialog = this.onClosePlayerDialog.bind(this);
     this.onReloadPlayerSettings = this.onReloadPlayerSettings.bind(this);
   }
 
-  onFsLocalHostnameChange(event) {
-    const { dispatch } = this.props;
-    dispatch(fsLocalHostnameChange(event.target.value));
+  onFsLocalChange(changes) {
+    const { 
+      dispatch,      
+      fileServer: {
+        local,
+      },
+    } = this.props;
+    const updates = { ...local, ...changes };
+    dispatch(fsLocalChange(updates));
   }
 
-  onFsLocalPortChange(event) {
-    const { dispatch } = this.props;
-    dispatch(fsLocalPortChange(event.target.value));
-  }
-
-  onPlayerLocalHostnameChange(event) {
-    const { dispatch } = this.props;
-    dispatch(playerLocalHostnameChange(event.target.value));
-  }
-
-  onPlayerLocalPortChange(event) {
-    const { dispatch } = this.props;
-    dispatch(playerLocalPortChange(event.target.value));
-  }
-
-  onPlayerRemoteHostnameChange(event) {
-    const { dispatch } = this.props;
-    dispatch(playerRemoteHostnameChange(event.target.value));
-  }
-
-  onPlayerRemotePortChange(event) {
-    const { dispatch } = this.props;
-    dispatch(playerRemotePortChange(event.target.value));
-  }
+  onFsRemoteChange(changes) {
+    const { 
+      dispatch,      
+      fileServer: {
+        remote,
+      },
+    } = this.props;
+    const updates = { ...remote, ...changes };
+    dispatch(fsRemoteChange(updates));
+  }  
 
   toggleFileServerLocal() {
     const { dispatch } = this.props;
     dispatch(toggleFileServerLocal());
+  }
+
+  toggleFileServerRemote() {
+    const { dispatch } = this.props;
+    dispatch(toggleFileServerRemote());
   }
 
   openFileServerLocal() {
@@ -100,6 +100,77 @@ class DevicesPage extends Component {
   closeFileServerLocal() {
     const { dispatch } = this.props;
     dispatch(closeFileServerLocal());
+  }
+
+  onReloadFsSettings() {
+    const { dispatch } = this.props;
+    dispatch((dispatch, getState) => {
+      const {
+        devices: {
+          fileServer: {
+            connected,
+          },
+        },
+      } = getState();
+
+      if (connected) {
+        // open dialog and ask user
+        dispatch(toggleFsDialog(true));
+      } else {
+        dispatch(loadFileServerSettings());
+      }
+    });
+  }
+
+  onFsDialogConfirm() {
+    const { dispatch } = this.props;
+    dispatch(disconnectFileServer());
+    dispatch(closeFileServerLocal());
+    dispatch(loadFileServerSettings());    
+    dispatch(toggleFsDialog(false));
+  }
+
+  onCloseFsDialog() {
+    const { dispatch } = this.props;
+    dispatch(toggleFsDialog(false));
+  }
+
+  onConnectToLocalFileServer() {
+    const { dispatch } = this.props;
+    dispatch(connectFsLocal());
+  }
+
+  onConnectToRemoteFileServer() {
+    const { dispatch } = this.props;
+    dispatch(connectFsRemote());
+  }
+
+  onDisconnectFileServer() {
+    const { dispatch } = this.props;
+    dispatch(disconnectFileServer());
+  }
+
+  /****************** PLAYER ******************/
+  onPlayerLocalChange(changes) {
+    const { 
+      dispatch,      
+      player: {
+        local,
+      },
+    } = this.props;
+    const updates = { ...local, ...changes };
+    dispatch(playerLocalChange(updates));
+  }
+
+  onPlayerRemoteChange(changes) {
+    const { 
+      dispatch,      
+      player: {
+        remote,
+      },
+    } = this.props;
+    const updates = { ...remote, ...changes };
+    dispatch(playerRemoteChange(updates));
   }
 
   togglePlayerLocal() {
@@ -134,30 +205,20 @@ class DevicesPage extends Component {
 
   onDisconnectPlayer() {
     const { dispatch } = this.props;
-    dispatch(disconnect());
-  }
-
-  onCloseFsDialog() {
-    this.setState({ ...this.state, fsDialogOpen: false });
+    dispatch(disconnectPlayer());
   }
 
   onPlayerDialog() {
     const { dispatch } = this.props;
-    dispatch(disconnect());
+    dispatch(disconnectPlayer());
     dispatch(closePlayerLocal());
-    dispatch(loadPlayerSettings());
-    this.setState({ ...this.state, playerDialogOpen: false });
+    dispatch(loadPlayerSettings());    
+    dispatch(togglePlayerDialog(false));
   }
 
-  onClosePlayerDialog() {
-    this.setState({ ...this.state, playerDialogOpen: false });
-  }
-  
-  onReloadFsSettings() {
+  onClosePlayerDialog() {    
     const { dispatch } = this.props;
-    dispatch((dispatch, getState) => {
-
-    });
+    dispatch(togglePlayerDialog(false));
   }
 
   onReloadPlayerSettings() {
@@ -171,7 +232,7 @@ class DevicesPage extends Component {
 
       if (playerConnected) {
         // open dialog and ask user
-        this.setState({ ...this.state, playerDialogOpen: true });
+        dispatch(togglePlayerDialog(true));
       } else {
         dispatch(loadPlayerSettings());
       }
@@ -179,34 +240,41 @@ class DevicesPage extends Component {
   }
 
   render() {
-    const { fsDialogOpen, playerDialogOpen } = this.state;
+    const playerSettings = {
+      toggleLocal: this.togglePlayerLocal,
+      toggleRemote: this.togglePlayerRemote,
+      onOpenLocal: this.onOpenPlayerLocal,
+      onCloseLocal: this.onClosePlayerLocal,
+      onReloadSettings: this.onReloadPlayerSettings,
+      onDialogConfirm: this.onPlayerDialog,
+      onDialogCancel: this.onClosePlayerDialog,
+      onRemoteChange: this.onPlayerRemoteChange,
+      onLocalChange: this.onPlayerLocalChange,
+      onConnectLocal: this.onConnectToLocalPlayer,
+      onConnectRemote: this.onConnectToRemotePlayer,
+      onDisconnect: this.onDisconnectPlayer,
+    }
+
+    const fileServerSettings = {
+      toggleLocal: this.toggleFileServerLocal,
+      toggleRemote: this.toggleFileServerRemote,
+      onOpenLocal: this.openFileServerLocal,
+      onCloseLocal: this.closeFileServerLocal,
+      onReloadSettings: this.onReloadFsSettings,
+      onDialogConfirm: this.onFsDialogConfirm,
+      onDialogCancel: this.onCloseFsDialog,
+      onRemoteChange: this.onFsRemoteChange,
+      onLocalChange: this.onFsLocalChange,
+      onConnectLocal: this.onConnectToLocalFileServer,
+      onConnectRemote: this.onConnectToRemoteFileServer,
+      onDisconnect: this.onDisconnectFileServer,
+    }
+
     return (
       <Devices
         {...this.props}
-        toggleFileServerLocal={this.toggleFileServerLocal}
-        openFileServerLocal={this.openFileServerLocal}
-        closeFileServerLocal={this.closeFileServerLocal}
-        togglePlayerLocal={this.togglePlayerLocal}
-        togglePlayerRemote={this.togglePlayerRemote}
-        onOpenPlayerLocal={this.onOpenPlayerLocal}
-        onClosePlayerLocal={this.onClosePlayerLocal}
-        onConnectToLocalPlayer={this.onConnectToLocalPlayer}
-        onConnectToRemotePlayer={this.onConnectToRemotePlayer}
-        onDisconnectPlayer={this.onDisconnectPlayer}
-        onFsLocalHostnameChange={this.onFsLocalHostnameChange}
-        onFsLocalPortChange={this.onFsLocalPortChange}
-        onPlayerLocalHostnameChange={this.onPlayerLocalHostnameChange}
-        onPlayerLocalPortChange={this.onPlayerLocalPortChange}
-        onPlayerRemoteHostnameChange={this.onPlayerRemoteHostnameChange}
-        onPlayerRemotePortChange={this.onPlayerRemotePortChange}    
-        
-        fsDialogOpen={fsDialogOpen}
-        playerDialogOpen={playerDialogOpen}
-
-        onCloseFsDialog={this.onCloseFsDialog}
-        onPlayerDialog={this.onPlayerDialog}
-        onClosePlayerDialog={this.onClosePlayerDialog}
-        onReloadPlayerSettings={this.onReloadPlayerSettings}
+        playerSettings={playerSettings}
+        fileServerSettings={fileServerSettings}
       />
     );
   }

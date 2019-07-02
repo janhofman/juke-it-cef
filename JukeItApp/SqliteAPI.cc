@@ -20,7 +20,7 @@ SqliteAPI::~SqliteAPI() {
 	}
 }
 
-SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::GenreResult>& result) {
+SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SqliteAPI::GenreResult>& result) {
 	std::stringstream ss;
 	std::stringstream queryss;
 	queryss << "SELECT id, name";
@@ -57,7 +57,7 @@ SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std
 
 	queryss << ss.str();
 
-	std::uint32_t offset = (page - 1) * limit;
+	std::uint32_t offset = start == 0 ? 0 : start - 1;
 	if (offset > 0) {
 		if (where) {
 			queryss << " WHERE ";
@@ -92,7 +92,7 @@ SqliteAPI::ErrorCode SqliteAPI::Genres(const std::unordered_map<std::string, std
 	}	
 }
 
-SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::ArtistResult>& result) {
+SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SqliteAPI::ArtistResult>& result) {
 	std::stringstream ss;
 	std::stringstream queryss;
 	queryss << "SELECT id, name ";
@@ -129,7 +129,7 @@ SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std
 
 	queryss << ss.str();
 
-	std::uint32_t offset = (page - 1) * limit;
+	std::uint32_t offset = start == 0 ? 0 : start - 1;
 	if (offset > 0) {
 		if (where) {
 			queryss << " WHERE ";
@@ -164,7 +164,7 @@ SqliteAPI::ErrorCode SqliteAPI::Artist(const std::unordered_map<std::string, std
 	}
 }
 
-SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::PlaylistResult>& result) {
+SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SqliteAPI::PlaylistResult>& result) {
 	std::stringstream ss;
 	std::stringstream queryss;
 	queryss << "SELECT id, name, description, userId ";
@@ -212,7 +212,7 @@ SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, 
 
 	queryss << ss.str();
 
-	std::uint32_t offset = (page - 1) * limit;
+	std::uint32_t offset = start == 0 ? 0 : start - 1 ;
 	if (offset > 0) {
 		if (where) {
 			queryss << " WHERE ";
@@ -249,7 +249,7 @@ SqliteAPI::ErrorCode SqliteAPI::Playlists(const std::unordered_map<std::string, 
 	}
 }
 
-SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::SongResult>& result) {
+SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SqliteAPI::SongResult>& result) {
 	std::stringstream ss;
 	std::stringstream queryss;
 	queryss << "SELECT s.id, s.title, s.artist, s.album, s.genre, s.length, s.artistId, s.albumId, s.genreId ";
@@ -316,7 +316,7 @@ SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, s
 	}
 	// add ORDER BY clause and pagination		
 	std::string asc_desc = desc ? "DESC" : "ASC";
-	std::uint32_t offset = (page - 1) * limit;
+	std::uint32_t offset = start == 0 ? 0 : start - 1;
 
 	queryss << ss.str();
 
@@ -360,7 +360,7 @@ SqliteAPI::ErrorCode SqliteAPI::SongView(const std::unordered_map<std::string, s
 	}
 }
 
-SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SqliteAPI::AlbumResult>& result) {
+SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SqliteAPI::AlbumResult>& result) {
 	std::stringstream ss;
 	std::stringstream queryss;
 	queryss << "SELECT id, name, artist, artistId ";
@@ -400,7 +400,7 @@ SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, 
 		}
 	}
 	std::string asc_desc = desc ? "DESC" : "ASC";
-	std::uint32_t offset = (page - 1) * limit;
+	std::uint32_t offset = start == 0 ? 0 : start - 1;
 
 	queryss << ss.str();
 

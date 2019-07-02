@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Songs from '../../components/Songs';
 import { addToEndOfQueue, uploadSongsLib, removePlaylist } from './../../actions/playbackActions';
-import { loadSongs } from './../../actions/libraryActions';
+import { loadSongs, apiSongsPromise } from './../../actions/libraryActions';
 
 class SongsPage extends Component {
   constructor(props) {
@@ -11,9 +11,9 @@ class SongsPage extends Component {
 
     this.onSongDoubleClick = this.onSongDoubleClick.bind(this);
     this.playPlaylist = this.playPlaylist.bind(this);
+    this.loadNextPage = this.loadNextPage.bind(this);
 
     const { dispatch } = props;
-    dispatch(loadSongs());
   }
 
   componentWillReceiveProps(nextProps) {
@@ -21,7 +21,7 @@ class SongsPage extends Component {
     const { loaded, dispatch } = this.props;
     if (nextProps.loaded === false && loaded === true) {
       console.log('Called update');
-      dispatch(loadSongs());
+      // dispatch(loadSongs()); use different function to refresh library
     }
   }
 
@@ -36,6 +36,10 @@ class SongsPage extends Component {
     dispatch(uploadSongsLib(title, subtitle));
   }
 
+  loadNextPage(baseUrl, startIndex, stopIndex, orderby = null, desc = false, filter = null) {
+    return apiSongsPromise(baseUrl, stopIndex - startIndex + 1, startIndex, orderby, desc, filter);
+  }
+
   render() {
     const {
       songs,
@@ -47,6 +51,7 @@ class SongsPage extends Component {
         songs={songs}
         onSongDoubleClick={this.onSongDoubleClick}
         playAction={this.playPlaylist}
+        loadNextPage={this.loadNextPage}
       />
     );
   }

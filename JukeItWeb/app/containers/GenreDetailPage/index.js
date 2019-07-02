@@ -8,6 +8,7 @@ import {
   loadMetadataForGenre,
   loadSongsForGenre,
 } from '../../actions/songListActions';
+import { apiEntitySongsPromise } from '../../actions/libraryActions';
 import MusicEntityDetail from '../../components/MusicEntityDetail';
 import { EntityEnum } from './../../utils';
 
@@ -18,8 +19,9 @@ class GenreDetailPage extends Component {
     const { genreId } = match.params;
     dispatch((dispatch) => {
       dispatch(loadMetadataForGenre(genreId));
-      dispatch(loadSongsForGenre(genreId));
     });
+    
+    this.loadNextPage = this.loadNextPage.bind(this);
   }
 
   componentWillUnmount() {
@@ -39,6 +41,17 @@ class GenreDetailPage extends Component {
     dispatch(uploadGenreLib(genreId, name, null));
   }
 
+  loadNextPage(baseUrl, startIndex, stopIndex, orderby = null, desc = false, filter = null) {
+    const {
+      match: {
+        params: {
+          genreId,
+        },
+      },
+    } = this.props;
+    return apiEntitySongsPromise(baseUrl, EntityEnum.GENRE, genreId, null, stopIndex - startIndex + 1, startIndex, orderby, desc, filter);
+  }
+
   render() {
     const {
       name,
@@ -53,6 +66,7 @@ class GenreDetailPage extends Component {
         navigateBack={this.navigateBack.bind(this)}
         playAction={this.playPlaylist.bind(this)}
         entityType={EntityEnum.GENRE}
+        loadNextPage={this.loadNextPage}
       />
     );
   }

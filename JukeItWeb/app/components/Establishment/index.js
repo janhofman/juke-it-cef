@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from 'react';
-import { defineMessages, injectIntl } from 'react-intl';
+import { injectIntl } from 'react-intl';
 import ScrollPane from './../../containers/ScrollPane';
 import TileGrid from './../../containers/TileGrid';
 import Star from './../Star';

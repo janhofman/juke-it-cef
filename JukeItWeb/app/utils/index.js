@@ -1,3 +1,7 @@
+import randomCoverArtGenerator from './randomCoverArt';
+
+export { randomCoverArtGenerator };
+
 export function makeCancelable(promise) {
   let hasCanceled_ = false;
 

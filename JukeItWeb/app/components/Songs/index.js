@@ -10,9 +10,11 @@ class Songs extends Component {
       songs,
       onSongDoubleClick,
       playAction,
-      intl
+      loadNextPage,
+      intl: {
+        formatMessage,
+      },
     } = this.props;
-    const { formatMessage } = intl;
     const selectable = false;
     return (
       <SongList
@@ -22,6 +24,7 @@ class Songs extends Component {
         selectable={selectable}
         onSongDoubleClick={onSongDoubleClick}
         playAction={() => playAction(formatMessage(messages.title), null)}
+        loadNextPage={loadNextPage}
       />
     );
   }

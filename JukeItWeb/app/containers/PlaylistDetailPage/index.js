@@ -8,6 +8,7 @@ import {
   loadMetadataForPlaylist,
   loadSongsForPlaylist,
 } from './../../actions/songListActions';
+import { apiEntitySongsPromise } from './../../actions/libraryActions';
 import MusicEntityDetail from '../../components/MusicEntityDetail';
 import { EntityEnum } from './../../utils';
 
@@ -18,8 +19,8 @@ class PlaylistDetailPage extends Component {
     const { playlistId } = match.params;
     dispatch((dispatch) => {
       dispatch(loadMetadataForPlaylist(playlistId));
-      dispatch(loadSongsForPlaylist(playlistId));
     });
+    this.loadNextPage = this.loadNextPage.bind(this);
   }
 
   componentWillUnmount() {
@@ -29,7 +30,7 @@ class PlaylistDetailPage extends Component {
 
   navigateBack() {
     const { dispatch } = this.props
-    dispatch(push('/home/playlists'));
+    dispatch(push('/home/library/playlists'));
   }
 
   playPlaylist() {
@@ -37,6 +38,18 @@ class PlaylistDetailPage extends Component {
     const { playlistId } = match.params;
     dispatch(removePlaylist());
     dispatch(uploadPlaylistLib(playlistId, name, description));
+  }
+
+  loadNextPage(baseUrl, startIndex, stopIndex, orderby = null, desc = false, filter = null) {
+    const {
+      userId,
+      match: {
+        params: {
+          playlistId,
+        },
+      },
+    } = this.props;
+    return apiEntitySongsPromise(baseUrl, EntityEnum.PLAYLIST, playlistId, userId, stopIndex - startIndex + 1, startIndex, orderby, desc, filter);
   }
 
   render() {
@@ -55,6 +68,7 @@ class PlaylistDetailPage extends Component {
         navigateBack={this.navigateBack.bind(this)}
         playAction={this.playPlaylist.bind(this)}
         entityType={EntityEnum.PLAYLIST}
+        loadNextPage={this.loadNextPage}
       />
     );
   }
@@ -65,11 +79,12 @@ PlaylistDetailPage.propTypes = {
 };
 
 export default connect((store) => {
-  const { songList } = store;
+  const { songList, userData } = store;
   return ({
     name: songList.title,
     description: songList.subtitle,
     songs: songList.songs,
     loaded: songList.songsLoaded && songList.metadataLoaded,
+    userId: userData.userId,
   });
 })(PlaylistDetailPage);

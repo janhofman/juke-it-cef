@@ -50,6 +50,7 @@ class MusicEntityDetail extends Component {
       loaded,
       playAction,
       navigateBack,
+      loadNextPage,
     } = this.props;
     const selectable = false; // to props
     const entityDetails = this.getEntityDetails(entityType);
@@ -71,6 +72,7 @@ class MusicEntityDetail extends Component {
           loaded={loaded}
           playAction={playAction}
           selectable={selectable}
+          loadNextPage={loadNextPage}
         />
       </div>
     );
@@ -85,6 +87,7 @@ MusicEntityDetail.propTypes = {
   playAction: PropTypes.func,
   navigateBack: PropTypes.func.isRequired,
   entityType: PropTypes.string.isRequired,
+  loadNextPage: PropTypes.func.isRequired,
 };
 
 export default injectIntl(MusicEntityDetail);

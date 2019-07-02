@@ -9,12 +9,16 @@ import ScrollPane from './../../containers/ScrollPane';
 import OrangeDivider from './../OrangeDivider';
 import StyledLink from './../StyledLink';
 import StyledTextField from './../StyledTextField';
-import LoadScreen from './../LoadScreen';
 import messages from './messages';
 import GenresPage from '../../containers/GenresPage';
 import ArtistsPage from '../../containers/ArtistsPage';
 import AlbumsPage from '../../containers/AlbumsPage';
 import SongsPage from '../../containers/SongsPage';
+import PlaylistsPage from './../../containers/PlaylistsPage';
+import AlbumDetailPage from './../../containers/AlbumDetailPage';
+import ArtistDetailPage from './../../containers/ArtistDetailPage';
+import GenreDetailPage from './../../containers/GenreDetailPage';
+import PlaylistDetailPage from './../../containers/PlaylistDetailPage';
 
 const styles = {
   search: {
@@ -57,30 +61,53 @@ const styles = {
 class Library extends Component {
 
   render() {
-    const { match, intl } = this.props;
-    const { formatMessage } = intl;
+    const { 
+      match,
+      intl: {
+        formatMessage,
+      },
+      location: { 
+        pathname,
+      },
+    } = this.props;
+
+    const songsPath = match.url;
+    const genresPath = `${match.url}/genres`;
+    const artistsPath = `${match.url}/artists`;
+    const playlistPath = `${match.url}/playlists`;
+    const albumsPath = `${match.url}/albums`;
+
+    let songsMatch = pathname == songsPath; // it is an exact match
+    let genresMatch  = pathname.startsWith(genresPath);
+    let artistsMatch  = pathname.startsWith(artistsPath);
+    let playlistMatch  = pathname.startsWith(playlistPath);
+    let albumsMatch  = pathname.startsWith(albumsPath);
+
     return (
       <div style={styles.base}>
         <div style={styles.menu}>
           <div style={styles.tabs}>
-            <StyledLink to="/home/library/genres" >
-              {formatMessage(messages.genresLabel)}
-            </StyledLink>
-            <StyledLink to="/home/library/artists" >
-              {formatMessage(messages.artistsLabel)}
-            </StyledLink>
-            <StyledLink to="/home/library/albums" >
+            <StyledLink to={albumsPath} routeActive={albumsMatch}>
               {formatMessage(messages.albumsLabel)}
             </StyledLink>
-            <StyledLink to="/home/library" >
+            <StyledLink to={artistsPath} routeActive={artistsMatch}>
+              {formatMessage(messages.artistsLabel)}
+            </StyledLink>
+            <StyledLink to={genresPath} routeActive={genresMatch}>
+              {formatMessage(messages.genresLabel)}
+            </StyledLink>
+            <StyledLink to={songsPath} routeActive={songsMatch}>
               {formatMessage(messages.songsLabel)}
+            </StyledLink>
+            <StyledLink to={playlistPath} routeActive={playlistMatch}>
+              {formatMessage(messages.playlistsLabel)}
             </StyledLink>
           </div>
           <div style={styles.ghost} />
-          <div style={styles.search}>
+          {/*<div style={styles.search}>
             <StyledTextField hintText={formatMessage(messages.searchHint)} />
           </div>
-          <div style={styles.ghost} />
+    <div style={styles.ghost} />*/}
           <div style={styles.tabs}>
             <FlatButton
               label={formatMessage(messages.addLabel)}
@@ -92,14 +119,17 @@ class Library extends Component {
         </div>
         <OrangeDivider />
         <div style={styles.gap} />
-        <LoadScreen loading={this.props.libLoading}>
-          <Switch>
-            <Route exact path={match.url} component={SongsPage} />
-            <Route path={`${match.url}/albums`} component={AlbumsPage} />
-            <Route path={`${match.url}/artists`} component={ArtistsPage} />
-            <Route path={`${match.url}/genres`} component={GenresPage} />
-          </Switch>
-        </LoadScreen>
+        <Switch>
+          <Route exact path={songsPath} component={SongsPage} />
+          <Route exact path={albumsPath} component={AlbumsPage} />
+          <Route path={`${albumsPath}/:albumId`} component={AlbumDetailPage} />
+          <Route exact path={artistsPath} component={ArtistsPage} />
+          <Route path={`${artistsPath}/:artistId`} component={ArtistDetailPage} />
+          <Route exact path={genresPath} component={GenresPage} />
+          <Route path={`${genresPath}/:genreId`} component={GenreDetailPage} />
+          <Route exact path={playlistPath} component={PlaylistsPage} />
+          <Route path={`${playlistPath}/:playlistId`} component={PlaylistDetailPage} />
+        </Switch>
       </div>
     );
   }

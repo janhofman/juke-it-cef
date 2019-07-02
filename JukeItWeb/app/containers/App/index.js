@@ -94,6 +94,14 @@ const muiTheme = getMuiTheme({
     //labelDisabledColor: palette.disabledColor,
     //trackRequiredColor: fade(palette.primary1Color, 0.5),
   },
+  checkbox: {
+    boxColor: fullWhite,
+    checkedColor: fullWhite,
+    //requiredColor: palette.primary1Color,
+    //disabledColor: palette.disabledColor,
+    //labelColor: palette.textColor,
+    //labelDisabledColor: palette.disabledColor,
+  },
 });
 
 class App extends Component {

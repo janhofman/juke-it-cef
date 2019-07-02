@@ -17,6 +17,10 @@ export default defineMessages({
       id: 'Library.songsLabel',
       defaultMessage: "Songs",
   },
+  playlistsLabel: {
+    id: 'Library.playlistsLabel',
+    defaultMessage: "Playlists",
+},
   searchHint: {
       id: 'Library.searchHint',
       defaultMessage: "Search...",

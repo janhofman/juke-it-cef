@@ -6,7 +6,7 @@ import TileGrid from '../../containers/TileGrid';
 import ScrollPane from '../../containers/ScrollPane';
 import GridItem from '../GridItem';
 import OrangeDivider from '../OrangeDivider';
-import defaultImage from '../../images/logo_negative_no_bg.png';
+import { randomCoverArtGenerator } from '../../utils';
 
 const styles = {
   header: {
@@ -30,6 +30,7 @@ class Artists extends Component {
       intl
     } = this.props;
     const { formatMessage } = intl;
+    const generator = randomCoverArtGenerator();
     return (
       <ScrollPane>
         <div style={styles.wrapper}>
@@ -43,7 +44,7 @@ class Artists extends Component {
                   key={index}
                   onTouchTap={() => showDetail(artist.id)}
                 >
-                  <img src={artist.img ? artist.img : defaultImage} style={styles.image} />
+                  <img src={artist.img ? artist.img : generator.next()} style={styles.image} />
                 </GridItem>
               ))
             }

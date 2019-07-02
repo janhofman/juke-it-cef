@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   openFileServer,
   closeFileServer,
@@ -18,6 +19,12 @@ export function toggleFileServerLocal() {
   });
 }
 
+export function toggleFileServerRemote() {
+  return ({
+    type: 'DEVICES_TOGGLE_FS_REMOTE',
+  });
+}
+
 function localFileServerBusy(busy) {
   return ({
     type: 'DEVICES_FS_LOCAL_BUSY',
@@ -25,18 +32,32 @@ function localFileServerBusy(busy) {
   });
 }
 
-export function fsLocalHostnameChange(hostname) {
-  return ({
-    type: 'DEVICES_FS_LOCAL_HOSTNAME',
-    payload: hostname,
-  });
+export function fsLocalChange(changes) {
+  return {
+      type: 'DEVICES_FS_LOCAL_CHANGE',
+      payload: changes,
+  };
 }
 
-export function fsLocalPortChange(port) {
-  return ({
-    type: 'DEVICES_FS_LOCAL_PORT',
-    payload: port,
-  });
+export function fsRemoteChange(changes) {
+  return {
+      type: 'DEVICES_FS_REMOTE_CHANGE',
+      payload: changes,
+  };
+}
+
+export function playerLocalChange(changes) {
+  return {
+      type: 'DEVICES_PLAYER_LOCAL_CHANGE',
+      payload: changes,
+  };
+}
+
+export function playerRemoteChange(changes) {
+  return {
+      type: 'DEVICES_PLAYER_REMOTE_CHANGE',
+      payload: changes,
+  };
 }
 
 export function playerLocalHostnameChange(hostname) {
@@ -67,25 +88,17 @@ export function playerRemotePortChange(port) {
   });
 }
 
-export function openFileServerLocal() {
-  return ((dispatch, getState) => {
-    const { devices: { fileServer: { local } } } = getState();
-
-    if (!local.running && !local.busy) {
-      dispatch(localFileServerBusy(true));
-      dispatch(openFileServer(local.hostname, local.port));
-    }
+export function togglePlayerDialog(open) {
+  return ({
+    type: 'DEVICES_TOGGLE_PLAYER_DIALOG',
+    payload: open,
   });
 }
 
-export function closeFileServerLocal() {
-  return ((dispatch, getState) => {
-    const { devices: { fileServer: { local } } } = getState();
-
-    if (local.running && !local.busy) {
-      dispatch(localFileServerBusy(true));
-      dispatch(closeFileServer());
-    }
+export function toggleFsDialog(open) {
+  return ({
+    type: 'DEVICES_TOGGLE_FS_DIALOG',
+    payload: open,
   });
 }
 
@@ -105,6 +118,54 @@ function localPlayerBusy(busy) {
   return ({
     type: 'DEVICES_PLAYER_LOCAL_BUSY',
     payload: busy,
+  });
+}
+
+function fsLocalConnected() {
+  return ({
+    type: 'DEVICES_FS_LOCAL_CONNECTED',
+  });
+}
+
+function fsRemoteConnected() {
+  return ({
+    type: 'DEVICES_FS_REMOTE_CONNECTED',
+  });
+}
+
+function fsConnected(address) {
+  return ({
+    type: 'DEVICES_FS_CONNECTED',
+    payload: address,
+  });
+}
+
+export function disconnectFileServer() {
+  return ({
+    type: 'DEVICES_FS_DISCONNECT',
+  });
+}
+
+export function openFileServerLocal() {
+  return ((dispatch, getState) => {
+    const { devices: { fileServer: { local } } } = getState();
+
+    if (!local.running && !local.busy) {
+      dispatch(localFileServerBusy(true));
+      dispatch(openFileServer(local.hostname, local.port));
+    }
+  });
+}
+
+export function closeFileServerLocal() {
+  return ((dispatch, getState) => {
+    const { devices: { fileServer: { local } } } = getState();
+
+    if (local.running && !local.busy) {
+      dispatch(localFileServerBusy(true));
+      dispatch(disconnectFileServer());
+      dispatch(closeFileServer());
+    }
   });
 }
 
@@ -141,12 +202,10 @@ export function loadFileServerSettings() {
       }
     } = getState();
 
-    if (local.localhost) {
-      dispatch(fsLocalHostnameChange('localhost'));
-    } else {      
-      dispatch(fsLocalHostnameChange(local.hostname));
-    }
-    dispatch(fsLocalPortChange(local.port));
+    dispatch(fsLocalChange({
+      hostname: local.localhost ? 'localhost' : local.hostname,
+      port: local.port,
+    }));
   }
 }
 
@@ -162,15 +221,15 @@ export function loadPlayerSettings() {
     } = getState();
 
     /*** LOCAL SETTINGS ***/
-    if (local.localhost) {
-      dispatch(playerLocalHostnameChange('localhost'));
-    } else {      
-      dispatch(playerLocalHostnameChange(local.hostname));
-    }
-    dispatch(playerLocalPortChange(local.port));
+    dispatch(playerLocalChange({
+      hostname: local.localhost ? 'localhost' : local.hostname,
+      port: local.port,
+    }));
     /*** REMOTE SETTINGS ***/
-    dispatch(playerRemoteHostnameChange(remote.hostname));
-    dispatch(playerRemotePortChange(remote.port));      
+    dispatch(playerRemoteChange({
+      hostname: remote.hostname,
+      port: remote.port,
+    })); 
   }
 }
 
@@ -219,5 +278,98 @@ export function initializePlayer() {
       dispatch(connectToRemotePlayer());
     }    
   }
+}
+
+function testHostame(hostname, dispatch) {
+  const rtc = true;
+
+  return rtc;
+}
+
+function testPortNumber(portNumber, dispatch) {
+  const rtc = true;
+
+  return rtc;
+}
+
+function pingFileServer(baseUrl) {
+  let url = baseUrl;
+  if (!url.endsWith('/')) {
+    url += '/';
+  }
+  url = `${url}v1/ping`;
+
+  return axios.get(url).then((response) => {
+    if (response.status === 200) {
+      return true;
+    }
+    return false;
+  }).catch((error) => {
+    console.log(error);
+    return false;
+  });
+}
+
+export function connectFsLocal() {
+  return (dispatch, getState) => {
+    const {
+      devices: {
+        fileServer: {
+          local: {
+            running,
+            address,
+          },
+        },
+      },
+    } = getState();
+
+    if (running && address) {      
+      pingFileServer(address)
+        .then((available) => {
+          if (available) {
+            dispatch(fsLocalConnected());
+            dispatch(fsConnected(address));
+          } else {
+            // TODO: show error that fs is not available
+          }
+        });
+    }
+  };
+}
+
+export function connectFsRemote() {
+  return (dispatch, getState) => {
+    const {
+      devices: {
+        fileServer: {
+          remote: {
+            hostname,
+            port,
+            connected,
+          },
+        },
+      },
+    } = getState();
+
+    if (!connected && testHostame(hostname) && testPortNumber(port)) {
+      let url = 'http://';
+      if (hostname.toLowerCase().startsWith('http://')) {
+        url = hostname;
+      } else {
+        url += hostname;
+      }
+      url += `:${port}/api`;
+
+      pingFileServer(url)
+        .then((available) => {
+          if (available) {
+            dispatch(fsRemoteConnected());
+            dispatch(fsConnected(url));
+          } else {
+            // TODO: show error that fs is not available
+          }
+        });
+    }
+  };
 }
 

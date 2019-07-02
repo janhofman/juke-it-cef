@@ -20,8 +20,8 @@ class ArtistsPage extends Component {
   }
 
   showDetail(artistId) {
-    const { dispatch } = this.props;
-    dispatch(push(`/home/detail/artist/${artistId}`));
+    const { dispatch, match } = this.props;
+    dispatch(push(`${match.url}/${artistId}`));
   }
 
   render() {

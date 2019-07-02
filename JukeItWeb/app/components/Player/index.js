@@ -137,6 +137,7 @@ class Player extends Component {
       playing,
       currentTime,
       volume,
+      height,
 
       seeking,
       sliderValue,
@@ -160,7 +161,7 @@ class Player extends Component {
     const volumeSliderValue = volumeDragging ? volumeValue : Math.min(volume, 100);
 
     return (
-      <div style={Object.assign(styles.base, { height: this.props.height })}>
+      <div style={{ ...styles.base, height }}>
         <div style={styles.imageBox}>
           <img
             src={

@@ -1,3 +1,5 @@
+import { connectFsLocal } from './devicesActions';
+
 function makeRequest(command, payload = null, onSuccess = function () {}, onFailure = function () {}) {
   return (dispatch, getState) => {
     const { cefQuery } = getState();
@@ -58,8 +60,9 @@ export function openFileServer(hostName = null, port = null) {
         dispatch(fileServerOpened(response.address));
       } else {
         // here warnings can be handled
-        dispatch(fileServerOpened(response.address));
-      }
+        dispatch(fileServerOpened(response.address)); 
+      }       
+      dispatch(connectFsLocal());
     };
 
     const onFailure = (errorCode, errorMessage) => {

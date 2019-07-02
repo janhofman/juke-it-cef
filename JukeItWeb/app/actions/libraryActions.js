@@ -292,14 +292,14 @@ export function apiSongPromise(baseUrl, songId) {
  * Creates Songs request promise.
  * @param {string} baseUrl File Server base url.
  * @param {number} limit   Maximum number of items in response.
- * @param {number} page    Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number} start   Index of the first item (numbering starts from 1)
  * @param {string} orderby Column by which the result should be sorted by, use one of these values: title, artist, album, genre, duration.
  * @param {bool}   desc    Decides whether results will be sorted in ascending or descending order.
  * @param {string} filter  Specifies a string to look for in song titles.
  * @return {Promise} A promise returning response to Songs request.
  */
-export function apiSongsPromise(baseUrl, limit = 100, page = 1, orderby = null, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiSongsPromise(baseUrl, limit = 100, start = 1, orderby = null, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -307,7 +307,7 @@ export function apiSongsPromise(baseUrl, limit = 100, page = 1, orderby = null, 
   url = `${url}v1/songs`;
   const params = {
     limit,
-    page,
+    start,
   };
   if (desc) {
     params.desc = 'desc';
@@ -329,35 +329,35 @@ export function apiSongsPromise(baseUrl, limit = 100, page = 1, orderby = null, 
   });
 }
 
-function getAllSongsContinuation(baseUrl, limit, page, orderby, desc, filter, songs, result) {
+function getAllSongsContinuation(baseUrl, limit, start, orderby, desc, filter, songs, result) {
   const newSongs = songs.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiSongsPromise(baseUrl, limit, nextPage, orderby, desc, filter)
-      .then((result2) => getAllSongsContinuation(baseUrl, limit, nextPage, orderby, desc, filter, newSongs, result2));
+    const nextStart = start + limit;
+    return apiSongsPromise(baseUrl, limit, nextStart, orderby, desc, filter)
+      .then((result2) => getAllSongsContinuation(baseUrl, limit, nextStart, orderby, desc, filter, newSongs, result2));
   }
   return newSongs;
 }
 
 export function getAllSongs(baseUrl, orderby = null, desc = false, filter = null) {
   const limit = 3;
-  const page = 1;
-  return apiSongsPromise(baseUrl, limit, page, orderby, desc, filter)
-    .then((result) => getAllSongsContinuation(baseUrl, limit, page, orderby, desc, filter, [], result));
+  const start = 1;
+  return apiSongsPromise(baseUrl, limit, start, orderby, desc, filter)
+    .then((result) => getAllSongsContinuation(baseUrl, limit, start, orderby, desc, filter, [], result));
 }
 
 /**
  * Creates Albums request promise.
  * @param {string} baseUrl File Server base url.
  * @param {number} limit   Maximum number of items in response.
- * @param {number} page    Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number} start   Index of the first item (numbering starts from 1)
  * @param {string} orderby Column by which the result should be sorted by, use one of these values: name, artist.
  * @param {bool}   desc    Decides whether results will be sorted in ascending or descending order.
  * @param {string} filter  Specifies a string to look for in album titles.
  * @return {Promise} A promise returning response to Albums request.
  */
-export function apiAlbumsPromise(baseUrl, limit = 100, page = 1, orderby = null, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiAlbumsPromise(baseUrl, limit = 100, start = 1, orderby = null, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -365,7 +365,7 @@ export function apiAlbumsPromise(baseUrl, limit = 100, page = 1, orderby = null,
   url = `${url}v1/albums`;
   const params = {
     limit,
-    page,
+    start,
   };
   if (desc) {
     params.desc = 'desc';
@@ -404,34 +404,34 @@ export function apiAlbumPromise(baseUrl, albumId) {
   });
 }
 
-function getAllAlbumsContinuation(baseUrl, limit, page, orderby, desc, filter, albums, result) {
+function getAllAlbumsContinuation(baseUrl, limit, start, orderby, desc, filter, albums, result) {
   const newAlbums = albums.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiAlbumsPromise(baseUrl, limit, nextPage, orderby, desc, filter)
-      .then((result2) => getAllAlbumsContinuation(baseUrl, limit, nextPage, orderby, desc, filter, newAlbums, result2));
+    const nextStart = start + limit;
+    return apiAlbumsPromise(baseUrl, limit, nextStart, orderby, desc, filter)
+      .then((result2) => getAllAlbumsContinuation(baseUrl, limit, nextStart, orderby, desc, filter, newAlbums, result2));
   }
   return newAlbums;
 }
 
 export function getAllAlbums(baseUrl, orderby = null, desc = false, filter = null) {
   const limit = 1;
-  const page = 1;
-  return apiAlbumsPromise(baseUrl, limit, page, orderby, desc, filter)
-    .then((result) => getAllAlbumsContinuation(baseUrl, limit, page, orderby, desc, filter, [], result));
+  const start = 1;
+  return apiAlbumsPromise(baseUrl, limit, start, orderby, desc, filter)
+    .then((result) => getAllAlbumsContinuation(baseUrl, limit, start, orderby, desc, filter, [], result));
 }
 
 /**
  * Creates Genres request promise.
  * @param {string} baseUrl File Server base url.
  * @param {number} limit   Maximum number of items in response.
- * @param {number} page    Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number} start   Index of the first item (numbering starts from 1)
  * @param {bool}   desc    Decides whether results will be sorted in ascending or descending order.
  * @param {string} filter  Specifies a string to look for in genre names.
  * @return {Promise} A promise returning response to Genres request.
  */
-export function apiGenresPromise(baseUrl, limit = 100, page = 1, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiGenresPromise(baseUrl, limit = 100, start = 1, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -439,7 +439,7 @@ export function apiGenresPromise(baseUrl, limit = 100, page = 1, desc = false, f
   url = `${url}v1/genres`;
   const params = {
     limit,
-    page,
+    start,
   };
   if (desc) {
     params.desc = 'desc';
@@ -475,34 +475,34 @@ export function apiGenrePromise(baseUrl, genreId) {
   });
 }
 
-function getAllGenresContinuation(baseUrl, limit, page, desc, filter, genres, result) {
+function getAllGenresContinuation(baseUrl, limit, start, desc, filter, genres, result) {
   const newGenres = genres.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiGenresPromise(baseUrl, limit, nextPage, desc, filter)
-      .then((result2) => getAllGenresContinuation(baseUrl, limit, nextPage, desc, filter, newGenres, result2));
+    const nextStart = start + limit;
+    return apiGenresPromise(baseUrl, limit, nextStart, desc, filter)
+      .then((result2) => getAllGenresContinuation(baseUrl, limit, nextStart, desc, filter, newGenres, result2));
   }
   return newGenres;
 }
 
 export function getAllGenres(baseUrl, desc = false, filter = null) {
   const limit = 1;
-  const page = 1;
-  return apiGenresPromise(baseUrl, limit, page, desc, filter)
-    .then((result) => getAllGenresContinuation(baseUrl, limit, page, desc, filter, [], result));
+  const start = 1;
+  return apiGenresPromise(baseUrl, limit, start, desc, filter)
+    .then((result) => getAllGenresContinuation(baseUrl, limit, start, desc, filter, [], result));
 }
 
 /**
  * Creates Artists request promise.
  * @param {string} baseUrl File Server base url.
  * @param {number} limit   Maximum number of items in response.
- * @param {number} page    Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number} start   Index of the first item (numbering starts from 1)
  * @param {bool}   desc    Decides whether results will be sorted in ascending or descending order.
  * @param {string} filter  Specifies a string to look for in artist names.
  * @return {Promise} A promise returning response to Artists request.
  */
-export function apiArtistsPromise(baseUrl, limit = 100, page = 1, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiArtistsPromise(baseUrl, limit = 100, start = 1, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -510,7 +510,7 @@ export function apiArtistsPromise(baseUrl, limit = 100, page = 1, desc = false, 
   url = `${url}v1/artists`;
   const params = {
     limit,
-    page,
+    start,
   };
   if (desc) {
     params.desc = 'desc';
@@ -529,21 +529,21 @@ export function apiArtistsPromise(baseUrl, limit = 100, page = 1, desc = false, 
   });
 }
 
-function getAllArtistsContinuation(baseUrl, limit, page, desc, filter, artists, result) {
+function getAllArtistsContinuation(baseUrl, limit, start, desc, filter, artists, result) {
   const newArtists = artists.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiArtistsPromise(baseUrl, limit, nextPage, desc, filter)
-      .then((result2) => getAllArtistsContinuation(baseUrl, limit, nextPage, desc, filter, newArtists, result2));
+    const nextStart = start + limit;
+    return apiArtistsPromise(baseUrl, limit, nextStart, desc, filter)
+      .then((result2) => getAllArtistsContinuation(baseUrl, limit, nextStart, desc, filter, newArtists, result2));
   }
   return newArtists;
 }
 
 export function getAllArtists(baseUrl, desc = false, filter = null) {
   const limit = 1;
-  const page = 1;
-  return apiArtistsPromise(baseUrl, limit, page, desc, filter)
-    .then((result) => getAllArtistsContinuation(baseUrl, limit, page, desc, filter, [], result));
+  const start = 1;
+  return apiArtistsPromise(baseUrl, limit, start, desc, filter)
+    .then((result) => getAllArtistsContinuation(baseUrl, limit, start, desc, filter, [], result));
 }
 
 export function apiArtistPromise(baseUrl, artistId) {
@@ -568,13 +568,13 @@ export function apiArtistPromise(baseUrl, artistId) {
  * @param {string} baseUrl File Server base url.
  * @param {string} userId  ID of user.
  * @param {number} limit   Maximum number of items in response.
- * @param {number} page    Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number} start   Index of the first item (numbering starts from 1)
  * @param {bool}   desc    Decides whether results will be sorted in ascending or descending order.
  * @param {string} filter  Specifies a string to look for in artist names.
  * @return {Promise} A promise returning response to Artists request.
  */
-export function apiPlaylistsPromise(baseUrl, userId, limit = 100, page = 1, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiPlaylistsPromise(baseUrl, userId, limit = 100, start = 1, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -582,7 +582,7 @@ export function apiPlaylistsPromise(baseUrl, userId, limit = 100, page = 1, desc
   url = `${url}v1/playlists/${userId.toString()}`;
   const params = {
     limit,
-    page,
+    start,
   };
   if (desc) {
     params.desc = 'desc';
@@ -601,21 +601,21 @@ export function apiPlaylistsPromise(baseUrl, userId, limit = 100, page = 1, desc
   });
 }
 
-function getAllPlaylistsContinuation(baseUrl, userId, limit, page, desc, filter, playlists, result) {
+function getAllPlaylistsContinuation(baseUrl, userId, limit, start, desc, filter, playlists, result) {
   const newPlaylists = playlists.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiPlaylistsPromise(baseUrl, userId, limit, nextPage, desc, filter)
-      .then((result2) => getAllPlaylistsContinuation(baseUrl, userId, limit, nextPage, desc, filter, newPlaylists, result2));
+    const nextStart = start + limit;
+    return apiPlaylistsPromise(baseUrl, userId, limit, nextStart, desc, filter)
+      .then((result2) => getAllPlaylistsContinuation(baseUrl, userId, limit, nextStart, desc, filter, newPlaylists, result2));
   }
   return newPlaylists;
 }
 
 export function getAllPlaylists(baseUrl, userId, desc = false, filter = null) {
   const limit = 1;
-  const page = 1;
-  return apiPlaylistsPromise(baseUrl, userId, limit, page, desc, filter)
-    .then((result) => getAllPlaylistsContinuation(baseUrl, userId, limit, page, desc, filter, [], result));
+  const start = 1;
+  return apiPlaylistsPromise(baseUrl, userId, limit, start, desc, filter)
+    .then((result) => getAllPlaylistsContinuation(baseUrl, userId, limit, start, desc, filter, [], result));
 }
 
 export function apiPlaylistPromise(baseUrl, playlistId, userId) {
@@ -642,13 +642,13 @@ export function apiPlaylistPromise(baseUrl, playlistId, userId) {
  * @param {string}     entitiId - ID of desired entity.
  * @param {string}     userId   - ID of user, used only for playlist entity.
  * @param {number}     limit    - Maximum number of items in response.
- * @param {number}     page     - Number of the page to get (e.g. page=5 and limit=100 will return records 401-500).
+ * @param {number}     start   Index of the first item (numbering starts from 1)
  * @param {bool}       desc     - Decides whether results will be sorted in ascending or descending order.
  * @param {string}     filter   - Specifies a string to look for in artist names.
  * @return {Promise} A promise returning response to Artists request.
  */
-export function apiEntitySongsPromise(baseUrl, entity, entityId, userId = null, limit = 100, page = 1, orderby = null, desc = false, filter = null) {
-  console.log('Page: ', page, ' Limit: ', limit);
+export function apiEntitySongsPromise(baseUrl, entity, entityId, userId = null, limit = 100, start = 1, orderby = null, desc = false, filter = null) {
+  console.log('Start: ', start, ' Limit: ', limit);
   let url = baseUrl;
   if (!url.endsWith('/')) {
     url += '/';
@@ -673,7 +673,7 @@ export function apiEntitySongsPromise(baseUrl, entity, entityId, userId = null, 
   console.log('URL: ', url);
   const params = {
     limit,
-    page,
+    start,
   };
   if (orderby) {
     params.orderby = orderby;
@@ -695,20 +695,20 @@ export function apiEntitySongsPromise(baseUrl, entity, entityId, userId = null, 
   });
 }
 
-function getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, page, orderby, desc, filter, songs, result) {
+function getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter, songs, result) {
   const newSongs = songs.concat(result);
   if (result.length === limit) {
-    const nextPage = page + 1;
-    return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, nextPage, orderby, desc, filter)
-      .then((result2) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, nextPage, orderby, desc, filter, newSongs, result2));
+    const nextStart = start + limit;
+    return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, nextStart, orderby, desc, filter)
+      .then((result2) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, nextStart, orderby, desc, filter, newSongs, result2));
   }
   return newSongs;
 }
 
 export function getAllEntitySongs(baseUrl, entity, entityId, userId, orderby = null, desc = false, filter = null) {
   const limit = 3
-  const page = 1;
-  return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, page, orderby, desc, filter)
-    .then((result) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, page, orderby, desc, filter, [], result));
+  const start = 1;
+  return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter)
+    .then((result) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter, [], result));
 }
 

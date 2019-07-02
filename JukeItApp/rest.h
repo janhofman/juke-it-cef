@@ -30,7 +30,7 @@ private:
 	typedef std::tuple<AbstractFileServerHandler::ResponseCode, web::json::value> ResultTuple;
 	typedef struct {
 		std::uint32_t limit;
-		std::uint32_t page;
+		std::uint32_t start;
 		std::string id;
 		std::string filter;
 		std::string orderBy;
@@ -72,6 +72,7 @@ private:
 	void v1_PlaylistSongs(web::http::http_request message, const std::vector<utility::string_t>& paths, const std::map<utility::string_t, utility::string_t>& queries);
 	void v1_PlaylistSongs_Modify(web::http::http_request message, const std::vector<utility::string_t>& paths);
 	void v1_GetSong(web::http::http_request message, const std::vector<utility::string_t>& paths);
+	void v1_Ping(web::http::http_request message);
 	void Reply(const web::http::http_request& message, web::http::status_code code);
 	void Reply(const web::http::http_request& message, web::http::status_code code, const web::json::value& bodyData);
 };

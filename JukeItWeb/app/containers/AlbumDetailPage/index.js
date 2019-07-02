@@ -10,18 +10,25 @@ import {
 } from '../../actions/songListActions';
 import MusicEntityDetail from '../../components/MusicEntityDetail';
 import { EntityEnum } from '../../utils';
+import { apiEntitySongsPromise } from '../../actions/libraryActions';
 
 class AlbumDetailPage extends Component {
   constructor(props) {
     super(props);
-    const { match, dispatch } = props;
-    const { albumId } = match.params;
+    const {
+      dispatch,
+      match: {
+        params: {
+          albumId,
+        },
+      },
+    } = props;
 
     this.navigateBack = this.navigateBack.bind(this);
     this.playAction = this.playAction.bind(this);
+    this.loadNextPage = this.loadNextPage.bind(this);
 
     dispatch(loadMetadataForAlbum(albumId));
-    dispatch(loadSongsForAlbum(albumId));
   }
 
   componentWillUnmount() {
@@ -40,6 +47,17 @@ class AlbumDetailPage extends Component {
     dispatch(removePlaylist());
     dispatch(uploadAlbumLib(albumId, name, artist));
   }
+  
+  loadNextPage(baseUrl, startIndex, stopIndex, orderby = null, desc = false, filter = null) {
+    const {
+      match: {
+        params: {
+          albumId,
+        },
+      },
+    } = this.props;
+    return apiEntitySongsPromise(baseUrl, EntityEnum.ALBUM, albumId, null, stopIndex - startIndex + 1, startIndex, orderby, desc, filter);
+  }
 
   render() {
     const {
@@ -57,6 +75,7 @@ class AlbumDetailPage extends Component {
         navigateBack={this.navigateBack}
         playAction={this.playAction}
         entityType={EntityEnum.ALBUM}
+        loadNextPage={this.loadNextPage}
       />
     );
   }

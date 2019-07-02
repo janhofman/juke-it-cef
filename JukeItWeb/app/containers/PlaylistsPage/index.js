@@ -26,8 +26,8 @@ class PlaylistsPage extends Component {
   }
 
   showDetail(playlistId) {
-    const { dispatch } = this.props;
-    dispatch(push(`/home/detail/playlist/${playlistId}`));
+    const { dispatch, match } = this.props;
+    dispatch(push(`${match.url}/${playlistId}`));
   }
 
   showDialog() {

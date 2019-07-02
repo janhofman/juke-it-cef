@@ -49,6 +49,22 @@ export default defineMessages({
     id: 'Devices.fsLocalPortLabel',
     defaultMessage: 'Port number',
   },
+  fsRemoteHostnameHint: {
+    id: 'Devices.fsRemoteHostnameHint',
+    defaultMessage: 'default: localhost',
+  },
+  fsRemoteHostnameLabel: {
+    id: 'Devices.fsRemoteHostnameLabel',
+    defaultMessage: 'Hostname / IP address',
+  },
+  fsRemotePortHint: {
+    id: 'Devices.fsRemotePortHint',
+    defaultMessage: 'default: 26331',
+  },
+  fsRemotePortLabel: {
+    id: 'Devices.fsRemotePortLabel',
+    defaultMessage: 'Port number',
+  },
   fsLocalStartBtn: {
     id: 'Devices.fsLocalStartBtn',
     defaultMessage: 'Start',
@@ -56,6 +72,18 @@ export default defineMessages({
   fsLocalStopBtn: {
     id: 'Devices.fsLocalStopBtn',
     defaultMessage: 'Stop',
+  },
+  fsLocalReconnectBtn: {
+    id: 'Devices.fsLocalReconnectBtn',
+    defaultMessage: 'Reconnect',
+  },
+  fsRemoteConnectBtn: {
+    id: 'Devices.fsRemoteConnectBtn',
+    defaultMessage: 'Connect',
+  },
+  fsRemoteDisconnectBtn: {
+    id: 'Devices.fsRemoteDisconnectBtn',
+    defaultMessage: 'Disconnect',
   },
   playerLocalHostnameHint: {
     id: 'Devices.playerLocalHostnameHint',
@@ -81,13 +109,9 @@ export default defineMessages({
     id: 'Devices.playerLocalStopBtn',
     defaultMessage: 'Stop',
   },
-  playerLocalConnectBtn: {
-    id: 'Devices.playerLocalConnectBtn',
-    defaultMessage: 'Connect',
-  },
-  playerLocalDisconnectBtn: {
-    id: 'Devices.playerLocalDisconnectBtn',
-    defaultMessage: 'Disconnect',
+  playerLocalReconnectBtn: {
+    id: 'Devices.playerLocalReconnectBtn',
+    defaultMessage: 'Reconnect',
   },
   playerRemoteHostnameLabel: {
     id: 'Devices.playerRemoteHostnameLabel',
@@ -106,7 +130,7 @@ export default defineMessages({
     defaultMessage: 'Connect',
   },
   playerRemoteDisconnectBtn: {
-    id: 'Devices.playerRemoteConnectBtn',
+    id: 'Devices.playerRemoteDisconnectBtn',
     defaultMessage: 'Disconnect',
   },
 });

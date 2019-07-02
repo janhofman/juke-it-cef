@@ -61,7 +61,7 @@ class Playback extends Component {
     return (
       <ScrollPane>
         <p>{formatMessage(messages.noPlaylist)}</p>
-        <StyledLink to="/home/playlists">
+        <StyledLink to="/home/library">
           {formatMessage(messages.pickPlaylist)}
         </StyledLink>
       </ScrollPane>

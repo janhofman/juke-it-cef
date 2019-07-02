@@ -1,44 +1,35 @@
 import React, { Component } from 'react';
-import { defineMessages, injectIntl } from 'react-intl';
+import { injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
+
 import IconButton from 'material-ui/IconButton';
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
-import BackArrow from 'material-ui/svg-icons/navigation/arrow-back';
 import PlayButton from 'material-ui/svg-icons/av/play-arrow';
 import Options from 'material-ui/svg-icons/navigation/more-horiz';
+import SearchIcon from 'material-ui/svg-icons/action/search';
 import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
-import CircularProgress from 'material-ui/CircularProgress';
 import Popover from 'material-ui/Popover';
 import { Menu, MenuItem } from 'material-ui/Menu';
-import { grey500, deepOrange500 } from 'material-ui/styles/colors';
-import {
-  Table,
-  TableHeader,
-  TableHeaderColumn,
-  TableBody,
-  TableRowColumn,
-  TableRow,
-} from 'material-ui/Table';
-/* import Table from '../Table';
+import IconMenu from 'material-ui/IconMenu';
+import Checkbox from 'material-ui/Checkbox';
+import { deepOrange500 } from 'material-ui/styles/colors';
+
+import InfiniteLoader from 'react-virtualized/dist/es/InfiniteLoader';
+import { Table, Column, SortDirection } from 'react-virtualized/dist/es/Table';
+import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
+import 'react-virtualized/styles.css'; // only needs to be imported once
+
 import TableBodyRow from '../TableBodyRow';
-import TableHead from '../TableHead';
-import TableHeadCell from '../TableHeadCell';*/
 import ScrollPane from '../../containers/ScrollPane';
-import AutoSizeDiv from '../AutoSizeDiv';
-import LoadScreen from '../LoadScreen';
 import MillisToTime from '../MillisToTime';
+import StyledTextField from './../StyledTextField';
 import messages from './messages';
 import defaultImage from '../../images/logo_negative_no_bg.png';
 
 const styles = {
-  base: {
-    padding: '10px',
-    height: '100%',
-  },
   image: {
     height: '8em',
-    float: 'left',
     border: '1px solid white',
   },
   playlistName: {
@@ -51,215 +42,309 @@ const styles = {
     marginLeft: '9em',
     marginRight: '120px',
   },
-  datagrid: {
-    clear: 'both',
+  topContainer: {
+    display: 'flex',
+    margin: '0 -10px',
   },
-  playlistInfo: {
-
+  topItem: {
+    margin: '0 20px',
+  },
+  topCenterItem: {
+    margin: '0 auto',
+    flexGrow: 1,
   },
   playButton: {
     display: 'inline-block',
     width: '50px',
   },
+  headerStyle: {
+    color: deepOrange500,
+  },
+  search: {
+    width: '200px',
+    display: 'inline-block',
+  },
+  buttons: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  iconButton: { 
+    verticalAlign: 'middle',
+  }
 };
 
 class SongListDumb extends Component {
+  constructor(props) {
+    super(props);
+
+    this.selectionCellRenderer = this.selectionCellRenderer.bind(this);
+    this.setInfiniteLoaderRef = element => {
+      this.infiniteLoader = element;
+    };
+  }
+
+  selectionCellRenderer(args) {
+    const {
+      cellData,
+      columnData,
+      columnIndex,
+      dataKey,
+      isScrolling,
+      rowData,
+      rowIndex,
+    } = args;
+
+    const {
+      onRowChecked,
+    } = this.props;
+
+    return (
+      <Checkbox 
+        checked={cellData}
+        onCheck={(_, checked) => onRowChecked(rowIndex, checked)}
+      />
+    );
+  }  
+
   render() {
     const { formatMessage } = this.props.intl;
     const {
       title,
       subtitle,
       image,
-      songs,
-      loaded,
       playAction,
-      onSongDoubleClick,
       playerConnected,
-      optionsOpen,
-      optionsAnchor,
       selectable,
-      openOptions,
-      closeOptions,
-      addSelectionToPlaylistAction,
-      cancelSelectable,
-      handleAddToPlaylist,
-      handleRowSelection,
       playlists,
       contextMenuOpen,
       contextMenuAnchor,
-      songOnMouseUp,
       handleCloseContextMenu,
       addSongToPlaylistAction,
       addSongToQueueAction,
+
+      sort,
+      search,
+      loadNextPage,
+      hasNextPage,
+      isNextPageLoading,
+      rows,
+      onAddSelectionToPlaylist,
+      onAddToPlaylistMenuClick,
+      onCancelSelection,
     } = this.props;
 
-    const playButtonDisabled = !loaded || !playerConnected;
+    const playButtonDisabled = !playerConnected;
 
-    return (<div>
-      <LoadScreen loading={!loaded}>
-        <img
-          src={image || defaultImage}
-          style={styles.image}
-        />
+    function rowRenderer (props) {
+      return <TableBodyRow {...props} />
+    }
 
-        <div style={styles.title}>
-          <div style={styles.playlistInfo}>
+    // If there are more items to be loaded then add an extra row to hold a loading indicator.
+    const rowCount = hasNextPage
+    ? rows.length + 1
+    : rows.length
+
+    // Only load 1 page of items at a time.
+    // Pass an empty callback to InfiniteLoader in case it asks us to load more than once.
+    const loadMoreRows = loadNextPage;/*isNextPageLoading
+      ? () => {}
+      : loadNextPage;*/
+
+    const sortDirection = sort.sortBy ? (sort.desc ? SortDirection.DESC : SortDirection.ASC) : null;
+    const onSort = (args) => { sort.onSort(args); this.infiniteLoader.resetLoadMoreRowsCache(true); };
+
+    const onSearch = () => { search.onSearch(); this.infiniteLoader.resetLoadMoreRowsCache(true); };
+    const onSearchKeyUp = (e) => {
+      // Number 13 is the "Enter" key on the keyboard
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        onSearch();
+      }
+    };
+    
+    // Every row is loaded except for our loading indicator row.
+    const isRowLoaded = ({ index }) => !hasNextPage || index < rows.length
+
+    return (
+      <div>
+        <div style={styles.topContainer}>
+          <div style={styles.topItem}>
+            <img
+              src={image || defaultImage}
+              style={styles.image}
+            />
+          </div>
+
+          <div style={styles.topCenterItem}>
             <div>
               <p style={styles.playlistName}>{title || null}</p>
-              <RaisedButton
-                label={formatMessage(messages.playButton)}
-                labelPosition="after"
-                containerElement="label"
-                icon={<PlayButton />}
-                onTouchTap={playButtonDisabled ? null : playAction}
-                style={{ verticalAlign: 'middle' }}
-                disabled={playButtonDisabled}
-              />
-              <IconButton
-                style={{ verticalAlign: 'middle' }}
-                onTouchTap={openOptions}
-              >
-                <Options />
-              </IconButton>
-            </div>
+              
             <p>{subtitle || null}</p>
-          </div>
-        </div>
-        <div style={styles.datagrid}>
-          <div style={{ display: selectable ? 'block' : 'none' }}>
-            <FlatButton
-              label={'Add'}
-              // abelPosition='after'
-              containerElement="label"
-              // icon={<PlayButton/>}
-              onTouchTap={addSelectionToPlaylistAction}
-              // style={{verticalAlign: 'middle'}}
-            />
-            <FlatButton
-              label={'Cancel'}
-              // abelPosition='after'
-              containerElement="label"
-              // icon={<PlayButton/>}
-              onTouchTap={cancelSelectable}
-              // style={{verticalAlign: 'middle'}}
-            />
+            </div>
           </div>
 
-          <Table>
-            <TableHeader adjustForCheckbox={selectable} displaySelectAll={selectable}>
-              <TableRow>
-                <TableHeaderColumn>
-                  {formatMessage(messages.nameColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.artistColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.albumColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.genreColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn style={{ width: '59px' }}>
-                  {formatMessage(messages.timeColumnHeader)}
-                </TableHeaderColumn>
-              </TableRow>
-            </TableHeader>
-          </Table>
-          <ScrollPane>
-            {/*
-                        <AutoSizeDiv>
-            <Table
-              head={<TableHead>
-                <TableHeadCell>
-                  {formatMessage(messages.nameColumnHeader)}
-                </TableHeadCell>
-                <TableHeadCell>
-                  {formatMessage(messages.artistColumnHeader)}
-                </TableHeadCell>
-                <TableHeadCell>
-                  {formatMessage(messages.albumColumnHeader)}
-                </TableHeadCell>
-                <TableHeadCell>
-                  {formatMessage(messages.genreColumnHeader)}
-                </TableHeadCell>
-                <TableHeadCell>
-                  {formatMessage(messages.timeColumnHeader)}
-                </TableHeadCell>
-              </TableHead>}
-              items={songs}
-              fixedWidth={true}
-              getRow={(song, idx) => {
-                return (
-                  <TableBodyRow key={idx}>
-                    <td>{song.title}</td>
-                    <td>{song.artist}</td>
-                    <td>{song.album}</td>
-                    <td>{song.genre}</td>
-                    <td><MillisToTime value={song.length}/></td>
-                  </TableBodyRow>
-                );
-              }}
-            >
-            </Table>
-          </AutoSizeDiv>
-          */}
-            <Table multiSelectable={selectable} selectable={selectable} onRowSelection={handleRowSelection}>
-              <TableBody
-                displayRowCheckbox={selectable}
-                showRowHover
-                preScanRows={false}
+          <div style={styles.topItem}>
+            <div>
+              <div style={styles.search}>
+                <StyledTextField 
+                  hintText={formatMessage(messages.searchHint)}
+                  floatingLabelText={formatMessage(messages.searchLabel)}
+                  onChange={search.onSearchValueChange}
+                  value={search.value}
+                  onKeyUp={onSearchKeyUp}
+                />                
+              </div>              
+              <IconButton
+                style={styles.iconButton}
+                onTouchTap={onSearch}
               >
-                {
-                    songs ? songs.map((song, idx) => (
-                      <TableRow
-                        key={idx}
-                        onDoubleClick={
-                          onSongDoubleClick ?
-                            (event) => {
-                              event.stopPropagation();
-                              onSongDoubleClick(song);
-                            }
-                            : null
-                        }
-                        onMouseUp={songOnMouseUp ? (event) => songOnMouseUp(event, song.id) : null}
-                      >
-                        <TableRowColumn>{song.title}</TableRowColumn>
-                        <TableRowColumn>{song.artist}</TableRowColumn>
-                        <TableRowColumn>{song.album}</TableRowColumn>
-                        <TableRowColumn>{song.genre}</TableRowColumn>
-                        <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.duration} /></TableRowColumn>
-                      </TableRow>
-                    )) : null
+                <SearchIcon/>
+              </IconButton>              
+            </div>
+            { selectable ? (
+              <div style={styles.buttons}>
+                <FlatButton
+                  label={'Add'}
+                  // labelPosition='after'
+                  containerElement="label"
+                  // icon={<PlayButton/>}
+                  onTouchTap={onAddSelectionToPlaylist}
+                />
+                <FlatButton
+                  label={'Cancel'}
+                  // abelPosition='after'
+                  containerElement="label"
+                  // icon={<PlayButton/>}
+                  onTouchTap={onCancelSelection}
+                />
+              </div>
+            ) : (
+              <div style={styles.buttons}>
+                <RaisedButton
+                  label={formatMessage(messages.playButton)}
+                  labelPosition="after"
+                  containerElement="label"
+                  icon={<PlayButton />}
+                  onTouchTap={playButtonDisabled ? null : playAction}
+                  style={{ verticalAlign: 'middle' }}
+                  disabled={playButtonDisabled}
+                />
+                <IconMenu
+                  iconButtonElement={
+                    <IconButton
+                      style={styles.iconButton}
+                    >
+                      <Options />
+                    </IconButton>
                   }
-              </TableBody>
-            </Table>
-          </ScrollPane>
-
+                  anchorOrigin={{ horizontal: 'middle', vertical: 'bottom' }}
+                  targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  useLayerForClickAway={true}
+                >
+                  <MenuItem
+                    primaryText={formatMessage(messages.addToPlaylistOpt)}
+                    leftIcon={<ArrowDropRight transform='rotate(180)'/>}
+                    menuItems={playlists.map((playlist, idx) =>
+                      (<MenuItem
+                        primaryText={playlist.name} key={idx}
+                        onTouchTap={() => onAddToPlaylistMenuClick(playlist.id)}
+                    />))}
+                  />
+                </IconMenu>
+              </div>
+            )}
+          </div>
         </div>
-        <Popover
-          open={optionsOpen}
-          anchorEl={optionsAnchor}
-          onRequestClose={closeOptions}
-        >
-          <Menu>
-            <MenuItem
-              primaryText={formatMessage(messages.addToPlaylistOpt)}
-              rightIcon={<ArrowDropRight />}
-              menuItems={playlists.map((playlist, idx) =>
-                (<MenuItem
-                  primaryText={playlist.name} key={idx}
-                  onTouchTap={() => handleAddToPlaylist(playlist.id)}
-                />))}
-            />
-          </Menu>
-        </Popover>
+        
+        {/*** TABLE  ***/}
+        <div>
+          <ScrollPane unscrollable >
+            <AutoSizer>
+              {({height, width}) => (   
+                <InfiniteLoader
+                  ref={this.setInfiniteLoaderRef}
+                  isRowLoaded={isRowLoaded}
+                  loadMoreRows={loadMoreRows}
+                  rowCount={rowCount}
+                  minimumBatchSize={20}
+                >
+                  {({ onRowsRendered, registerChild }) => (           
+                    <Table
+                      ref={registerChild}
+                      height={height}
+                      headerHeight={45}
+                      headerStyle={styles.headerStyle}
+                      noRowsRenderer={this._noRowsRenderer}
+                      onRowsRendered={onRowsRendered}
+                      rowGetter={({index}) => (index < rows.length) ? rows[index] : { loading: true }}
+                      rowRenderer={rowRenderer}
+                      rowCount={rowCount}            
+                      rowHeight={45}
+                      width={width}
+                      sort={onSort}
+                      sortBy={sort.sortBy}
+                      sortDirection={sortDirection}
+                    >
+                      {selectable && (
+                        <Column
+                          cellDataGetter={({rowData}) => rowData.selected ? rowData.selected : false}
+                          cellRenderer={this.selectionCellRenderer}
+                          dataKey="selected"
+                          disableSort                          
+                          flexGrow={0}
+                          flexShrink={1}
+                          width={45}
+                      />)}
+                      <Column
+                        label={formatMessage(messages.nameColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="title"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.artistColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="artist"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.albumColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="album"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.genreColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="genre"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.timeColumnHeader)}
+                        flexGrow={0}
+                        flexShrink={1}
+                        dataKey="duration"
+                        cellRenderer={({cellData}) => <MillisToTime value={cellData} />}
+                        width={50}
+                      />
+                    </Table>
+                  )}
+                </InfiniteLoader>
+              )}
+            </AutoSizer>
+          </ScrollPane>
+        </div>
         <Popover
           open={contextMenuOpen}
           anchorEl={contextMenuAnchor}
           onRequestClose={handleCloseContextMenu}
           anchorOrigin={{ horizontal: 'middle', vertical: 'bottom' }}
-          targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+          targetOrigin={{ horizontal: 'right', vertical: 'top' }}
         >
           <Menu>
             <MenuItem
@@ -277,8 +362,8 @@ class SongListDumb extends Component {
             />
           </Menu>
         </Popover>
-      </LoadScreen>
-    </div>);
+      </div>
+    );
   }
 }
 
@@ -287,7 +372,6 @@ SongListDumb.propTypes = {
   subtitle: PropTypes.string,
   image: PropTypes.string,
   songs: PropTypes.arrayOf(PropTypes.object),
-  loaded: PropTypes.bool.isRequired,
   playerConnected: PropTypes.bool.isRequired,
   playAction: PropTypes.func,
   onSongDoubleClick: PropTypes.func,

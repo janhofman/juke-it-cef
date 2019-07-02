@@ -66,11 +66,11 @@ public:
 		std::string userId;
 	} PlaylistResult;
 
-	ErrorCode SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<SongResult>& result);
-	ErrorCode AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<AlbumResult>& result);
-	ErrorCode Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<ArtistResult>& result);
-	ErrorCode Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<GenreResult>& result);
-	ErrorCode Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t page, bool desc, std::vector<PlaylistResult>& result);
+	ErrorCode SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SongResult>& result);
+	ErrorCode AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<AlbumResult>& result);
+	ErrorCode Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<ArtistResult>& result);
+	ErrorCode Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<GenreResult>& result);
+	ErrorCode Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<PlaylistResult>& result);
 	void AddFiles();
 	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
 	ErrorCode AddPlaylist(const std::string& userId, const std::string& name, const std::string& description, PlaylistResult& result);

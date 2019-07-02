@@ -6,7 +6,7 @@ import TileGrid from '../../containers/TileGrid';
 import ScrollPane from '../../containers/ScrollPane';
 import GridItem from '../GridItem';
 import OrangeDivider from '../OrangeDivider';
-import defaultImage from '../../images/logo_negative_no_bg.png';
+import { randomCoverArtGenerator } from '../../utils';
 
 const styles = {
   header: {
@@ -30,6 +30,7 @@ class Genres extends Component {
       genres,
       showDetail,
     } = this.props;
+    const generator = randomCoverArtGenerator();
     return (
       <ScrollPane>
         <div style={styles.wrapper}>
@@ -43,7 +44,7 @@ class Genres extends Component {
                   key={index}
                   onTouchTap={() => showDetail(genre.id)}
                 >
-                  <img src={genre.img ? genre.img : defaultImage} style={styles.image} />
+                  <img src={genre.img ? genre.img : generator.next()} style={styles.image} />
                 </GridItem>
               ))
             }

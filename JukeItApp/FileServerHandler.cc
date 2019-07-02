@@ -3,7 +3,7 @@
 
 
 
-FileServerHandler::ResponseCode FileServerHandler::v1_Songs(std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_Songs(std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -17,7 +17,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Songs(std::uint32_t limit,
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
-	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->SongView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -49,7 +49,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Song(const std::string& so
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_Albums(std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_Albums(std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -63,7 +63,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Albums(std::uint32_t limit
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::AlbumResult> result;
-	auto errCode = db_ptr_->AlbumView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->AlbumView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -95,7 +95,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Album(const std::string& a
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_AlbumSongs(const std::string& albumId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_AlbumSongs(const std::string& albumId, std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -110,7 +110,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_AlbumSongs(const std::stri
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
-	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->SongView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -122,7 +122,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_AlbumSongs(const std::stri
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_Artists(std::uint32_t limit, std::uint32_t page, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_Artists(std::uint32_t limit, std::uint32_t start, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -133,7 +133,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Artists(std::uint32_t limi
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::ArtistResult> result;
-	auto errCode = db_ptr_->Artist(params, limit, page, desc, result);
+	auto errCode = db_ptr_->Artist(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -166,7 +166,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Artist(const std::string& 
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_ArtistSongs(const std::string& artistId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_ArtistSongs(const std::string& artistId, std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -181,7 +181,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_ArtistSongs(const std::str
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
-	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->SongView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -193,7 +193,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_ArtistSongs(const std::str
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_Genres(std::uint32_t limit, std::uint32_t page, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_Genres(std::uint32_t limit, std::uint32_t start, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -204,7 +204,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Genres(std::uint32_t limit
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::GenreResult> result;
-	auto errCode = db_ptr_->Genres(params, limit, page, desc, result);
+	auto errCode = db_ptr_->Genres(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -237,7 +237,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Genre(const std::string& g
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_GenreSongs(const std::string& genreId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_GenreSongs(const std::string& genreId, std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -252,7 +252,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_GenreSongs(const std::stri
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
-	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->SongView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -264,7 +264,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_GenreSongs(const std::stri
 	return MapErrorCode(errCode);
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_Playlists(const std::string& userId, std::uint32_t limit, std::uint32_t page, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_Playlists(const std::string& userId, std::uint32_t limit, std::uint32_t start, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -276,7 +276,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlists(const std::strin
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::PlaylistResult> result;
-	auto errCode = db_ptr_->Playlists(params, limit, page, desc, result);
+	auto errCode = db_ptr_->Playlists(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -362,7 +362,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_Playlist_Delete(const std:
 	return ResponseCode::CODE_404_NOT_FOUND;
 }
 
-FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::string& userId, const std::string& playlistId, std::uint32_t limit, std::uint32_t page, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
+FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::string& userId, const std::string& playlistId, std::uint32_t limit, std::uint32_t start, const std::string& orderBy, bool desc, const std::string& filter, web::json::value& response) {
 	auto rtc = VerifyDatabase();
 	if (rtc != ResponseCode::CODE_200_OK) {
 		return rtc;
@@ -378,7 +378,7 @@ FileServerHandler::ResponseCode FileServerHandler::v1_PlaylistSongs(const std::s
 		params[SqliteAPI::FILTER_PARAM] = filter;
 	}
 	std::vector<SqliteAPI::SongResult> result;
-	auto errCode = db_ptr_->SongView(params, limit, page, desc, result);
+	auto errCode = db_ptr_->SongView(params, limit, start, desc, result);
 
 	if (errCode == SqliteAPI::ErrorCode::OK) {
 		response = web::json::value::array(result.size());
@@ -436,6 +436,10 @@ FileServerHandler::ResponseCode FileServerHandler::v1_GetSong(const std::string&
 	else {
 		return ResponseCode::CODE_404_NOT_FOUND;
 	}
+}
+
+FileServerHandler::ResponseCode FileServerHandler::v1_Ping() {
+	return ResponseCode::CODE_200_OK;
 }
 
 web::json::value FileServerHandler::Fill(SqliteAPI::SongResult& song) {
