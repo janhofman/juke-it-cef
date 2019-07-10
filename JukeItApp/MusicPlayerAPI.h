@@ -24,11 +24,44 @@ using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
 namespace MusicPlayer {
+	enum ErrorCodeEnum {
+		OK = 0,
+		NOT_SUPPORTED_ACTION = 11,
+		MALFORMED_REQUEST = 12,
+		FILESERVER_NOT_SET = 13,
+		EMPTY_QUEUES = 21
+	};
+
+	class Session; //forward declaration
+
+	class PlayerWrapper {
+	public:
+		ErrorCodeEnum Play();
+		ErrorCodeEnum Pause();
+		ErrorCodeEnum Next();
+		ErrorCodeEnum Reset(const std::string& fileserverUrl);
+		ErrorCodeEnum SetVolume(int volume);
+		ErrorCodeEnum UpdateQueue(std::vector<SongCache::QueueItem> queue);
+
+		Session* session;
+
+	private:
+		// player properties
+		MusicPlayer player_;
+		std::unique_ptr<SongCache> cache_;
+		bool playing_ = false;
+		bool waitingForQueue_ = false;
+		SongPtr currentSong_;
+
+		void OpenNextSong(); 
+		void SendStatus(bool playing, int timestamp);
+	};
+
 	class Session : public std::enable_shared_from_this<Session>
 	{
 	public:
 		// Take ownership of the socket
-		explicit Session(tcp::socket socket) : ws_(std::move(socket)), strand_(ws_.get_executor()) {}
+		explicit Session(tcp::socket socket, PlayerWrapper& player_) : ws_(std::move(socket)), strand_(ws_.get_executor()), player_(player_) {}
 		// Start the asynchronous operation
 		void Run();
 		// closes session synchronously
@@ -38,6 +71,11 @@ namespace MusicPlayer {
 		inline bool IsClosed() {
 			return closed_;
 		};
+
+		void SendRequest(const std::string& action);
+		void SendRequest(const std::string& action, const web::json::value& payload);
+		void RequestPlaylistSong();
+
 		~Session() {};
 		
 
@@ -52,10 +90,12 @@ namespace MusicPlayer {
 		bool writing_ = false;
 		bool closed_ = false;
 		// player properties
-		MusicPlayer player_;
+		/*MusicPlayer player_;
 		std::unique_ptr<SongCache> cache_;
 		bool playing_ = false;
-		SongPtr currentSong_;
+		SongPtr currentSong_;*/
+
+		PlayerWrapper& player_;
 
 		static const std::string TYPE_REQUEST;
 		static const std::string TYPE_RESPONSE;
@@ -69,8 +109,7 @@ namespace MusicPlayer {
 			FILESERVER,
 			SEEK,
 			VOLUME,
-			ADD_ORDER,
-			ADD_PLAYLIST,
+			UPDATE_QUEUE,
 
 			NOT_SUPPORTED
 		};
@@ -100,20 +139,18 @@ namespace MusicPlayer {
 		void ResetAction();
 		void FileServerAction(const web::json::object& payload);
 		void VolumeAction(const web::json::object& payload);
-		void SeekAction(const web::json::object& payload);
-		void AddOrderAction(const web::json::object& payload);
-		void AddPlaylistAction(const web::json::object& payload);
+		void SeekAction(const web::json::object& payload); 
+		void UpdateQueueAction(const web::json::object& payload);
+		//void AddOrderAction(const web::json::object& payload);
+		//void AddPlaylistAction(const web::json::object& payload);
 
-		void RequestPlaylistSong();
-		void SendStatus(bool playing, int timestamp);
-		bool TryParseAddAction(const web::json::object& payload, std::string& outSongId, std::string& outItemId);
+		void SendStatus(bool playing_, int timestamp);
+		bool TryParseQueue(const web::json::object& payload, std::vector<SongCache::QueueItem>& outQueue);
 		// this function just handles raw song opening, calling function must verify 
 		// cache existence and catch exception caused by empty cache
 		void OpenNextSong();
 
-		ActionEnum GetAction(const std::string& action);
-		void SendRequest(const std::string& action);
-		void SendRequest(const std::string& action, const web::json::value& payload);
+		ActionEnum GetAction(const std::string& action);		
 		void Error(ResponseErrorCode errCode);
 		
 	};
@@ -122,7 +159,7 @@ namespace MusicPlayer {
 	class Listener : public std::enable_shared_from_this<Listener>
 	{
 	public:
-		Listener(boost::asio::io_context& ioc, tcp::endpoint endpoint);
+		Listener(boost::asio::io_context& ioc, tcp::endpoint endpoint, PlayerWrapper& player_);
 		// Start accepting incoming connections
 		void Run();
 		void DoAccept();
@@ -136,6 +173,7 @@ namespace MusicPlayer {
 		tcp::acceptor acceptor_;
 		tcp::socket socket_;
 		std::shared_ptr<Session> sessionPtr_;
+		PlayerWrapper& player_;
 	};
 
 	class API 
@@ -156,6 +194,8 @@ namespace MusicPlayer {
 		bool running_ = false;
 		std::mutex mutex;
 		std::string address_;
+
+		PlayerWrapper player_;
 	};
 }
 

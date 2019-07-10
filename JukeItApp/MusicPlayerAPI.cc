@@ -14,6 +14,142 @@ namespace MusicPlayer {
 	const std::string Session::TYPE_REQUEST = "REQUEST";
 	const std::string Session::TYPE_RESPONSE = "RESPONSE";
 
+	ErrorCodeEnum PlayerWrapper::Play() {
+		if (cache_.get() != nullptr) {
+			if (currentSong_.get() == nullptr || waitingForQueue_) {
+				try {
+					OpenNextSong();
+				}
+				catch (...) {
+					// ask for a song					
+					waitingForQueue_ = true;
+					if (session != nullptr) {
+						session->RequestPlaylistSong();
+					}
+				}
+			}
+			if (!playing_) {
+				playing_ = true;
+				player_.Play();
+			}
+		}
+		else {
+			return ErrorCodeEnum::FILESERVER_NOT_SET;
+		}
+		return ErrorCodeEnum::OK;
+	}
+
+	void PlayerWrapper::OpenNextSong() {
+		SongPtr nextSong;
+		do {
+			nextSong = cache_->NextSong();
+		} while (nextSong.get() == nullptr || nextSong->IsFailed());
+
+		currentSong_ = nextSong->shared_from_this();
+		player_.Open(nextSong->GetStream());
+		waitingForQueue_ = false;
+
+		// notify manager about next song
+		web::json::value payload;
+		payload[String_t("itemId")] = web::json::value::string(String_t(nextSong->GetItemId()));
+
+		if(session != nullptr) {
+			session->SendRequest("SONGSTARTED", payload);
+		}
+	}
+
+	ErrorCodeEnum PlayerWrapper::Pause() {
+		if (cache_.get() != nullptr) {
+			player_.Pause();
+			playing_ = false;
+		}
+		else {
+			return ErrorCodeEnum::FILESERVER_NOT_SET;
+		}
+		return ErrorCodeEnum::OK;
+	}
+
+	ErrorCodeEnum PlayerWrapper::Next() {
+		if (cache_.get() != nullptr) {
+			try {
+				OpenNextSong();
+				if (playing_) {
+					player_.Play();
+				}
+				if (!cache_->HasEnoughSongs() && session != nullptr) {
+					session->RequestPlaylistSong();
+				}
+			}
+			catch (...) {
+				// ask for a song
+				waitingForQueue_ = true;
+				if (session != nullptr) {
+					session->RequestPlaylistSong();
+				}
+			}
+		}
+		else {
+			return ErrorCodeEnum::FILESERVER_NOT_SET;
+		}
+		return ErrorCodeEnum::OK;
+	}
+
+	ErrorCodeEnum PlayerWrapper::Reset(const std::string& fileserverUrl) {
+		// we only need to take care of situation where the cache has already been initialized
+		if (cache_.get() != nullptr) {
+			player_.Close();
+			playing_ = false;
+			waitingForQueue_ = false;
+			currentSong_.reset();
+			cache_->Reset();
+		}
+
+		cache_ = std::make_unique<SongCache>(fileserverUrl);
+		player_.SetPlaybackFinishedCallback(std::bind(&PlayerWrapper::Next, this));
+		player_.SetStatusCallback(std::bind(&PlayerWrapper::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
+
+		return ErrorCodeEnum::OK;
+	}
+
+	ErrorCodeEnum PlayerWrapper::SetVolume(int volume) {
+		player_.SetVolume(volume);
+		return ErrorCodeEnum::OK;
+	}
+
+	ErrorCodeEnum PlayerWrapper::UpdateQueue(std::vector<SongCache::QueueItem> queue) {
+		if (cache_.get() != nullptr) {
+			cache_->UpdateQueue(queue);
+
+			if (waitingForQueue_) {
+				Next();
+			}
+		}
+		else {
+			return ErrorCodeEnum::FILESERVER_NOT_SET;
+		}
+		return ErrorCodeEnum::OK;
+	}
+
+	void PlayerWrapper::SendStatus(bool playing, int timestamp) {
+		if (session != nullptr) {
+			web::json::value status;
+			status[String_t("timestamp")] = web::json::value::number(timestamp);
+			status[String_t("playing")] = web::json::value::boolean(playing);
+
+			session->SendRequest("STATUS", status);
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
 	void Session::Run()
 	{
 		// Accept the websocket handshake
@@ -26,6 +162,8 @@ namespace MusicPlayer {
 		if (ec) {
 			return fail(ec, "accept");
 		}
+
+		player_.session = this;
 
 		// Read a message
 		DoRead();
@@ -95,6 +233,11 @@ namespace MusicPlayer {
 
 	void Session::OnWrite(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
+		if (ec.value() == 995) {
+			// connection closed
+			return;
+		}
+
 		boost::ignore_unused(bytes_transferred);
 		writing_ = false;
 
@@ -113,8 +256,9 @@ namespace MusicPlayer {
 
 	void Session::OnClose() {
 		// reset cache and player
-		ResetAction();
+		//ResetAction();
 		// clear writeQueue so no writes happen on closed connection
+		player_.session = nullptr;
 		while (writeQueue_.size() > 0) {
 			writeQueue_.pop();
 		}
@@ -154,10 +298,10 @@ namespace MusicPlayer {
 					NextAction();
 					break;
 				}
-				case Session::RESET: {
+				/*case Session::RESET: {
 					ResetAction();
 					break;
-				}
+				}*/
 				default: {
 					// find payload and handle the rest of actions					
 					auto payloadPtr = request.find(utility::conversions::to_string_t("payload"));
@@ -166,12 +310,8 @@ namespace MusicPlayer {
 							auto payload = payloadPtr->second.as_object();
 							switch (action)
 							{
-							case Session::ADD_ORDER: {
-								AddOrderAction(payload);
-								break;
-							}
-							case Session::ADD_PLAYLIST: {
-								AddPlaylistAction(payload);
+							case Session::UPDATE_QUEUE: {
+								UpdateQueueAction(payload);
 								break;
 							}
 							case Session::FILESERVER: {
@@ -214,66 +354,15 @@ namespace MusicPlayer {
 	}
 
 	void Session::PlayAction() {
-		if (cache_.get() != nullptr) {
-			if (currentSong_.get() == nullptr) {
-				try {
-					OpenNextSong();
-				}
-				catch (...) {
-					// ask for a song
-					Error(ResponseErrorCode::EMPTY_QUEUES);
-					return;
-				}
-			}
-			if (!playing_) {
-				playing_ = true;
-				player_.Play();
-			}
-		}
-		else {
-			Error(ResponseErrorCode::FILESERVER_NOT_SET);
-		}
+		player_.Play();
 	}
 
 	void Session::PauseAction() {
-		if (cache_.get() != nullptr) {
-			player_.Pause();
-			playing_ = false;
-		}
-		else {
-			Error(ResponseErrorCode::FILESERVER_NOT_SET);
-		}
+		player_.Pause();
 	}
 
 	void Session::NextAction() {
-		if (cache_.get() != nullptr) {
-			try {
-				OpenNextSong();
-				if (playing_) {
-					player_.Play();
-				}
-				if (!cache_->HasEnoughSongs()) {
-					RequestPlaylistSong();
-				}
-			}
-			catch (...) {
-				// ask for a song
-				Error(ResponseErrorCode::EMPTY_QUEUES);
-			}
-		}
-		else {
-			Error(ResponseErrorCode::FILESERVER_NOT_SET);
-		}
-	}
-
-	void Session::ResetAction() {
-		// we only need to take care of situation where the cache has already been initialized
-		if (cache_.get() != nullptr) {
-			player_.Close();
-			playing_ = false;
-			currentSong_.reset();
-			cache_->Reset();
-		}
+		player_.Next();
 	}
 
 	void Session::FileServerAction(const web::json::object& payload) {
@@ -281,11 +370,7 @@ namespace MusicPlayer {
 		if (it != payload.end()) {
 			if (it->second.is_string()) {
 				auto url = utility::conversions::to_utf8string(it->second.as_string());
-				cache_ = std::make_unique<SongCache>(url);
-				player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
-				player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
-				// ask for a song
-				RequestPlaylistSong();
+				player_.Reset(url);
 			}	
 		}
 		else {
@@ -308,85 +393,46 @@ namespace MusicPlayer {
 		Error(ResponseErrorCode::MALFORMED_REQUEST);
 	}
 
-	void Session::AddOrderAction(const web::json::object& payload) {
-		if (cache_.get() != nullptr) {
-			std::string songId;
-			std::string itemId;
-			if (TryParseAddAction(payload, songId, itemId)) {
-				// add to queue
-				cache_->AddToOrderQueue(songId, itemId);
-			}
-			else {
-				Error(ResponseErrorCode::MALFORMED_REQUEST);
-			}
+	void Session::UpdateQueueAction(const web::json::object& payload) {		
+		std::vector<SongCache::QueueItem> queue;
+		if (TryParseQueue(payload, queue)) {
+			// add to queue
+			player_.UpdateQueue(queue);
 		}
 		else {
-			Error(ResponseErrorCode::FILESERVER_NOT_SET);
+			Error(ResponseErrorCode::MALFORMED_REQUEST);
 		}
 	}
 
-	void Session::AddPlaylistAction(const web::json::object& payload) {
-		if (cache_.get() != nullptr) {
-			std::string songId;
-			std::string itemId;
-			if (TryParseAddAction(payload, songId, itemId)) {
-				// add to queue
-				cache_->AddToPlaylistQueue(songId, itemId);
-				// request another song if we're still short
-				if (!cache_->HasEnoughSongs()) {
-					RequestPlaylistSong();
+	bool Session::TryParseQueue(const web::json::object& payload, std::vector<SongCache::QueueItem>& outQueue) {
+		auto queueIt = payload.find(String_t("queue"));
+		if (queueIt != payload.end() && queueIt->second.is_array()) {
+			auto queue = queueIt->second.as_array();
+			for (auto item = queue.begin(); item != queue.end(); item++)
+			{
+				if (item->is_object() && item->has_string_field(String_t("songId")) && item->has_string_field(String_t("itemId"))) {
+					SongCache::QueueItem queItem;
+					queItem.itemId = utility::conversions::to_utf8string((*item)[String_t("itemId")].as_string());
+					queItem.songId = utility::conversions::to_utf8string((*item)[String_t("songId")].as_string());
+					outQueue.push_back(queItem);
+				}
+				else {
+					return false;
 				}
 			}
-			else {
-				Error(ResponseErrorCode::MALFORMED_REQUEST);
-			}
-		}
-		else {
-			Error(ResponseErrorCode::FILESERVER_NOT_SET);
-		}
-	}
-
-	void Session::OpenNextSong() {		
-		SongPtr nextSong;
-		do {
-			nextSong = cache_->NextSong();
-		} while (nextSong.get() == nullptr || nextSong->IsFailed());
-
-		currentSong_ = nextSong->shared_from_this();
-		player_.Open(nextSong->GetStream());
-
-		// notify manager about next song
-		web::json::value payload;
-		payload[String_t("itemId")] = web::json::value::string(String_t(nextSong->GetItemId()));
-
-		SendRequest("SONGSTARTED", payload);
-	}
-
-	bool Session::TryParseAddAction(const web::json::object& payload, std::string& outSongId, std::string& outItemId) {
-		auto it = payload.find(String_t("songId"));
-		if (it != payload.end() && it->second.is_string()) {
-			outSongId = utility::conversions::to_utf8string(it->second.as_string());
-
-			it = payload.find(String_t("itemId"));
-			if (it != payload.end() && it->second.is_string()) {
-				outItemId = utility::conversions::to_utf8string(it->second.as_string());
-
-				return true;
-			}
+			return true;
 		}
 		return false;
 	}
 
 	void Session::RequestPlaylistSong() {
-		if (!cache_->HasEnoughSongs()) {
-			SendRequest("REQUESTPLAYLIST");
-		}
+		SendRequest("REQUESTPLAYLIST");
 	}
 
-	void Session::SendStatus(bool playing, int timestamp) {
+	void Session::SendStatus(bool playing_, int timestamp) {
 		web::json::value status;
 		status[String_t("timestamp")] = web::json::value::number(timestamp);
-		status[String_t("playing")] = web::json::value::boolean(playing);
+		status[String_t("playing")] = web::json::value::boolean(playing_);
 
 		SendRequest("STATUS", status);
 	}
@@ -404,11 +450,8 @@ namespace MusicPlayer {
 		else if (action == "RESET") {
 			return ActionEnum::RESET;
 		}
-		else if (action == "ADDORDER") {
-			return ActionEnum::ADD_ORDER;
-		}
-		else if (action == "ADDPLAYLIST") {
-			return ActionEnum::ADD_PLAYLIST;
+		else if (action == "UPDATEQUEUE") {
+			return ActionEnum::UPDATE_QUEUE;
 		}
 		else if (action == "FILESERVER") {
 			return ActionEnum::FILESERVER;
@@ -444,7 +487,7 @@ namespace MusicPlayer {
 		SendRequest("ERROR", payload);
 	}
 
-	Listener::Listener(boost::asio::io_context& ioc,tcp::endpoint endpoint) : acceptor_(ioc), socket_(ioc)
+	Listener::Listener(boost::asio::io_context& ioc,tcp::endpoint endpoint, PlayerWrapper& player_) : acceptor_(ioc), socket_(ioc), player_(player_)
 	{
 		boost::system::error_code ec;
 
@@ -507,7 +550,7 @@ namespace MusicPlayer {
 		{
 			if (sessionPtr_ == nullptr || sessionPtr_->IsClosed()) {
 				// Create the session and run it
-				sessionPtr_ = std::make_shared<Session>(std::move(socket_));
+				sessionPtr_ = std::make_shared<Session>(std::move(socket_), player_);
 				sessionPtr_->Run();
 			}
 			else {
@@ -552,7 +595,7 @@ namespace MusicPlayer {
 			ioContext_ = std::make_shared<boost::asio::io_context>(1);
 
 			// Create and launch a listening port
-			listener_ = std::make_shared<Listener>(*ioContext_, tcp::endpoint{ address, port });
+			listener_ = std::make_shared<Listener>(*ioContext_, tcp::endpoint{ address, port }, player_);
 			listener_->Run();
 
 			// Run the I/O service on new thread
