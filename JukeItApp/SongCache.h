@@ -82,10 +82,16 @@ namespace MusicPlayer {
 		SongCache(const std::string& url)
 			: httpClient_(utility::conversions::to_string_t(url)) {};
 
+		struct QueueItem {
+			std::string songId;
+			std::string itemId;
+		};
+
 		SongPtr NextSong();
-		void AddToOrderQueue(const std::string& songId, const std::string& itemId);
-		void AddToPlaylistQueue(const std::string& songId, const std::string& itemId);
+		//void AddToOrderQueue(const std::string& songId, const std::string& itemId);
+		//void AddToPlaylistQueue(const std::string& songId, const std::string& itemId);
 		void Reset();
+		void UpdateQueue(const std::vector<QueueItem>& newQueue);
 
 		inline bool HasEnoughSongs() {
 			return playlistQueue_.size() >= 5;
@@ -93,14 +99,11 @@ namespace MusicPlayer {
 	private:
 		void GetSongAsync(const std::string& songId, SongPtr songPtr);
 		void AddToCache(const std::string& songId, const std::string& itemId);
-
-		struct QueueItem {
-			std::string songId;
-			std::string itemId;
-		};
+		void UpdateCache();
 
 		std::vector<QueueItem> orderQueue_;
 		std::vector<QueueItem> playlistQueue_;
+		std::vector<QueueItem> queue_;
 		std::unordered_map<std::string, SongPtr> cache_;
 		web::http::client::http_client httpClient_;
 	};

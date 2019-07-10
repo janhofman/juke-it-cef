@@ -84,13 +84,13 @@ void MsgHandler_Configuration::SaveConfig(web::json::value request, CefRefPtr<Ca
 
 			boost::property_tree::ptree tree;
 			/*** PLAYER SETTINGS ***/
-			tree.put(PATH_PLAYER_REMOTE_CONNECTONSTARTUP, settings_.player.remote.connectOnStartup);
-			tree.put(PATH_PLAYER_LOCAL_HOSTNAME, settings_.player.local.hostname);
-			tree.put(PATH_PLAYER_LOCAL_LOCALHOST, settings_.player.local.localhost);
-			tree.put(PATH_PLAYER_LOCAL_PORT, settings_.player.local.port);
-			tree.put(PATH_PLAYER_LOCAL_RUNONSTARTUP, settings_.player.local.runOnStartup);
-			tree.put(PATH_PLAYER_REMOTE_HOSTNAME, settings_.player.remote.hostname);
-			tree.put(PATH_PLAYER_REMOTE_PORT, settings_.player.remote.port);
+			tree.put(PATH_PLAYER_REMOTE_CONNECTONSTARTUP, settings_.player_.remote.connectOnStartup);
+			tree.put(PATH_PLAYER_LOCAL_HOSTNAME, settings_.player_.local.hostname);
+			tree.put(PATH_PLAYER_LOCAL_LOCALHOST, settings_.player_.local.localhost);
+			tree.put(PATH_PLAYER_LOCAL_PORT, settings_.player_.local.port);
+			tree.put(PATH_PLAYER_LOCAL_RUNONSTARTUP, settings_.player_.local.runOnStartup);
+			tree.put(PATH_PLAYER_REMOTE_HOSTNAME, settings_.player_.remote.hostname);
+			tree.put(PATH_PLAYER_REMOTE_PORT, settings_.player_.remote.port);
 
 			/*** FILESERVER SETTINGS ***/
 			tree.put(PATH_FS_REMOTE_CONNECTONSTARTUP, settings_.fileServer.remote.connectOnStartup);
@@ -131,7 +131,7 @@ void MsgHandler_Configuration::GetConfig(CefRefPtr<Callback> callback) {
 web::json::value MsgHandler_Configuration::Settings::ToJSON() {
 	web::json::value settings;
 
-	settings[utility::conversions::to_string_t(PROPERTY_SETTINGS_PLAYER)] = player.ToJSON();
+	settings[utility::conversions::to_string_t(PROPERTY_SETTINGS_PLAYER)] = player_.ToJSON();
 	settings[utility::conversions::to_string_t(PROPERTY_SETTINGS_FILESERVER)] = fileServer.ToJSON();
 
 	return settings;
@@ -296,7 +296,7 @@ void MsgHandler_Configuration::FileServerSettings::FromJSON(web::json::object js
 void MsgHandler_Configuration::Settings::FromJSON(web::json::object json) {
 	auto playerIt = json.find(utility::conversions::to_string_t(PROPERTY_SETTINGS_PLAYER));
 	if (playerIt != json.end() && playerIt->second.is_object()) {
-		player.FromJSON(playerIt->second.as_object());
+		player_.FromJSON(playerIt->second.as_object());
 	}
 
 	auto fsIt = json.find(utility::conversions::to_string_t(PROPERTY_SETTINGS_FILESERVER));
@@ -323,13 +323,13 @@ void MsgHandler_Configuration::LoadConfig() {
 	}
 
 	/*** PLAYER SETTINGS ***/
-	settings_.player.local.hostname = tree.get(PATH_PLAYER_LOCAL_HOSTNAME, DEFAULT_PLAYER_LOCAL_HOSTNAME);
-	settings_.player.local.localhost = tree.get(PATH_PLAYER_LOCAL_LOCALHOST, DEFAULT_PLAYER_LOCAL_LOCALHOST);
-	settings_.player.local.port = tree.get(PATH_PLAYER_LOCAL_PORT, DEFAULT_PLAYER_LOCAL_PORT);
-	settings_.player.local.runOnStartup = tree.get(PATH_PLAYER_LOCAL_RUNONSTARTUP, DEFAULT_PLAYER_LOCAL_RUNONSTARTUP);
-	settings_.player.remote.hostname = tree.get(PATH_PLAYER_REMOTE_HOSTNAME, DEFAULT_PLAYER_REMOTE_HOSTNAME);
-	settings_.player.remote.port = tree.get(PATH_PLAYER_REMOTE_PORT, DEFAULT_PLAYER_REMOTE_PORT);
-	settings_.player.remote.connectOnStartup = tree.get(PATH_PLAYER_REMOTE_CONNECTONSTARTUP, DEFAULT_PLAYER_REMOTE_CONNECTONSTARTUP);
+	settings_.player_.local.hostname = tree.get(PATH_PLAYER_LOCAL_HOSTNAME, DEFAULT_PLAYER_LOCAL_HOSTNAME);
+	settings_.player_.local.localhost = tree.get(PATH_PLAYER_LOCAL_LOCALHOST, DEFAULT_PLAYER_LOCAL_LOCALHOST);
+	settings_.player_.local.port = tree.get(PATH_PLAYER_LOCAL_PORT, DEFAULT_PLAYER_LOCAL_PORT);
+	settings_.player_.local.runOnStartup = tree.get(PATH_PLAYER_LOCAL_RUNONSTARTUP, DEFAULT_PLAYER_LOCAL_RUNONSTARTUP);
+	settings_.player_.remote.hostname = tree.get(PATH_PLAYER_REMOTE_HOSTNAME, DEFAULT_PLAYER_REMOTE_HOSTNAME);
+	settings_.player_.remote.port = tree.get(PATH_PLAYER_REMOTE_PORT, DEFAULT_PLAYER_REMOTE_PORT);
+	settings_.player_.remote.connectOnStartup = tree.get(PATH_PLAYER_REMOTE_CONNECTONSTARTUP, DEFAULT_PLAYER_REMOTE_CONNECTONSTARTUP);
 
 	/*** FILESERVER SETTINGS ***/
 	settings_.fileServer.local.hostname = tree.get(PATH_FS_LOCAL_HOSTNAME, DEFAULT_FS_LOCAL_HOSTNAME);

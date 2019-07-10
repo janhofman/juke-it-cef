@@ -85,7 +85,7 @@ private:
 	};
 
 	struct Settings : public AbstractSettings {
-		PlayerSettings player;
+		PlayerSettings player_;
 		FileServerSettings fileServer;
 
 		web::json::value ToJSON() override;

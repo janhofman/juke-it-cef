@@ -43,6 +43,8 @@ set(MSGHANDLER_SRCS
   MsgHandler_FileServer.cc
   MsgHandler_MusicPlayer.h
   MsgHandler_MusicPlayer.cc
+  MsgHandler_Configuration.h
+  MsgHandler_Configuration.cc
   )   
   
 source_group("JukeItApp\\\\Message Handlers" FILES ${MSGHANDLER_SRCS})
