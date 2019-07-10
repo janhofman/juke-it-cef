@@ -9,14 +9,20 @@ import { Menu, MenuItem } from 'material-ui/Menu';
 import ScrollPane from './../../containers/ScrollPane';
 import StyledLink from './../StyledLink';
 import MillisToTime from './../MillisToTime';
-import {
+import TableBodyRow from '../TableBodyRow';
+/*import {
     Table,
     TableHeader,
     TableHeaderColumn,
     TableBody,
     TableRowColumn,
     TableRow,
-} from 'material-ui/Table';
+} from 'material-ui/Table';*/
+
+import { Table, Column, SortDirection } from 'react-virtualized/dist/es/Table';
+import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
+import 'react-virtualized/styles.css'; // only needs to be imported once
+
 import messages from './messages';
 import defaultImage from '../../images/logo_negative_no_bg.png';
 
@@ -52,6 +58,28 @@ const styles = {
   datagrid: {
     clear: 'both',
   },
+  mainContainer: {
+    display: 'flex',
+    margin: '0 -10px',
+    height: '100%',
+  },
+  mainList: {
+    margin: '0 10px',
+    flexGrow: 2,
+    flexShrink: 2,
+    flexBasis: 'auto',    
+    border: '1px solid white', // temporary
+  },
+  mainItem: {
+    margin: '0 10px',
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
+    border: '1px solid white', // temporary
+  },
+  headerStyle: {
+    color: deepOrange500,
+  },
 };
 
 class Playback extends Component {
@@ -85,6 +113,15 @@ class Playback extends Component {
             startPlaying,
         } = this.props;
     const { title, subtitle, songs, image } = playlist;
+
+    function rowRenderer (props) {
+      return <TableBodyRow {...props} />
+    }
+
+    const listOpen = true;
+    const orderQueueOpen = true;
+    const playlistQueueOpen = true;
+
     return (
       <div>
         <img
@@ -134,7 +171,8 @@ class Playback extends Component {
             <p>{subtitle || null}</p>
           </div>
         </div>
-        <div style={styles.datagrid}>
+{/*
+        <div style={styles.mainContainer}>
           <Table>
             <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
               <TableRow>
@@ -186,8 +224,94 @@ class Playback extends Component {
                 }
               </TableBody>
             </Table>
+          </ScrollPane>          
+        </div>
+          */}
+        <div style={{clear: 'both'}}>
+          <ScrollPane unscrollable>
+              <div style={styles.mainContainer}>
+{/****** SONG LIST ******/}          
+              {listOpen &&
+              <div style={styles.mainList}>
+                <AutoSizer>
+                  {({height, width}) => (      
+                    <Table
+                      height={height}
+                      headerHeight={45}
+                      headerStyle={styles.headerStyle}
+                      noRowsRenderer={this._noRowsRenderer}
+                      rowGetter={({index}) => songs[index]}
+                      rowRenderer={rowRenderer}
+                      rowCount={songs.length}            
+                      rowHeight={45}
+                      width={width}
+                      //sort={onSort}
+                      //sortBy={sort.sortBy}
+                      //sortDirection={sortDirection}
+                    >                      
+                      <Column
+                        label={formatMessage(messages.nameColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="title"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.artistColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="artist"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.albumColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="album"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.genreColumnHeader)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="genre"
+                        width={100}
+                      />
+                      <Column
+                        label={formatMessage(messages.timeColumnHeader)}
+                        flexGrow={0}
+                        flexShrink={1}
+                        dataKey="duration"
+                        cellRenderer={({cellData}) => <MillisToTime value={cellData} />}
+                        width={50}
+                      />
+                    </Table>
+                  )}
+                </AutoSizer>
+              </div>
+              }
+
+{/****** PLAYLIST QUEUE ******/}   
+              {playlistQueueOpen &&       
+              <div style={styles.mainItem}>
+              <AutoSizer>
+                  {({height, width}) => (   
+                    <div style={{width, height: '10px', border: '1px solid white', boxSizing: 'border-box'}}>
+                    </div>
+                  )}
+              </AutoSizer>
+              </div>
+              }
+{/****** ORDER QUEUE ******/}    
+              {orderQueueOpen &&      
+              <div style={styles.mainItem}>
+  c
+              </div>
+              }
+            </div>
           </ScrollPane>
         </div>
+
         <Popover
           open={contextMenuOpen}
           anchorEl={contextMenuAnchor}

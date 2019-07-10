@@ -236,23 +236,62 @@ export function addToEndOfQueue(songId) {
   };
 }
 
-export function removeQueueItem(itemId) {
-  return (dispatch, getState) => {
-    const {
-      firebase,
-      userData: {
-        spotId,
-      },
-    } = getState();
+/**** TEST FUNCTION *******/
+// export function testPriorityQueue() {
+//   return (dispatch, getState) => {
+//     const { firebase, userData } = getState();
+//     const queRef = firebase.database().ref('que').child(userData.spotId);
+//     const newKey = queRef.push().key;
+//     const priority = Math.floor(Math.random() * 5);
+//     let prio = '';
+//     switch(priority) {
+//       case 0:
+//         prio = 'e';
+//         break;
+//         case 1:
+//         prio = 'd';
+//         break;
+//         case 2:
+//         prio = 'c';
+//         break;
+//         case 3:
+//         prio = 'b';
+//         break;
+//         case 4:
+//         prio = 'a';
+//         break;
+//         default: 
+//         prio = 'z';
+//         break;
+//     }
+//     console.log("Newkey: ", newKey);
+//     const priorityKey = prio.toString() + newKey;    
+//     console.log("PriorityKey: ", priorityKey);
+//     queRef.child(priorityKey).set({
+//       songId: "1",
+//       userId: userData.userId,
+//       test: true
+//     });
+//   };
+// }
 
-    const updates = {};
-    updates[itemId] = null;
-    firebase.database()
-        .ref('que')
-        .child(spotId)
-        .update(updates);
-  };
-}
+// export function removeQueueItem(itemId) {
+//   return (dispatch, getState) => {
+//     const {
+//       firebase,
+//       userData: {
+//         spotId,
+//       },
+//     } = getState();
+
+//     const updates = {};
+//     updates[itemId] = null;
+//     firebase.database()
+//         .ref('que')
+//         .child(spotId)
+//         .update(updates);
+//   };
+// }
 
 export function playlistQueueAddItem(songId, itemId) {
   return (dispatch, getState) => {
