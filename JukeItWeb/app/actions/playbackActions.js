@@ -1,5 +1,5 @@
 import { push } from 'react-router-redux';
-import { addOrder, resetPlayer } from './playerActions';
+import { addOrder, resetPlayer, play } from './playerActions';
 import {
   apiSongPromise,
   getAllEntitySongs,
@@ -36,6 +36,30 @@ export function closeContextMenu() {
 export function resetPlaylistQueue() {
   return {
     type: 'PLAYBACK_RESET_PLAYLIST_QUEUE',
+  };
+}
+
+export function toggleAvailableSongs() {
+  return {
+    type: 'PLAYBACK_TOGGLE_AVAILABLE_SONGS',
+  };
+}
+
+export function togglePlaylistQueue() {
+  return {
+    type: 'PLAYBACK_TOGGLE_PLAYLIST_QUEUE',
+  };
+}
+
+export function togglePriorityQueue() {
+  return {
+    type: 'PLAYBACK_TOGGLE_PRIORITY_QUEUE',
+  };
+}
+
+export function toggleOrderQueue() {
+  return {
+    type: 'PLAYBACK_TOGGLE_ORDER_QUEUE',
   };
 }
 
@@ -157,6 +181,12 @@ function uploadLibrary(entityType, entityId, title, subtitle) {
         }
       }
 
+      // create map for playlist
+      let map = {};
+      for(let i in songs){
+        map[songs[i].id] = songs[i];
+      }
+
       console.log(updates);
       libRef.update(updates)
         .then(() => {
@@ -164,6 +194,7 @@ function uploadLibrary(entityType, entityId, title, subtitle) {
             title,
             subtitle,
             songs,
+            map,
           };
           dispatch(playlistChanged(playlist));
           dispatch(push('/home/playback'));
@@ -190,6 +221,15 @@ export function uploadAlbumLib(albumId, title, subtitle) {
 
 export function uploadSongsLib(title, subtitle) {
   return uploadLibrary(null, null, title, subtitle);
+}
+
+export function startPlayback(){
+  return (dispatch, getState) => {
+    dispatch({
+      type: 'PLAYBACK_START',
+    });
+    dispatch(play());
+  };
 }
 
 export function removePlaylist() {
@@ -225,94 +265,8 @@ export function wipeQueue() {
   };
 }
 
-export function addToEndOfQueue(songId) {
-  return (dispatch, getState) => {
-    const { firebase, userData } = getState();
-    const queRef = firebase.database().ref('que').child(userData.spotId);
-    queRef.push({
-      songId: songId.toString(),
-      userId: userData.userId,
-    });
-  };
-}
-
-/**** TEST FUNCTION *******/
-// export function testPriorityQueue() {
-//   return (dispatch, getState) => {
-//     const { firebase, userData } = getState();
-//     const queRef = firebase.database().ref('que').child(userData.spotId);
-//     const newKey = queRef.push().key;
-//     const priority = Math.floor(Math.random() * 5);
-//     let prio = '';
-//     switch(priority) {
-//       case 0:
-//         prio = 'e';
-//         break;
-//         case 1:
-//         prio = 'd';
-//         break;
-//         case 2:
-//         prio = 'c';
-//         break;
-//         case 3:
-//         prio = 'b';
-//         break;
-//         case 4:
-//         prio = 'a';
-//         break;
-//         default: 
-//         prio = 'z';
-//         break;
-//     }
-//     console.log("Newkey: ", newKey);
-//     const priorityKey = prio.toString() + newKey;    
-//     console.log("PriorityKey: ", priorityKey);
-//     queRef.child(priorityKey).set({
-//       songId: "1",
-//       userId: userData.userId,
-//       test: true
-//     });
-//   };
-// }
-
-// export function removeQueueItem(itemId) {
-//   return (dispatch, getState) => {
-//     const {
-//       firebase,
-//       userData: {
-//         spotId,
-//       },
-//     } = getState();
-
-//     const updates = {};
-//     updates[itemId] = null;
-//     firebase.database()
-//         .ref('que')
-//         .child(spotId)
-//         .update(updates);
-//   };
-// }
-
-export function playlistQueueAddItem(songId, itemId) {
-  return (dispatch, getState) => {
-    dispatch({
-      type: 'PLAYBACK_ADD_PLAYLIST_QUEUE',
-      payload: {
-        songId,
-        itemId,
-      },
-    });
-    const { devices: { fileServer: { baseAddress } } } = getState();
-    apiSongPromise(baseAddress, songId).then((song) => {
-      dispatch({
-        type: 'PLAYBACK_PLAYLISTQUEUE_SONG_DETAIL',
-        payload: {
-          itemId,
-          song,
-        },
-      });
-    });
-  };
+function generateItemId() {
+  return `p${new Date().valueOf().toString(36)}${Math.random().toString(36).substr(2)}`;
 }
 
 export function generateNextSong(playlist) {
@@ -320,7 +274,7 @@ export function generateNextSong(playlist) {
     const rand = Math.floor(Math.random() * playlist.songs.length);
     const songId = playlist.songs[rand].id;
     // generate unique ID for this song
-    const itemId = `p${new Date().valueOf().toString(36)}${Math.random().toString(36).substr(2)}`;
+    const itemId = generateItemId();
     return ({
       songId,
       itemId,
@@ -330,28 +284,14 @@ export function generateNextSong(playlist) {
 }
 
 export function orderQueueChildAdded(itemId, queueItem) {
-  return (dispatch, getState) => {
-    const { devices: { fileServer: { baseAddress } } } = getState();
+  return (dispatch) => {
     const { songId } = queueItem;
-    // first put this to order queue
     dispatch({
       type: 'PLAYBACK_ORDERQUEUE_NEW_VALUE',
       payload: {
         itemId,
         songId,
       },
-    });
-    // next we let player know about the song
-    dispatch(addOrder(songId, itemId));
-    // finally we make a request to fileServer and get song details
-    apiSongPromise(baseAddress, songId).then((song) => {
-      dispatch({
-        type: 'PLAYBACK_ORDERQUEUE_SONG_DETAIL',
-        payload: {
-          itemId,
-          song,
-        },
-      });
     });
   };
 }
@@ -363,11 +303,61 @@ export function orderQueueChildRemoved(itemId) {
   });
 }
 
-export function playlistQueueRemoveItem(itemId) {
+export function priorityQueueAddItem(songId) {
   return ({
-    type: 'PLAYBACK_REMOVE_PLAYLIST_QUEUE',
+    type: 'PLAYBACK_PRIORITY_QUEUE_ADD',
     payload: {
-      itemId,
+      songId,
+      itemId: generateItemId(),
     },
   });
+}
+
+export function playlistQueueAddItem(songId) {
+  return ({
+    type: 'PLAYBACK_PLAYLIST_QUEUE_ADD',
+    payload: {
+      songId,
+      itemId: generateItemId(),
+    },
+  });
+}
+
+
+function removeFromOrderQueue(itemId) {
+  return (dispatch, getState) => {
+    const {
+      firebase,
+      userData: {
+        spotId,
+      },
+    } = getState();
+    // remove data form firebase
+    console.log('removing from order queue');
+    firebase.database().ref('que').child(spotId).child(itemId).remove();
+  };
+}
+
+export function removeQueueItem(itemId) {
+  return (dispatch, getState) => {
+    const {
+      playback: {
+        orderQueue
+      },
+    } = getState();
+
+    console.log("checking order queue")
+    for(let i in orderQueue){
+      if(orderQueue[i].itemId == itemId){
+        // remove from firebase queue
+        console.log('calling remove from order queue')
+        dispatch(removeFromOrderQueue(itemId))
+        return;
+      }
+    }
+    dispatch({
+      type: 'PLAYBACK_REMOVE_QUEUE_ITEM',
+      payload: { itemId },
+    });
+  }
 }

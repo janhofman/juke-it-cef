@@ -8,6 +8,14 @@ import {
     openContextMenu,
     closeContextMenu,
     removePlaylist,
+    startPlayback,
+    removeQueueItem,
+    toggleAvailableSongs,
+    togglePlaylistQueue,
+    toggleOrderQueue,
+    togglePriorityQueue,
+    playlistQueueAddItem,
+    priorityQueueAddItem,
 } from './../../actions/playbackActions';
 import { toggleActive } from './../../actions/userDataActions';
 import { play } from './../../actions/playerActions';
@@ -17,24 +25,39 @@ class PlaybackPage extends Component {
     super(props);
 
     this.startPlaying = this.startPlaying.bind(this);
+    this.onRemoveSong = this.onRemoveSong.bind(this);
+    this.onToggleOrderQueue = this.onToggleOrderQueue.bind(this);
+    this.onTogglePlaylistQueue = this.onTogglePlaylistQueue.bind(this);
+    this.onTogglePriorityQueue = this.onTogglePriorityQueue.bind(this);
+    this.onToggleSongs = this.onToggleSongs.bind(this);
+    this.onSongRightClick = this.onSongRightClick.bind(this);
+    this.addToPlaylistQueueOpt = this.addToPlaylistQueueOpt.bind(this);
+    this.addToPriorityQueueOpt = this.addToPriorityQueueOpt.bind(this);
   }
   onSongDoubleClick(songId) {
     this.props.dispatch(addToEndOfQueue(songId));
   }
 
-  songOnMouseUp(event, songId) {
+  onSongRightClick({event, index, rowData}) {
+    console.log("Rightclick", event, index, rowData);
     if (event.button === 2) {
       event.preventDefault();
       event.persist();
       const { dispatch } = this.props;
       const target = event.currentTarget;
-      dispatch(openContextMenu(target, songId));
+      dispatch(openContextMenu(target, rowData.id));
     }
   }
 
-  addSongToQueueAction() {
+  addToPlaylistQueueOpt() {
     const { dispatch, songId } = this.props;
-    dispatch(addToEndOfQueue(songId));
+    dispatch(playlistQueueAddItem(songId));
+    dispatch(closeContextMenu());
+  }
+
+  addToPriorityQueueOpt() {
+    const { dispatch, songId } = this.props;
+    dispatch(priorityQueueAddItem(songId));
     dispatch(closeContextMenu());
   }
 
@@ -55,7 +78,32 @@ class PlaybackPage extends Component {
 
   startPlaying() {
     const { dispatch } = this.props;
-    dispatch(play());
+    dispatch(startPlayback());
+  }
+
+  onRemoveSong(itemId) {
+    const { dispatch } = this.props;
+    dispatch(removeQueueItem(itemId));
+  }
+
+  onToggleSongs() {
+    const { dispatch } = this.props;
+    dispatch(toggleAvailableSongs());
+  }
+
+  onTogglePlaylistQueue() {
+    const { dispatch } = this.props;
+    dispatch(togglePlaylistQueue());
+  }
+
+  onTogglePriorityQueue() {
+    const { dispatch } = this.props;
+    dispatch(togglePriorityQueue());
+  }
+
+  onToggleOrderQueue() {
+    const { dispatch } = this.props;
+    dispatch(toggleOrderQueue());
   }
 
   render() {
@@ -63,12 +111,18 @@ class PlaybackPage extends Component {
       <Playback
         {...this.props}
         onSongDoubleClick={this.onSongDoubleClick.bind(this)}
-        songOnMouseUp={this.songOnMouseUp.bind(this)}
-        addSongToQueueAction={this.addSongToQueueAction.bind(this)}
+        onSongRightClick={this.onSongRightClick}
+        addToPlaylistQueueOpt={this.addToPlaylistQueueOpt}
+        addToPriorityQueueOpt={this.addToPriorityQueueOpt}
         handleCloseContextMenu={this.handleCloseContextMenu.bind(this)}
         toggleActive={this.toggleActive.bind(this)}
         removePlaylist={this.removePlaylist.bind(this)}
         startPlaying={this.startPlaying}
+        onRemoveSong={this.onRemoveSong}
+        onToggleSongs={this.onToggleSongs}
+        onTogglePlaylistQueue={this.onTogglePlaylistQueue}
+        onTogglePriorityQueue={this.onTogglePriorityQueue}
+        onToggleOrderQueue={this.onToggleOrderQueue}
       />
     );
   }
@@ -76,6 +130,13 @@ class PlaybackPage extends Component {
 
 PlaybackPage.propTypes = {
   dispatch: PropTypes.func.isRequired,
+  playlistQueue: PropTypes.array.isRequired,
+  orderQueue: PropTypes.array.isRequired,
+  priorityQueue: PropTypes.array.isRequired,
+  orderQueueOpen: PropTypes.bool.isRequired,
+  playlistQueueOpen: PropTypes.bool.isRequired,
+  priorityQueueOpen: PropTypes.bool.isRequired,
+  availableSongsOpen: PropTypes.bool.isRequired,
 };
 
 export default connect((store) => {
@@ -88,5 +149,12 @@ export default connect((store) => {
     songId: playback.songId,
     active: userData.spot.active,
     playerEnabled: !!player.currentSong,
+    playlistQueue: playback.playlistQueue,
+    orderQueue: playback.orderQueue,
+    priorityQueue: playback.priorityQueue,
+    orderQueueOpen: playback.orderQueueOpen,
+    playlistQueueOpen: playback.playlistQueueOpen,
+    priorityQueueOpen: playback.priorityQueueOpen,
+    availableSongsOpen: playback.availableSongsOpen,
   });
 })(PlaybackPage);

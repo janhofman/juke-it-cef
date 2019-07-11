@@ -45,7 +45,7 @@ export default class TableBodyRow extends Component {
 
   render() {
     // prepare props
-    const { style } = this.props;
+    const { style, rightClick } = this.props;
     const { hovered } = this.state;
     let finalStyle = { ...styles.rowStyle, ...style };
     if (hovered) {
@@ -56,6 +56,7 @@ export default class TableBodyRow extends Component {
       style: finalStyle,
       onRowMouseOver: this.onMouseOver.bind(this),
       onRowMouseOut: this.onMouseLeave.bind(this),
+      onRowRightClick: rightClick ? (props) => rightClick(props) : null,
     };
 
     if(finalProps.rowData.loading) {  

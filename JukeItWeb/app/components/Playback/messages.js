@@ -33,9 +33,13 @@ export default defineMessages({
         id: 'Playback.albumColumnHeader',
         defaultMessage: 'Album',
     },
-    addToQueueOpt: {
-        id: 'Playback.addToQueueOpt',
-        defaultMessage: 'Add to queue',
+    addToPlaylistQueueOpt: {
+        id: 'Playback.addToPlaylistQueueOpt',
+        defaultMessage: 'Add to playlist queue',
+    },    
+    addToPriorityQueueOpt: {
+        id: 'Playback.addToPriorityQueueOpt',
+        defaultMessage: 'Add to priority queue',
     },
     activateSpot: {
         id: 'Playback.activateSpot',
@@ -53,4 +57,29 @@ export default defineMessages({
         id: 'Playback.startPlaying',
         defaultMessage: 'start playing',
     },
+    title: {
+        id: 'Playback.title',
+        defaultMessage: 'Playback management',
+    },
+    songsWidgetTitle: {
+        id: 'Playback.songsWidgetTitle',
+        defaultMessage: 'Available songs',
+    },
+    priorityQueueWidgetTitle: {
+        id: 'Playback.priorityQueueWidgetTitle',
+        defaultMessage: 'Priority queue',
+    },
+    orderQueueWidgetTitle: {
+        id: 'Playback.orderQueueWidgetTitle',
+        defaultMessage: 'Order queue',
+    },
+    playlistQueueWidgetTitle: {
+        id: 'Playback.playlistQueueWidgetTitle',
+        defaultMessage: 'Playlist queue',
+    },
+    songsColumnLabel: {
+        id: 'Playback.songsColumnLabel',
+        defaultMessage: 'Songs',
+    },
+
 });

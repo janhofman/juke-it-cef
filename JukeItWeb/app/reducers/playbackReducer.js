@@ -1,12 +1,18 @@
 const initialState = {
   activePlaylist: null,
   playbackReady: false,
+  playbackStarted: false,
   playlistQueue: [],
   orderQueue: [],
+  priorityQueue: [],
   queueOpen: false,
   contextMenuOpen: false,
   contextMenuAnchor: null,
   songId: null,
+  orderQueueOpen: false,
+  playlistQueueOpen: false,
+  priorityQueueOpen: false,
+  availableSongsOpen: true,
 };
 
 export default function reducer(state = initialState, action) {
@@ -16,12 +22,8 @@ export default function reducer(state = initialState, action) {
       return { ...state, activePlaylist: payload, playbackReady: (payload !== null) };
     case 'PLAYBACK_ADD_PLAYLIST_QUEUE': {
       const { playlistQueue } = state;
-      const { songId, itemId } = payload;
-      playlistQueue.push({
-        songId,
-        itemId,
-      });
-      return { ...state, playlistQueue };
+      const { songId, itemId } = payload;      
+      return { ...state, playlistQueue: [...playlistQueue, { songId, itemId }] };
     }
     case 'PLAYBACK_PLAYLISTQUEUE_SONG_DETAIL': {
       const { playlistQueue } = state;
@@ -34,6 +36,10 @@ export default function reducer(state = initialState, action) {
       }
       return { ...state, playlistQueue };
     }
+    case 'PLAYBACK_START':
+      return { ...state, playbackStarted: true, };      
+    case 'PLAYBACK_STOP':
+      return { ...state, playbackStarted: false, };
     case 'PLAYBACK_REMOVE_PLAYLIST_QUEUE': {
       const { playlistQueue } = state;
       const { itemId } = payload;
@@ -50,11 +56,7 @@ export default function reducer(state = initialState, action) {
     case 'PLAYBACK_ORDERQUEUE_NEW_VALUE': {
       const { songId, itemId } = payload;
       const { orderQueue } = state;
-      orderQueue.push({
-        songId,
-        itemId,
-      });
-      return { ...state, orderQueue };
+      return { ...state, orderQueue: [...orderQueue, { songId, itemId }] };
     }
     case 'PLAYBACK_ORDERQUEUE_SONG_DETAIL': {
       const { orderQueue } = state;
@@ -69,14 +71,46 @@ export default function reducer(state = initialState, action) {
     }
     case 'PLAYBACK_ORDERQUEUE_REMOVE_VALUE': {
       const { orderQueue } = state;
-      const { itemId } = payload;
-      for (let i = 0; i < orderQueue.length; i++) {
+      const { itemId } = payload;      
+      let newQueue = [...orderQueue]
+      for (let i in orderQueue) {
         if (orderQueue[i].itemId === itemId) {
-          orderQueue.splice(i, 1);
-          break;
+          let newQueue = [...orderQueue];
+          newQueue.splice(i, 1);
+          return { ...state, orderQueue: newQueue };
         }
       }
-      return { ...state, orderQueue };
+      return { ...state };
+    }
+    case 'PLAYBACK_REMOVE_QUEUE_ITEM': {
+      const { 
+        priorityQueue,
+        orderQueue,
+        playlistQueue,
+      } = state;
+      const { itemId } = payload;
+      for (let i in priorityQueue) {
+        if (priorityQueue[i].itemId === itemId) {
+          let newQueue = [...priorityQueue];
+          newQueue.splice(i, 1);
+          return { ...state, priorityQueue: newQueue };
+        }
+      }
+      for (let i in orderQueue) {
+        if (orderQueue[i].itemId === itemId) {
+          let newQueue = [...orderQueue];
+          newQueue.splice(i, 1);
+          return { ...state, orderQueue: newQueue };
+        }
+      }
+      for (let i in playlistQueue) {
+        if (playlistQueue[i].itemId === itemId) {
+          let newQueue = [...playlistQueue];
+          newQueue.splice(i, 1);
+          return { ...state, playlistQueue: newQueue };
+        }
+      }
+      return { ...state};
     }
     case 'PLAYBACK_TOGGLE_QUEUE':
       return { ...state, queueOpen: !state.queueOpen };
@@ -84,6 +118,24 @@ export default function reducer(state = initialState, action) {
       return { ...state, contextMenuOpen: true, contextMenuAnchor: payload.anchor, songId: payload.songId };
     case 'PLAYBACK_CLOSE_CONTEXT_MENU':
       return { ...state, contextMenuOpen: false, contextMenuAnchor: null, songId: null };
+    case 'PLAYBACK_TOGGLE_AVAILABLE_SONGS':
+      return { ...state, availableSongsOpen: !state.availableSongsOpen };
+    case 'PLAYBACK_TOGGLE_PLAYLIST_QUEUE':
+      return { ...state, playlistQueueOpen: !state.playlistQueueOpen };
+    case 'PLAYBACK_TOGGLE_PRIORITY_QUEUE':
+      return { ...state, priorityQueueOpen: !state.priorityQueueOpen };
+    case 'PLAYBACK_TOGGLE_ORDER_QUEUE':
+      return { ...state, orderQueueOpen: !state.orderQueueOpen };
+    case 'PLAYBACK_PLAYLIST_QUEUE_ADD': {
+      const { playlistQueue } = state;
+      const { songId, itemId } = payload;      
+      return { ...state, playlistQueue: [...playlistQueue, { songId, itemId }] };
+    }
+    case 'PLAYBACK_PRIORITY_QUEUE_ADD': {
+      const { priorityQueue } = state;
+      const { songId, itemId } = payload;      
+      return { ...state, priorityQueue: [...priorityQueue, { songId, itemId }] };
+    }
     case 'LOGOUT':
       return initialState;
     default:

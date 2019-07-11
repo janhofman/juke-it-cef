@@ -94,7 +94,7 @@ namespace MusicPlayer {
 		void UpdateQueue(const std::vector<QueueItem>& newQueue);
 
 		inline bool HasEnoughSongs() {
-			return playlistQueue_.size() >= 5;
+			return queue_.size() >= 3;
 		}
 	private:
 		void GetSongAsync(const std::string& songId, SongPtr songPtr);

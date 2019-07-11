@@ -262,6 +262,7 @@ class Player extends Component {
               />
             </div>
           </Popover>
+          {/*
           <IconButton
             onTouchTap={toggleQueue}
             tooltip={formatMessage(messages.queueTooltip)}
@@ -269,8 +270,9 @@ class Player extends Component {
           >
             <Queue />
           </IconButton>
+          */}
         </div>
-        <Drawer width={400} openSecondary open={queueOpen}>
+        {/*<Drawer width={400} openSecondary open={queueOpen}>
           <AppBar
             title={formatMessage(messages.queueTitle)}
             iconElementLeft={<IconButton onTouchTap={toggleQueue}><NavigationClose /></IconButton>}
@@ -281,6 +283,7 @@ class Player extends Component {
             </TableBody>
           </Table>
         </Drawer>
+        */}
       </div>
     );
   }

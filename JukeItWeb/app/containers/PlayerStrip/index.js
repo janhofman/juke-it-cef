@@ -6,9 +6,9 @@ import {
     play,
     pause,
     next,
-    updateTime,
     seekTo,
     setVolume,
+    updateQueue,
 } from './../../actions/playerActions';
 import {
     toggleQueue,
@@ -36,6 +36,45 @@ class PlayerStrip extends Component {
     this.onVolumeDragStop = this.onVolumeDragStop.bind(this);
     this.onVolumeChange = this.onVolumeChange.bind(this);
     this.onSliderChange = this.onSliderChange.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps){
+    const {
+      playlistQueue,
+      orderQueue,
+      priorityQueue,
+      playerConnected,
+      playbackStarted,
+      dispatch
+    } = this.props;
+
+    if(nextProps.playerConnected &&
+        nextProps.playbackStarted &&
+        (
+          !this.arraysEqual(playlistQueue, nextProps.playlistQueue) 
+          || !this.arraysEqual(orderQueue, nextProps.orderQueue)
+          || !this.arraysEqual(priorityQueue, nextProps.priorityQueue)
+          || playerConnected !== nextProps.playerConnected
+          || playbackStarted !== nextProps.playbackStarted
+        )
+    ) {
+      // send queue change to player
+      const queue = nextProps.priorityQueue.concat(nextProps.orderQueue).concat(nextProps.playlistQueue);
+      console.log("Queue update: ", queue);
+      dispatch(updateQueue(queue));
+    }
+  }
+
+  arraysEqual(arr1, arr2) {
+    if (arr1.length == arr2.length) {
+      for (let i in arr1) {
+        if(JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])){
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   onNext() {
@@ -128,7 +167,10 @@ export default connect((store) => {
     firebase,
     spotId: store.userData.user.adminForSpot,
     orderQueue: playback.orderQueue,
+    playlistQueue: playback.playlistQueue,
+    priorityQueue: playback.priorityQueue,
     queue: playback.queue,
     queueOpen: playback.queueOpen,
+    playbackStarted: playback.playbackStarted,
   });
 })(PlayerStrip);

@@ -3,13 +3,16 @@ import React, { Component } from 'react';
 import { injectIntl } from 'react-intl';
 import { Link } from 'react-router-dom';
 import FlatButton from 'material-ui/FlatButton';
+import IconButton from 'material-ui/IconButton';
 import { deepOrange500 } from 'material-ui/styles/colors';
 import Popover from 'material-ui/Popover';
 import { Menu, MenuItem } from 'material-ui/Menu';
+import DeleteIcon from 'material-ui/svg-icons/action/delete';
 import ScrollPane from './../../containers/ScrollPane';
 import StyledLink from './../StyledLink';
 import MillisToTime from './../MillisToTime';
 import TableBodyRow from '../TableBodyRow';
+import PlaybackWidget from '../PlaybackWidget';
 /*import {
     Table,
     TableHeader,
@@ -25,64 +28,82 @@ import 'react-virtualized/styles.css'; // only needs to be imported once
 
 import messages from './messages';
 import defaultImage from '../../images/logo_negative_no_bg.png';
+import OrangeDivider from '../OrangeDivider';
 
 const styles = {
   base: {
     padding: '10px',
   },
-  actionButton: {
-    float: 'right',
-    clear: 'right',
-    display: 'block',
+  headline: {
+    display: 'flex',
+    margin: '0 10px',
   },
-  right: {
-    float: 'right',
-    width: '29%',
-  },
-  clearer: {
-    clear: 'both',
-  },
-  image: {
-    height: '8em',
-    float: 'left',
-    border: '1px solid white',
-  },
-  playlistName: {
-    fontSize: '2em',
-    margin: '0 0 0.5em 0',
-  },
-  title: {
-    marginLeft: '9em',
-    marginRight: '120px',
+  title: { 
+    fontSize: '1.5em',
+    margin: '0.3em',
   },
   datagrid: {
     clear: 'both',
   },
   mainContainer: {
     display: 'flex',
-    margin: '0 -10px',
+    margin: '0',
     height: '100%',
   },
   mainList: {
-    margin: '0 10px',
+    margin: '10px',
     flexGrow: 2,
     flexShrink: 2,
-    flexBasis: 'auto',    
-    border: '1px solid white', // temporary
+    flexBasis: '300',    
+    //border: '1px solid white', // temporary
   },
   mainItem: {
-    margin: '0 10px',
+    margin: '10px',
     flexGrow: 1,
     flexShrink: 1,
-    flexBasis: 'auto',
-    border: '1px solid white', // temporary
+    flexBasis: '150',
+    //border: '1px solid white', // temporary
+  },
+  collapsedItem: {
+    margin: '10px',
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: '1.4em',
+    //border: '1px solid white', // temporary
   },
   headerStyle: {
     color: deepOrange500,
-  },
+  },  
+  iconButton: { 
+    verticalAlign: 'middle',
+  }
 };
 
 class Playback extends Component {
+  constructor(props){
+    super(props);
+
+    this.removeSongRenderer = this.removeSongRenderer.bind(this);
+  }
+
+  removeSongRenderer(args) {
+    const {
+      rowData,
+    } = args;
+
+    const {
+      onRemoveSong,
+    } = this.props;
+
+    return (
+      <IconButton
+        style={styles.iconButton}
+        onTouchTap={() => onRemoveSong(rowData.itemId)}
+      >
+        <DeleteIcon />
+      </IconButton>
+    );
+  }  
 
   noPlaylist() {
     const { formatMessage } = this.props.intl;
@@ -101,33 +122,56 @@ class Playback extends Component {
     const {
             playlist,
             onSongDoubleClick,
-            songOnMouseUp,
+            onSongRightClick,
             contextMenuOpen,
             contextMenuAnchor,
             handleCloseContextMenu,
-            addSongToQueueAction,
+            addToPlaylistQueueOpt,
+            addToPriorityQueueOpt,
             active,
             playerEnabled,
             toggleActive,
             removePlaylist,
             startPlaying,
+            onToggleSongs,
+            onTogglePlaylistQueue,
+            onTogglePriorityQueue,
+            onToggleOrderQueue,            
+            orderQueueOpen,
+            playlistQueueOpen,
+            priorityQueueOpen,
+            availableSongsOpen,
         } = this.props;
     const { title, subtitle, songs, image } = playlist;
+    
+    let playlistQueue = this.props.playlistQueue;
+    let orderQueue = this.props.orderQueue;
+    let priorityQueue = this.props.priorityQueue;
+    if(playlist && playlist.map) {
+      playlistQueue = playlistQueue.map((val) => {
+        return {...val, song: playlist.map[val.songId] };
+      });
+      orderQueue = orderQueue.map((val) => {
+        return {...val, song: playlist.map[val.songId] };
+      });
+      priorityQueue = priorityQueue.map((val) => {
+        return {...val, song: playlist.map[val.songId] };
+      });
+    }
 
     function rowRenderer (props) {
       return <TableBodyRow {...props} />
     }
 
-    const listOpen = true;
-    const orderQueueOpen = true;
-    const playlistQueueOpen = true;
+    function listRowRenderer(props) {
+      return <TableBodyRow {...props} rightClick={onSongRightClick} />
+    }
 
     return (
       <div>
-        <img
-          src={image || defaultImage}
-          style={styles.image}
-        />
+        <div style={styles.headline}> 
+        <p style={styles.title}>{formatMessage(messages.title)}</p>
+        <div style={{flexGrow: 1}}/>
         <FlatButton
           label={formatMessage(active ? messages.deactivateSpot : messages.activateSpot)}
           containerElement="div"
@@ -148,91 +192,19 @@ class Playback extends Component {
           disabled={!active || playerEnabled}
           style={styles.actionButton}
         />
-        <div style={styles.title}>
-
-          <div style={styles.playlistInfo}>
-            <div>
-              <p style={styles.playlistName}>{title || null}</p>
-              {/* <RaisedButton
-                                label={formatMessage(messages.playButton)}
-                                labelPosition='after'
-                                containerElement='label'
-                                icon={<PlayButton/>}
-                                onTouchTap={playAction}
-                                style={{verticalAlign: 'middle'}}
-                            />
-                            <IconButton
-                                style={{verticalAlign: 'middle'}}
-                                onTouchTap={openOptions}
-                            >
-                                <Options/>
-                            </IconButton>  */}
-            </div>
-            <p>{subtitle || null}</p>
-          </div>
-        </div>
-{/*
-        <div style={styles.mainContainer}>
-          <Table>
-            <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
-              <TableRow>
-                <TableHeaderColumn>
-                  {formatMessage(messages.nameColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.artistColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.albumColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn>
-                  {formatMessage(messages.genreColumnHeader)}
-                </TableHeaderColumn>
-                <TableHeaderColumn style={{ width: '59px' }}>
-                  {formatMessage(messages.timeColumnHeader)}
-                </TableHeaderColumn>
-              </TableRow>
-            </TableHeader>
-          </Table>
-          <ScrollPane>
-            <Table selectable={false}>
-              <TableBody
-                displayRowCheckbox={false}
-                showRowHover
-              >
-                {
-                  songs ? songs.map((song) => (
-                    <TableRow
-                      key={song.id}
-                      onDoubleClick={
-                              onSongDoubleClick ?
-                                  (event) => {
-                                    event.stopPropagation();
-                                    onSongDoubleClick(song.id);
-                                  }
-                                  : null
-                          }
-                      onMouseUp={songOnMouseUp ? (event) => songOnMouseUp(event, song.id) : null}
-                    >
-                      <TableRowColumn>{song.title}</TableRowColumn>
-                      <TableRowColumn>{song.artist}</TableRowColumn>
-                      <TableRowColumn>{song.album}</TableRowColumn>
-                      <TableRowColumn>{song.genre}</TableRowColumn>
-                      <TableRowColumn style={{ width: '50px' }}><MillisToTime value={song.duration} /></TableRowColumn>
-                    </TableRow>
-                  )) : null
-                }
-              </TableBody>
-            </Table>
-          </ScrollPane>          
-        </div>
-          */}
+      </div>
+      <OrangeDivider/>
         <div style={{clear: 'both'}}>
           <ScrollPane unscrollable>
               <div style={styles.mainContainer}>
-{/****** SONG LIST ******/}          
-              {listOpen &&
-              <div style={styles.mainList}>
+
+{/****** SONG LIST ******/}    
+              <PlaybackWidget 
+                style={availableSongsOpen ? styles.mainList : styles.collapsedItem} 
+                open={availableSongsOpen} 
+                title={formatMessage(messages.songsWidgetTitle)}
+                onToggle={onToggleSongs}
+              >
                 <AutoSizer>
                   {({height, width}) => (      
                     <Table
@@ -241,7 +213,7 @@ class Playback extends Component {
                       headerStyle={styles.headerStyle}
                       noRowsRenderer={this._noRowsRenderer}
                       rowGetter={({index}) => songs[index]}
-                      rowRenderer={rowRenderer}
+                      rowRenderer={listRowRenderer}
                       rowCount={songs.length}            
                       rowHeight={45}
                       width={width}
@@ -288,26 +260,128 @@ class Playback extends Component {
                     </Table>
                   )}
                 </AutoSizer>
-              </div>
-              }
+              </PlaybackWidget>
 
-{/****** PLAYLIST QUEUE ******/}   
-              {playlistQueueOpen &&       
-              <div style={styles.mainItem}>
+{/****** PRIORITY QUEUE ******/}
+              <PlaybackWidget 
+                style={priorityQueueOpen ? styles.mainItem : styles.collapsedItem} 
+                open={priorityQueueOpen} 
+                title={formatMessage(messages.priorityQueueWidgetTitle)}
+                onToggle={onTogglePriorityQueue}
+              >
               <AutoSizer>
-                  {({height, width}) => (   
-                    <div style={{width, height: '10px', border: '1px solid white', boxSizing: 'border-box'}}>
-                    </div>
+                  {({height, width}) => (      
+                    <Table
+                      height={height}
+                      headerHeight={45}
+                      headerStyle={styles.headerStyle}
+                      noRowsRenderer={this._noRowsRenderer}
+                      rowGetter={({index}) => priorityQueue[index]}
+                      rowRenderer={rowRenderer}
+                      rowCount={priorityQueue.length}            
+                      rowHeight={45}
+                      width={width}
+                    >                      
+                      <Column
+                        label={formatMessage(messages.songsColumnLabel)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="title"
+                        width={100}
+                        cellDataGetter={({rowData}) => rowData.song ? rowData.song.title: rowData.songId}
+                      />
+                      <Column
+                        flexGrow={0}
+                        flexShrink={0}
+                        dataKey="cancel"
+                        width={45}
+                        cellRenderer={this.removeSongRenderer}
+                      />
+                    </Table>
                   )}
-              </AutoSizer>
-              </div>
-              }
-{/****** ORDER QUEUE ******/}    
-              {orderQueueOpen &&      
-              <div style={styles.mainItem}>
-  c
-              </div>
-              }
+                </AutoSizer>
+              </PlaybackWidget>  
+
+{/****** ORDER QUEUE ******/}
+              <PlaybackWidget 
+                style={orderQueueOpen ? styles.mainItem : styles.collapsedItem} 
+                open={orderQueueOpen} 
+                title={formatMessage(messages.orderQueueWidgetTitle)}
+                onToggle={onToggleOrderQueue}
+              >
+              <AutoSizer>
+                  {({height, width}) => (      
+                    <Table
+                      height={height}
+                      headerHeight={45}
+                      headerStyle={styles.headerStyle}
+                      noRowsRenderer={this._noRowsRenderer}
+                      rowGetter={({index}) => orderQueue[index]}
+                      rowRenderer={rowRenderer}
+                      rowCount={orderQueue.length}            
+                      rowHeight={45}
+                      width={width}
+                    >                      
+                      <Column
+                        label={formatMessage(messages.songsColumnLabel)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="title"
+                        width={100}
+                        cellDataGetter={({rowData}) => rowData.song ? rowData.song.title: rowData.songId}
+                      />
+                      <Column
+                        flexGrow={0}
+                        flexShrink={0}
+                        dataKey="cancel"
+                        width={45}
+                        cellRenderer={this.removeSongRenderer}
+                      />
+                    </Table>
+                  )}
+                </AutoSizer>
+              </PlaybackWidget>              
+
+{/****** PLAYLIST QUEUE ******/}                 
+              <PlaybackWidget 
+                style={playlistQueueOpen ? styles.mainItem : styles.collapsedItem} 
+                open={playlistQueueOpen} 
+                title={formatMessage(messages.playlistQueueWidgetTitle)}
+                onToggle={onTogglePlaylistQueue}
+              >
+              <AutoSizer>
+                  {({height, width}) => (      
+                    <Table
+                      height={height}
+                      headerHeight={45}
+                      headerStyle={styles.headerStyle}
+                      noRowsRenderer={this._noRowsRenderer}
+                      rowGetter={({index}) => playlistQueue[index]}
+                      rowRenderer={rowRenderer}
+                      rowCount={playlistQueue.length}            
+                      rowHeight={45}
+                      width={width}
+                    >                      
+                      <Column
+                        label={formatMessage(messages.songsColumnLabel)}
+                        flexGrow={1}
+                        flexShrink={0}
+                        dataKey="title"
+                        width={100}
+                        cellDataGetter={({rowData}) => rowData.song ? rowData.song.title: rowData.songId}
+                      />
+                      <Column
+                        flexGrow={0}
+                        flexShrink={0}
+                        dataKey="cancel"
+                        width={45}
+                        cellRenderer={this.removeSongRenderer}
+                      />
+                    </Table>
+                  )}
+                </AutoSizer>
+                </PlaybackWidget>             
+              
             </div>
           </ScrollPane>
         </div>
@@ -321,9 +395,13 @@ class Playback extends Component {
         >
           <Menu>
             <MenuItem
-              primaryText={formatMessage(messages.addToQueueOpt)}
-              onTouchTap={addSongToQueueAction}
+              primaryText={formatMessage(messages.addToPlaylistQueueOpt)}
+              onTouchTap={addToPlaylistQueueOpt}
             />
+            <MenuItem
+            primaryText={formatMessage(messages.addToPriorityQueueOpt)}
+            onTouchTap={addToPriorityQueueOpt}
+          />
           </Menu>
         </Popover>
       </div>

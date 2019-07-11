@@ -1,14 +1,9 @@
 import * as fb from 'firebase';
-import { makeCancelable, sanitizeQueryParameter } from '../utils';
-import { playlistQueueAddItem, generateNextSong, removeQueueItem, playlistQueueRemoveItem } from './playbackActions';
-import { apiSongPromise } from './libraryActions';
+import { format, parse } from 'json-rpc-protocol';
+import { playlistQueueAddItem, generateNextSong, playlistQueueRemoveItem, removeQueueItem } from './playbackActions';
 
 function buildRequest(action, payload) {
-  const request = {
-    action,
-    payload,
-  };
-  return request;
+  return format.request(Date.now(), action, payload);
 }
 
 function playRequest() {
@@ -27,8 +22,13 @@ function volumeRequest(volume) {
   return buildRequest('VOLUME', { volume });
 }
 
-function fileserverRequest(url) {
-  return buildRequest('FILESERVER', { url });
+function initializeRequest(url) {
+  console.log('Initialize ',url );
+  return buildRequest('INITIALIZE', { url });
+}
+
+function updateQueueRequest(queue) {
+  return buildRequest('UPDATEQUEUE', { queue });
 }
 
 function addPlaylistRequest(songId, itemId) {
@@ -52,7 +52,7 @@ export function play() {
     const { player: { webSocket } } = getState();
     if (webSocket) {
       const request = playRequest();
-      webSocket.send(JSON.stringify(request));
+      webSocket.send(request);
       dispatch({
         type: 'PLAYER_PLAY',
       });
@@ -73,7 +73,7 @@ function sendVolume(volume) {
     if (webSocket) {
       console.log("sending volume")      
       const request = volumeRequest(volume);
-      webSocket.send(JSON.stringify(request));      
+      webSocket.send(request);      
     }
   };
 }
@@ -107,7 +107,7 @@ export function pause() {
     const { player: { webSocket } } = getState();
     if (webSocket) {
       const request = pauseRequest();
-      webSocket.send(JSON.stringify(request));
+      webSocket.send(request);
       dispatch({
         type: 'PLAYER_PAUSE',
       });
@@ -120,7 +120,7 @@ export function next() {
     const { player: { webSocket } } = getState();
     if (webSocket) {
       const request = nextRequest();
-      webSocket.send(JSON.stringify(request));
+      webSocket.send(request);
     }
   };
 }
@@ -229,14 +229,14 @@ function handleError(payload) {
   };
 }
 
-export function addOrder(songId, itemId) {
+export function updateQueue(queue) {
   return (dispatch, getState) => {
     const {
       player: { webSocket },
     } = getState();
     if (webSocket) {
-      const request = addOrderRequest(songId, itemId);
-      webSocket.send(JSON.stringify(request));
+      const request = updateQueueRequest(queue);
+      webSocket.send(request);
     }
   };
 }
@@ -258,56 +258,8 @@ function requestPlaylist() {
     if (nextSong) {
       const { songId, itemId } = nextSong;
       dispatch(playlistQueueAddItem(songId, itemId));
-      const request = addPlaylistRequest(songId, itemId);
-      webSocket.send(JSON.stringify(request));
-    }
-  };
-}
-
-function playFromOrderQueue(itemId) {
-  return (dispatch, getState) => {
-    const {
-      playback: { orderQueue },
-      devices: { fileServer: { baseAddress } },
-    } = getState();
-
-    for (let i = 0; i < orderQueue.length; i++) {
-      if (orderQueue[i].itemId === itemId) {
-        const itm = orderQueue[i];
-        dispatch(removeQueueItem(itemId));
-        if (itm.song) {
-          dispatch(changeSong(itm.song, itemId));
-        } else {
-          apiSongPromise(baseAddress, itm.songId).then((song) => {
-            dispatch(changeSong(song, itemId));
-          });
-        }
-        break;
-      }
-    }
-  };
-}
-
-function playFromPlaylistQueue(itemId) {
-  return (dispatch, getState) => {
-    const {
-      playback: { playlistQueue },
-      devices: { fileServer: { baseAddress } },
-    } = getState();
-
-    for (let i = 0; i < playlistQueue.length; i++) {
-      if (playlistQueue[i].itemId === itemId) {
-        const itm = playlistQueue[i];
-        dispatch(playlistQueueRemoveItem(itemId));
-        if (itm.song) {
-          dispatch(changeSong(itm.song, itemId));
-        } else {
-          apiSongPromise(baseAddress, itm.songId).then((song) => {
-            dispatch(changeSong(song, itemId));
-          });
-        }
-        break;
-      }
+      //const request = addPlaylistRequest(songId, itemId);
+      //webSocket.send(request);
     }
   };
 }
@@ -317,22 +269,23 @@ function songStarted(payload) {
     if (payload.itemId) {
       // assume it is playing from queue when it's nonempty
       const { itemId } = payload;
-      const { playback: { orderQueue } } = getState();
-      let queueItem = false;
-      for (let i = 0; i < orderQueue.length; i++) {
-        if (orderQueue[i].itemId === itemId) {
-          queueItem = true;
-          dispatch(playFromOrderQueue(itemId));
-          break;
-        }
-      }
-      if (!queueItem) {
-        const { playback: { playlistQueue } } = getState();
-        for (let i = 0; i < playlistQueue.length; i++) {
-          if (playlistQueue[i].itemId === itemId) {
-            dispatch(playFromPlaylistQueue(itemId));
-            break;
+      const { 
+        playback: { 
+          orderQueue,
+          playlistQueue,
+          priorityQueue,
+          activePlaylist: { 
+            map
           }
+        },
+      } = getState();
+
+      let queue = priorityQueue.concat(orderQueue).concat(playlistQueue);
+      for(let i in queue){
+        if (queue[i].itemId === itemId) {
+          dispatch(removeQueueItem(itemId));        
+          dispatch(changeSong(map[queue[i].songId], itemId));
+          break;
         }
       }
     }
@@ -353,7 +306,7 @@ export function resetPlayer() {
         const request = {
           action: 'RESET',
         };
-        webSocket.send(JSON.stringify(request));
+        webSocket.send(request);
         dispatch(playerReset());
       } else {
         // TODO: log websocket missing error
@@ -393,31 +346,29 @@ function statusUpdate(status) {
 }
 
 function webSocketOnMessage(dispatch, event) {
-  console.log(event);
   try {
-    const msg = JSON.parse(event.data);
-    console.log('Message: ', msg);
-    if (msg.action) {
-      switch (msg.action) {
+    const msg = parse(event.data);
+    if (msg.type === 'notification') {
+      switch (msg.method) {
         case 'REQUESTPLAYLIST': {
           dispatch(requestPlaylist());
           break;
         }
         default: {
           // actions with payload are resolved here
-          if (msg.payload) {
-            switch (msg.action) {
+          if (msg.params) {
+            switch (msg.method) {
               case 'ERROR': {
-                console.log(msg.payload);
-                dispatch(handleError(msg.payload));
+                console.log(msg.params);
+                dispatch(handleError(msg.params));
                 break;
               }
               case 'SONGSTARTED': {
-                dispatch(songStarted(msg.payload));
+                dispatch(songStarted(msg.params));
                 break;
               }
               case 'STATUS': {
-                dispatch(statusUpdate(msg.payload));
+                dispatch(statusUpdate(msg.params));
                 break;
               }
               default:
@@ -517,8 +468,8 @@ function connect(address) {
         ws.onmessage = (event) => webSocketOnMessage(dispatch, event);
         ws.onopen = () => {
           dispatch(playerConnectionChanged(true));
-          const fs = fileserverRequest(baseAddress);
-          ws.send(JSON.stringify(fs));
+          const init = initializeRequest(baseAddress);
+          ws.send(init);
           sendVolume(volume);
         };
         ws.onclose = () => {
