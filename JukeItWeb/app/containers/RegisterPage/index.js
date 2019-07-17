@@ -9,8 +9,7 @@ import {
   validatedName,
   registerError,
 } from './../../actions/registerActions';
-import { logInSuccessful } from './../../actions/loginActions';
-import { setUserId, userUpdate } from './../../actions/userDataActions';
+import { logInError } from './../../actions/loginActions';
 
 // according to w3.org, this regex should satisfy all rules
 const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -60,9 +59,9 @@ class RegisterPage extends Component {
         firebase.auth()
           .createUserWithEmailAndPassword(email, passwd)
           .then((user) => {
-            const userId = user.uid;
-            dispatch(logInSuccessful(user));
-            dispatch(setUserId(userId));
+            //const userId = user.uid;
+            //dispatch(logInSuccessful(user));
+            //dispatch(setUserId(userId));
             // create user profile
             const profile = {};
             profile[`/public/${user.uid}`] = {
@@ -72,14 +71,15 @@ class RegisterPage extends Component {
             profile[`/private/${user.uid}`] = {
               credits: 0,
             };
-            dispatch(userUpdate({ name }));
+            //dispatch(userUpdate({ name }));
             // register user account
             firebase.database()
               .ref('users')
               .update(profile)
               .then(() => {
                 dispatch(working(false));
-                dispatch(push('/spotregister'));
+                dispatch(logInError({ code: 'registerCompleted', message: null }));
+                dispatch(push('/'));
               });
           })
           .catch((error) => {

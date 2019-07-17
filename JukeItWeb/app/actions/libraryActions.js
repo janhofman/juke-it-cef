@@ -271,6 +271,32 @@ export function addSongs() {
   };
 }
 
+export function removeFiles(filesToRemove) {
+  return (dispatch, getState) => {
+    const { cefQuery } = getState();
+    dispatch(setLoading(true));
+    const request = JSON.stringify({
+      command: 'FLS_REMOVE_FILES',
+      payload: {
+        remove: filesToRemove,
+      },
+    });
+    cefQuery({
+      request,
+      onSuccess(response) {
+        console.log(response);
+        dispatch(cleanLibrary());
+        dispatch(setLoading(false));
+      },
+      onFailure(errorCode, errorMessage) {
+        // catch error
+        console.log(`Remove files error: ${errorCode} ${errorMessage}`);
+        dispatch(setLoading(false));
+      },
+    });
+  };
+}
+
 export function apiSongPromise(baseUrl, songId) {
   let url = baseUrl;
   if (!url.endsWith('/')) {

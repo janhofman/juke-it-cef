@@ -147,12 +147,16 @@ export function disconnectFileServer() {
 }
 
 export function openFileServerLocal() {
-  return ((dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function(resolve, reject) {
     const { devices: { fileServer: { local } } } = getState();
 
     if (!local.running && !local.busy) {
       dispatch(localFileServerBusy(true));
-      dispatch(openFileServer(local.hostname, local.port));
+      dispatch(openFileServer(local.hostname, local.port))
+        .then(() => resolve())
+        .catch((errorCode, errorMessage) => reject(errorCode, errorMessage));
+    } else {      
+      resolve();
     }
   });
 }
@@ -170,12 +174,16 @@ export function closeFileServerLocal() {
 }
 
 export function openPlayerLocal() {
-  return ((dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const { devices: { player: { local } } } = getState();
 
     if (!local.running && !local.busy) {
       dispatch(localPlayerBusy(true));
-      dispatch(openPlayerServer(local.hostname, local.port));
+      dispatch(openPlayerServer(local.hostname, local.port))
+        .then(() => resolve())
+        .catch((error) => reject(error));
+    } else{
+      resolve();
     }
   });
 }
@@ -235,13 +243,13 @@ export function loadPlayerSettings() {
 
 export function initialize() {
   return (dispatch) => {
-    dispatch(initializeFileServer());
-    dispatch(initializePlayer());
+    dispatch(initializeFileServer())
+      .then(dispatch(initializePlayer()));
   }
 }
 
 export function initializeFileServer() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function(resolve, reject) {
     const {
       settings: {
         fileServer: {
@@ -254,13 +262,21 @@ export function initializeFileServer() {
     dispatch(loadFileServerSettings());
 
     if (local.runOnStart) {
-      dispatch(openFileServerLocal());
+      dispatch(openFileServerLocal())
+        .then(() => resolve())
+        .catch((error) => reject(error));
+    } else if(remote.connectOnStart) {
+      dispatch(connectFsRemote())
+      .then(() => resolve())
+      .catch((error) => reject(error));
+    } else {
+      resolve();
     }
-  }
+  });
 }
 
 export function initializePlayer() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const {
       settings: {
         player: {
@@ -273,11 +289,17 @@ export function initializePlayer() {
     dispatch(loadPlayerSettings());
 
     if (local.runOnStart === true) {
-      dispatch(openPlayerLocal());
+        dispatch(openPlayerLocal())
+        .then(() => resolve())
+        .catch((error) => reject(error));
     } else if (remote.connectOnStart === true) {
-      dispatch(connectToRemotePlayer());
-    }    
-  }
+      dispatch(connectToRemotePlayer())
+        .then(() => resolve())
+        .catch((error) => reject(error));
+    } else {
+      resolve();
+    }
+  });
 }
 
 function testHostame(hostname, dispatch) {
@@ -305,13 +327,12 @@ function pingFileServer(baseUrl) {
     }
     return false;
   }).catch((error) => {
-    console.log(error);
-    return false;
+    return error;
   });
 }
 
 export function connectFsLocal() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const {
       devices: {
         fileServer: {
@@ -329,16 +350,22 @@ export function connectFsLocal() {
           if (available) {
             dispatch(fsLocalConnected());
             dispatch(fsConnected(address));
+            resolve();            
           } else {
             // TODO: show error that fs is not available
+            reject();
           }
-        });
+          
+        })
+        .catch((error) => reject(error));
+    } else {
+      resolve();
     }
-  };
+  });
 }
 
 export function connectFsRemote() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const {
       devices: {
         fileServer: {
@@ -365,11 +392,17 @@ export function connectFsRemote() {
           if (available) {
             dispatch(fsRemoteConnected());
             dispatch(fsConnected(url));
+            resolve();            
           } else {
             // TODO: show error that fs is not available
+            reject();
           }
-        });
+          
+        })
+        .catch((error) => reject(error));
+    } else {
+      resolve();
     }
-  };
+  });
 }
 

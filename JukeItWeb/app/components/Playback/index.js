@@ -27,7 +27,6 @@ import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
 import 'react-virtualized/styles.css'; // only needs to be imported once
 
 import messages from './messages';
-import defaultImage from '../../images/logo_negative_no_bg.png';
 import OrangeDivider from '../OrangeDivider';
 
 const styles = {
@@ -133,6 +132,7 @@ class Playback extends Component {
             toggleActive,
             removePlaylist,
             startPlaying,
+            stopPlaying,
             onToggleSongs,
             onTogglePlaylistQueue,
             onTogglePriorityQueue,
@@ -181,15 +181,14 @@ class Playback extends Component {
         <FlatButton
           label={formatMessage(messages.removePlaylist)}
           containerElement="div"
-          onTouchTap={active ? null : removePlaylist}
-          disabled={active}
+          onTouchTap={active || playerEnabled ? null : removePlaylist}
+          disabled={active || playerEnabled}
           style={styles.actionButton}
         />
         <FlatButton
-          label={formatMessage(messages.startPlaying)}
+          label={formatMessage(playerEnabled ? messages.stopPlaying : messages.startPlaying)}
           containerElement="div"
-          onTouchTap={!active || playerEnabled ? null : startPlaying}
-          disabled={!active || playerEnabled}
+          onTouchTap={playerEnabled ? stopPlaying : startPlaying}
           style={styles.actionButton}
         />
       </div>

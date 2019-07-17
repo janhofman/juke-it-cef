@@ -137,3 +137,82 @@ export function addSongsToPlaylist(playlistId, songs) {
       });
   };
 }
+
+/**
+ * Adds single song to playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {string} songId ID of song to be added to playlist.
+ * @returns {function} Dispatchable action.
+ */
+export function addSongToPlaylist(playlistId, songId) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
+    }
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: [songId],
+      remove: [],
+    };
+    axios.put(url, data)
+      .then((response) => {
+        console.log('Response: ', response);
+        dispatch(cleanPlaylists());
+      }).catch((error) => {
+        console.log('Error: ', error);
+      });
+  };
+}
+
+/**
+ * Remove songs from playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {array(string)} songs Array of song IDs to be removed from playlist.
+ * @returns {function} Dispatchable action.
+ */
+export function removeSongsFromPlaylist(playlistId, songs) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
+    }
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: [],
+      remove: songs,
+    };
+    axios.put(url, data)
+      .then((response) => {
+        console.log('Response: ', response);
+        dispatch(cleanPlaylists());
+      }).catch((error) => {
+        console.log('Error: ', error);
+      });
+  };
+}
+

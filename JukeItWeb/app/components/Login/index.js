@@ -1,7 +1,5 @@
-// @flow
 import React, { Component } from 'react';
 import { injectIntl } from 'react-intl';
-import TextField from 'material-ui/TextField';
 import StyledTextField from './../StyledTextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Link } from 'react-router-dom';
@@ -53,6 +51,7 @@ class Login extends Component{
             emptyEmail, 
             emptyPasswd,
             logIn,
+            errorCode,
             intl: {
                 formatMessage,
             }
@@ -65,6 +64,30 @@ class Login extends Component{
             }
         };
 
+        let emailError = null;
+        if(emptyEmail) {
+            emailError = formatMessage(messages.emptyEmail);
+        }
+        else if(errorCode) {
+            switch(errorCode) {
+                case 'auth/invalid-email':
+                    emailError = formatMessage(messages.errorInvalidEmail);
+                    break;
+                case 'auth/user-not-found':
+                    emailError = formatMessage(messages.errorUserNotFound);
+                    break;
+                case 'auth/wrong-password':
+                    emailError = formatMessage(messages.errorWrongPassword);
+                    break;
+                case 'registerCompleted':
+                    emailError = formatMessage(messages.errorRegisterCompleted);
+                    break;
+                default: 
+                    emailError = formatMessage(messages.errorGeneric);
+                    break;
+            }
+        }
+
         return (
             <div>
                 <img src={require('./../../images/logo_negative_no_bg.png')} style={styles.logo} />
@@ -74,7 +97,7 @@ class Login extends Component{
                         hintText={formatMessage(messages.emailHint)}
                         type='email'
                         id='email'
-                        errorText={emptyEmail ? formatMessage(messages.emptyEmail) : null}                        
+                        errorText={emailError}                        
                         onKeyUp={onTextKeyUp}
                     />
                 </div>

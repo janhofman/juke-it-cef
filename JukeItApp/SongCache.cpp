@@ -257,4 +257,24 @@ namespace MusicPlayer {
 
 		queue_.clear();
 	}
+
+	bool SongCache::TestConnection() {
+		auto path = String_t("/v1/ping");
+		try {
+			auto task = httpClient_.request(web::http::methods::GET, path)
+				.then([=](web::http::http_response response) {
+				if (response.status_code() == web::http::status_codes::OK) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			});
+			task.wait();
+			return task.get();
+		}
+		catch (...) {
+			return false;
+		}
+	}
 }

@@ -24,9 +24,8 @@ export default defineMessages({
 
   introPar1: {
     id: 'SpotRegister.introPar1',
-    defaultMessage: 'This wizard will take you thorugh creation of your spot ' +
-    'and help you to set up the player just the way you want.',
-
+    defaultMessage: 'This wizard will take you through creation of your spot ' +
+    'and help you to set it up just the way you want.',
   },
   introPar2: {
     id: 'SpotRegister.introPar2',

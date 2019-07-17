@@ -232,6 +232,12 @@ export function startPlayback(){
   };
 }
 
+export function stopPlayback(){
+  return (dispatch) => {
+    dispatch(resetPlayer());
+  };
+}
+
 export function removePlaylist() {
   return (dispatch, getState) => {
     const { firebase, userData } = getState();
@@ -261,7 +267,9 @@ export function wipeQueue() {
       },
     } = getState();
     // remove data form firebase
-    firebase.database().ref('que').child(spotId).remove();
+    if(spotId) {
+      firebase.database().ref('que').child(spotId).remove();
+    }
   };
 }
 

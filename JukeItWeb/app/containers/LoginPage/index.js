@@ -51,7 +51,7 @@ export default connect((store) => {
     emptyEmail: login.emptyEmail,
     authorizing: login.authorizing,
     authorized: login.authorized,
-    error: login.error,
+    errorCode: login.errorCode,
     firebase,
   });
 })(LoginPage);

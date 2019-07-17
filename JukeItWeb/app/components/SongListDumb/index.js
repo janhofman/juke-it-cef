@@ -26,6 +26,7 @@ import MillisToTime from '../MillisToTime';
 import StyledTextField from './../StyledTextField';
 import messages from './messages';
 import defaultImage from '../../images/logo_negative_no_bg.png';
+import { addSongToPlaylist } from '../../actions/playlistsActions';
 
 const styles = {
   image: {
@@ -116,28 +117,36 @@ class SongListDumb extends Component {
       playAction,
       playerConnected,
       selectable,
+      selection,
       playlists,
-      contextMenuOpen,
-      contextMenuAnchor,
-      handleCloseContextMenu,
-      addSongToPlaylistAction,
-      addSongToQueueAction,
 
+      manageable,
+      playlistId,
       sort,
       search,
+      contextMenu,
       loadNextPage,
       hasNextPage,
       isNextPageLoading,
       rows,
       onAddSelectionToPlaylist,
       onAddToPlaylistMenuClick,
+      onAddSongToPlaylist,
+      onSongRightClick,
       onCancelSelection,
+      onRemoveFilesOption,
+      onRemoveSelectedFiles,
+      onRemoveSongsFromPlaylistOption,
+      onRemoveSelectedSongsFromPlaylist,
     } = this.props;
 
     const playButtonDisabled = !playerConnected;
 
     function rowRenderer (props) {
-      return <TableBodyRow {...props} />
+      return <TableBodyRow 
+        {...props} 
+        rightClick={onSongRightClick}
+      />
     }
 
     // If there are more items to be loaded then add an extra row to hold a loading indicator.
@@ -204,13 +213,29 @@ class SongListDumb extends Component {
             </div>
             { selectable ? (
               <div style={styles.buttons}>
-                <FlatButton
-                  label={'Add'}
-                  // labelPosition='after'
-                  containerElement="label"
-                  // icon={<PlayButton/>}
-                  onTouchTap={onAddSelectionToPlaylist}
-                />
+                {selection.addToPlaylist &&
+                  <FlatButton
+                    label={'Add'}
+                    // labelPosition='after'
+                    containerElement="label"
+                    // icon={<PlayButton/>}
+                    onTouchTap={onAddSelectionToPlaylist}
+                  />
+                }
+                {selection.removeFiles &&
+                  <FlatButton
+                    label={'Remove'}
+                    containerElement="label"
+                    onTouchTap={onRemoveSelectedFiles}
+                  />
+                }
+                {selection.removeSongs &&
+                  <FlatButton
+                    label={'Remove'}
+                    containerElement="label"
+                    onTouchTap={onRemoveSelectedSongsFromPlaylist}
+                  />
+                }
                 <FlatButton
                   label={'Cancel'}
                   // abelPosition='after'
@@ -251,6 +276,18 @@ class SongListDumb extends Component {
                         onTouchTap={() => onAddToPlaylistMenuClick(playlist.id)}
                     />))}
                   />
+                  {manageable &&
+                    <MenuItem
+                      primaryText={formatMessage(messages.removeFilesOpt)}
+                      onTouchTap={onRemoveFilesOption}
+                    />
+                  }
+                  {playlistId &&
+                    <MenuItem
+                    primaryText={formatMessage(messages.removeSongsOpt)}
+                    onTouchTap={onRemoveSongsFromPlaylistOption}
+                    />
+                  }
                 </IconMenu>
               </div>
             )}
@@ -340,24 +377,20 @@ class SongListDumb extends Component {
           </ScrollPane>
         </div>
         <Popover
-          open={contextMenuOpen}
-          anchorEl={contextMenuAnchor}
-          onRequestClose={handleCloseContextMenu}
+          open={contextMenu.open}
+          anchorEl={contextMenu.anchor}
+          onRequestClose={contextMenu.onClose}
           anchorOrigin={{ horizontal: 'middle', vertical: 'bottom' }}
           targetOrigin={{ horizontal: 'right', vertical: 'top' }}
         >
           <Menu>
-            <MenuItem
-              primaryText={formatMessage(messages.addToQueueOpt)}
-              onTouchTap={addSongToQueueAction}
-            />
             <MenuItem
               primaryText={formatMessage(messages.addToPlaylistOpt)}
               rightIcon={<ArrowDropRight />}
               menuItems={playlists.map((playlist, idx) =>
                 (<MenuItem
                   primaryText={playlist.name} key={idx}
-                  onTouchTap={() => addSongToPlaylistAction(playlist.id)}
+                  onTouchTap={() => onAddSongToPlaylist(playlist.id)}
                 />))}
             />
           </Menu>

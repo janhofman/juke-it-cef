@@ -72,6 +72,7 @@ public:
 	ErrorCode Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<GenreResult>& result);
 	ErrorCode Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<PlaylistResult>& result);
 	void AddFiles();
+	void RemoveFiles(const std::vector<std::string>& remove);
 	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
 	ErrorCode AddPlaylist(const std::string& userId, const std::string& name, const std::string& description, PlaylistResult& result);
 	ErrorCode ModifyPlaylist(const PlaylistResult& changes, bool nameChange, bool descriptionChange, PlaylistResult& result);

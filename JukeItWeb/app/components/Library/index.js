@@ -1,14 +1,11 @@
 import React, { Component } from 'react';
 import FlatButton from 'material-ui/FlatButton';
 import AddIcon from 'material-ui/svg-icons/content/add';
-import { deepOrange500 } from 'material-ui/styles/colors';
 import { injectIntl } from 'react-intl';
 import { Switch, Route } from 'react-router-dom';
 
-import ScrollPane from './../../containers/ScrollPane';
 import OrangeDivider from './../OrangeDivider';
 import StyledLink from './../StyledLink';
-import StyledTextField from './../StyledTextField';
 import messages from './messages';
 import GenresPage from '../../containers/GenresPage';
 import ArtistsPage from '../../containers/ArtistsPage';
@@ -69,6 +66,8 @@ class Library extends Component {
       location: { 
         pathname,
       },
+      playbackReady,
+      localConnected,
     } = this.props;
 
     const songsPath = match.url;
@@ -109,12 +108,14 @@ class Library extends Component {
           </div>
     <div style={styles.ghost} />*/}
           <div style={styles.tabs}>
-            <FlatButton
-              label={formatMessage(messages.addLabel)}
-              icon={<AddIcon />}
-              containerElement="label"
-              onClick={() => this.props.openFile(formatMessage(messages.openDialogTitle))}
-            />
+            { localConnected && !playbackReady &&
+              <FlatButton
+                label={formatMessage(messages.addLabel)}
+                icon={<AddIcon />}
+                containerElement="label"
+                onClick={() => this.props.openFile(formatMessage(messages.openDialogTitle))}
+              />
+            }
           </div>
         </div>
         <OrangeDivider />

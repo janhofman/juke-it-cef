@@ -9,6 +9,7 @@ import {
     closeContextMenu,
     removePlaylist,
     startPlayback,
+    stopPlayback,
     removeQueueItem,
     toggleAvailableSongs,
     togglePlaylistQueue,
@@ -18,13 +19,13 @@ import {
     priorityQueueAddItem,
 } from './../../actions/playbackActions';
 import { toggleActive } from './../../actions/userDataActions';
-import { play } from './../../actions/playerActions';
 
 class PlaybackPage extends Component {
   constructor(props) {
     super(props);
 
     this.startPlaying = this.startPlaying.bind(this);
+    this.stopPlaying = this.stopPlaying.bind(this);
     this.onRemoveSong = this.onRemoveSong.bind(this);
     this.onToggleOrderQueue = this.onToggleOrderQueue.bind(this);
     this.onTogglePlaylistQueue = this.onTogglePlaylistQueue.bind(this);
@@ -39,7 +40,6 @@ class PlaybackPage extends Component {
   }
 
   onSongRightClick({event, index, rowData}) {
-    console.log("Rightclick", event, index, rowData);
     if (event.button === 2) {
       event.preventDefault();
       event.persist();
@@ -81,6 +81,11 @@ class PlaybackPage extends Component {
     dispatch(startPlayback());
   }
 
+  stopPlaying() {
+    const { dispatch } = this.props;
+    dispatch(stopPlayback());
+  }
+
   onRemoveSong(itemId) {
     const { dispatch } = this.props;
     dispatch(removeQueueItem(itemId));
@@ -118,6 +123,7 @@ class PlaybackPage extends Component {
         toggleActive={this.toggleActive.bind(this)}
         removePlaylist={this.removePlaylist.bind(this)}
         startPlaying={this.startPlaying}
+        stopPlaying={this.stopPlaying}
         onRemoveSong={this.onRemoveSong}
         onToggleSongs={this.onToggleSongs}
         onTogglePlaylistQueue={this.onTogglePlaylistQueue}

@@ -30,6 +30,7 @@ const styles = {
     margin: '0.2em 0',
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   expansion: {
     overflow: 'hidden',
@@ -195,7 +196,8 @@ class Devices extends Component {
                   />
                   <FlatButton
                     label={formatMessage(fileServer.remote.connected ? messages.fsRemoteDisconnectBtn : messages.fsRemoteConnectBtn)}
-                    onTouchTap={fileServer.remote.connected ? fs.onConnectRemote : fs.onDisconnect}
+                    onTouchTap={fileServer.connected ? (fileServer.remote.connected ? fs.onDisconnect : null) : fs.onConnectRemote}
+                    disabled={fileServer.connected && !fileServer.remote.connected}
                   />
                 </div>
               </div>
@@ -297,7 +299,8 @@ class Devices extends Component {
                     />
                     <FlatButton
                       label={formatMessage(player.remote.connected ? messages.playerRemoteDisconnectBtn : messages.playerRemoteConnectBtn)}
-                      onTouchTap={player.remote.connected ? ps.onDisconnect : ps.onConnectRemote}
+                      onTouchTap={playerConnected ? (player.remote.connected ? ps.onDisconnect : null) : ps.onConnectRemote}
+                      disabled={playerConnected && !player.remote.connected}
                     />
                   </div>
                 </div>

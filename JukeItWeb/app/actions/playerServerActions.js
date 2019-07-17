@@ -49,7 +49,7 @@ function playerServerCloseError(error) {
 }
 
 export function openPlayerServer(ipAddress = null, port = null) {
-  return (dispatch) => {
+  return (dispatch) => new Promise(function(resolve, reject) {
     // TODO: check if server is already opened
     let payload = null;
     if (ipAddress || port) {
@@ -64,15 +64,18 @@ export function openPlayerServer(ipAddress = null, port = null) {
         // here warnings can be handled
         dispatch(playerServerOpened(response.address));
       }
-      dispatch(connectToLocalPlayer());
+      dispatch(connectToLocalPlayer())
+        .then(() => resolve())
+        .catch((error) => reject(error));
     };
 
     const onFailure = (errorCode, errorMessage) => {
       dispatch(playerServerOpenError({ errorCode, errorMessage }));
+      reject({errorCode, errorMessage});
     };
 
     dispatch(makeRequest('MPL_OPEN_PLAYER', payload, onSuccess, onFailure));
-  };
+  });
 }
 
 export function closePlayerServer() {

@@ -58,6 +58,11 @@ class PlaylistDetailPage extends Component {
       description,
       songs,
       loaded,
+      match: {
+        params: {
+          playlistId,
+        },
+      },
     } = this.props;
     return (
       <MusicEntityDetail
@@ -69,6 +74,7 @@ class PlaylistDetailPage extends Component {
         playAction={this.playPlaylist.bind(this)}
         entityType={EntityEnum.PLAYLIST}
         loadNextPage={this.loadNextPage}
+        playlistId={playlistId}
       />
     );
   }

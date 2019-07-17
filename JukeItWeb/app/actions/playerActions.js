@@ -3,11 +3,16 @@ import { format, parse } from 'json-rpc-protocol';
 import { playlistQueueAddItem, generateNextSong, playlistQueueRemoveItem, removeQueueItem } from './playbackActions';
 
 function buildRequest(action, payload) {
-  return format.request(Date.now(), action, payload);
+  const d = new Date();
+  return format.request(d.getTime(), action, payload);
 }
 
 function playRequest() {
   return buildRequest('PLAY');
+}
+
+function resetRequest() {
+  return buildRequest('RESET');
 }
 
 function pauseRequest() {
@@ -31,21 +36,7 @@ function updateQueueRequest(queue) {
   return buildRequest('UPDATEQUEUE', { queue });
 }
 
-function addPlaylistRequest(songId, itemId) {
-  const payload = {
-    songId: songId.toString(),
-    itemId: itemId.toString(),
-  };
-  return buildRequest('ADDPLAYLIST', payload);
-}
 
-function addOrderRequest(songId, itemId) {
-  const payload = {
-    songId: songId.toString(),
-    itemId: itemId.toString(),
-  };
-  return buildRequest('ADDORDER', payload);
-}
 
 export function play() {
   return (dispatch, getState) => {
@@ -60,18 +51,10 @@ export function play() {
   };
 }
 
-export function stop() {
-  return {
-    type: 'PLAYER_STOP',
-  };
-}
-
 function sendVolume(volume) {
   return (dispatch, getState) => {
     const { player: { webSocket } } = getState();
-    console.log("websocket: ", webSocket);
-    if (webSocket) {
-      console.log("sending volume")      
+    if (webSocket) {   
       const request = volumeRequest(volume);
       webSocket.send(request);      
     }
@@ -92,6 +75,13 @@ export function setLength(length) {
   return ({
     type: 'PLAYER_SET_LENGTH',
     payload: length,
+  });
+}
+
+export function playerInitialized(result) {
+  return ({
+    type: 'PLAYER_INITIALIZED',
+    payload: result,
   });
 }
 
@@ -248,6 +238,64 @@ function setWebsocket(webSocket) {
   });
 }
 
+function createWebSocketCallback(id, onSuccess, onFailure) {
+  return ({
+    type: 'PLAYER_REGISTER_WEBSOCKET_CALLBACK',
+    payload: {
+      id,
+      onSuccess,
+      onFailure,
+    }
+  });
+}
+
+function removeWebSocketCallback(id) {
+  return ({
+    type: 'PLAYER_REMOVE_WEBSOCKET_CALLBACK',
+    payload: {
+      id,
+    }
+  });
+}
+
+function webSocketRequest(request, onSuccess, onFailure) {
+  return (dispatch, getState) => {
+    const {
+      player: { webSocket, webSocketManager },
+    } = getState();
+
+    if(webSocket && webSocketManager) {
+      var msg = parse(request);
+      const id = msg.id;
+
+      dispatch(createWebSocketCallback(id, onSuccess, onFailure));
+      webSocket.send(request);
+    }
+  }
+}
+
+function webSocketResponse(msg) {
+  return (dispatch, getState) => {
+    const {
+      player: { webSocketManager },
+    } = getState();
+
+    if(webSocketManager) {
+      const id = msg.id;
+
+      if(webSocketManager[id]) {
+        const callbacks = webSocketManager[id];
+        if(msg.type === 'response') {
+          callbacks.onSuccess(msg.result);
+        } else if (msg.type === 'error') {          
+          callbacks.onFailure(msg.error);
+        }
+        dispatch(removeWebSocketCallback(id));
+      }
+    }
+  }
+}
+
 function requestPlaylist() {
   return (dispatch, getState) => {
     const {
@@ -258,8 +306,6 @@ function requestPlaylist() {
     if (nextSong) {
       const { songId, itemId } = nextSong;
       dispatch(playlistQueueAddItem(songId, itemId));
-      //const request = addPlaylistRequest(songId, itemId);
-      //webSocket.send(request);
     }
   };
 }
@@ -303,11 +349,17 @@ export function resetPlayer() {
 
     if (playerConnected) {
       if (webSocket) {
-        const request = {
-          action: 'RESET',
-        };
-        webSocket.send(request);
-        dispatch(playerReset());
+        const request = resetRequest();
+        
+        const onSuccess = () => {
+          dispatch(playerReset());
+        }
+
+        const onFailure = (error) => {
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
       } else {
         // TODO: log websocket missing error
       }
@@ -347,7 +399,9 @@ function statusUpdate(status) {
 
 function webSocketOnMessage(dispatch, event) {
   try {
+    console.log('Websocket arrived: ', event.data);
     const msg = parse(event.data);
+    console.log('Websocket message: ', msg);
     if (msg.type === 'notification') {
       switch (msg.method) {
         case 'REQUESTPLAYLIST': {
@@ -378,6 +432,8 @@ function webSocketOnMessage(dispatch, event) {
           }
         }
       }
+    } else if(msg.type === 'response' || msg.type === 'error') {
+      dispatch(webSocketResponse(msg));
     }
   } catch (ex) {
     // TODO: mark bad format
@@ -398,7 +454,7 @@ function testPortNumber(portNumber, dispatch) {
 }
 
 export function connectToLocalPlayer() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const {
       devices: {
         player: {
@@ -418,13 +474,17 @@ export function connectToLocalPlayer() {
         url += hostname;
       }
       url += `:${port}`;
-      dispatch(connect(url));
+      dispatch(connect(url))
+        .then(() => resolve())
+        .catch((error) => reject(error));
+    } else{
+      resolve();
     }
-  };
+  });
 }
 
 export function connectToRemotePlayer() {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function(resolve, reject) {
     const {
       devices: {
         player: {
@@ -444,13 +504,17 @@ export function connectToRemotePlayer() {
         url += hostname;
       }
       url += `:${port}`;
-      dispatch(connect(url));
+      dispatch(connect(url))
+      .then(() => resolve())
+      .catch((error) => reject(error));
+    } else{
+      resolve();
     }
-  };
+  });
 }
 
 function connect(address) {
-  return (dispatch, getState) => {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
     const {
       devices: {
         fileServer: {
@@ -462,15 +526,26 @@ function connect(address) {
       }
     } = getState();
 
-    if (address) {
+    if (address && baseAddress) {
       try {
         const ws = new WebSocket(address);
         ws.onmessage = (event) => webSocketOnMessage(dispatch, event);
         ws.onopen = () => {
           dispatch(playerConnectionChanged(true));
           const init = initializeRequest(baseAddress);
-          ws.send(init);
-          sendVolume(volume);
+          const onSuccess = () => {
+            dispatch(sendVolume(volume));
+            dispatch(playerInitialized(true));
+          };
+          const onFailure = (error) => {
+            console.log("Init error", error);
+            dispatch(playerInitialized(false));
+            alert("Player could not connect to file server");
+            disconnect();
+          };
+          dispatch(webSocketRequest(init, onSuccess, onFailure));
+          //ws.send(init);
+          //sendVolume(volume);
         };
         ws.onclose = () => {
           dispatch(playerConnectionChanged(false));
@@ -478,13 +553,17 @@ function connect(address) {
           dispatch(playerReset());
         };
         dispatch(setWebsocket(ws));
+        resolve()
       } catch (ex) {
         console.log('Connection failed: ', ex);
         dispatch(playerConnectionChanged(false));
         dispatch(setWebsocket(null));
+        reject(ex);
       }
+    } else {
+      reject(); // fileserver not connected
     }
-  };
+  });
 }
 
 export function disconnect() {

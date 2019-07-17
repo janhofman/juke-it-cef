@@ -37,6 +37,14 @@ export default defineMessages({
     id: 'SongList.addToQueueOpt',
     defaultMessage: 'Add to queue',
   },
+  removeFilesOpt: {
+    id: 'SongList.removeFilesOpt',
+    defaultMessage: 'Remove files',
+  },
+  removeSongsOpt: {
+    id: 'SongList.removeSongsOpt',
+    defaultMessage: 'Remove songs',
+  },
   playerNotConnectedToolTip: {
     id: 'SongList.playerNotConnectedToolTip',
     defaultMessage: 'Player is not connected',

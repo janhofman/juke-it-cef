@@ -92,6 +92,7 @@ namespace MusicPlayer {
 		//void AddToPlaylistQueue(const std::string& songId, const std::string& itemId);
 		void Reset();
 		void UpdateQueue(const std::vector<QueueItem>& newQueue);
+		bool TestConnection();
 
 		inline bool HasEnoughSongs() {
 			return queue_.size() >= 3;

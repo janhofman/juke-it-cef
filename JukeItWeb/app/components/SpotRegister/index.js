@@ -167,14 +167,11 @@ class SpotRegister extends Component {
       nameOpened,
       addressOpened,
       descriptionOpened,
-      accInfoOpened,
       openingHoursOpened,
       spotName,
       street,
       city,
       description,
-      mondayFrom,
-      mondayTo,
       openingHours,
     } = this.state;
     return (
@@ -296,8 +293,8 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                   </div>
-                  <p>
-                    {formatMessage(messages.tuesday)}
+                  <div>
+                    <span>{formatMessage(messages.tuesday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -308,7 +305,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -318,9 +315,9 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
-                  <p>
-                    {formatMessage(messages.wednesday)}
+                  </div>
+                  <div>
+                    <span>{formatMessage(messages.wednesday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -331,7 +328,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -341,9 +338,9 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
-                  <p>
-                    {formatMessage(messages.thursday)}
+                  </div>
+                  <div>
+                    <span>{formatMessage(messages.thursday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -354,7 +351,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -364,9 +361,9 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
-                  <p>
-                    {formatMessage(messages.friday)}
+                  </div>
+                  <div>
+                    <span>{formatMessage(messages.friday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -377,7 +374,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -387,9 +384,9 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
-                  <p>
-                    {formatMessage(messages.saturday)}
+                  </div>
+                  <div>
+                    <span>{formatMessage(messages.saturday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -400,7 +397,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -410,9 +407,9 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
-                  <p>
-                    {formatMessage(messages.sunday)}
+                  </div>
+                  <div>
+                    <span>{formatMessage(messages.sunday)}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.fromHint)}
@@ -423,7 +420,7 @@ class SpotRegister extends Component {
                       textFieldStyle={styles.timePickerTextField}
                     />
                     <div style={styles.textGap} />
-                    {'-'}
+                    <span>{'-'}</span>
                     <div style={styles.textGap} />
                     <TimePicker
                       hintText={formatMessage(messages.toHint)}
@@ -433,7 +430,7 @@ class SpotRegister extends Component {
                       style={styles.timePickerBase}
                       textFieldStyle={styles.timePickerTextField}
                     />
-                  </p>
+                  </div>
                 </div>
               </div>
             </ExpandTransition>

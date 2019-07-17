@@ -33,4 +33,24 @@ export default defineMessages({
       id: 'Login.emptyPasswd',
       defaultMessage: 'Enter your password',
   },
+  errorInvalidEmail: {
+    id: 'Login.errorInvalidEmail',
+    defaultMessage: 'The email address is badly formatted',
+  },
+  errorUserNotFound: {
+    id: 'Login.errorInvalidEmail',
+    defaultMessage: 'Invalid username or password',
+  },  
+  errorGeneric: {
+    id: 'Login.errorGeneric',
+    defaultMessage: 'Log in failed',
+  },
+  errorWrongPassword: {
+    id: 'Login.errorWrongPassword',
+    defaultMessage: 'Invalid username or password',
+  }, 
+  errorRegisterCompleted: {
+    id: 'Login.errorRegisterCompleted',
+    defaultMessage: 'Your registration was successful. Please log in with your e-mail and password.',
+  }
 });

@@ -51,6 +51,7 @@ class MusicEntityDetail extends Component {
       playAction,
       navigateBack,
       loadNextPage,
+      playlistId,
     } = this.props;
     const selectable = false; // to props
     const entityDetails = this.getEntityDetails(entityType);
@@ -73,6 +74,7 @@ class MusicEntityDetail extends Component {
           playAction={playAction}
           selectable={selectable}
           loadNextPage={loadNextPage}
+          playlistId={playlistId}
         />
       </div>
     );

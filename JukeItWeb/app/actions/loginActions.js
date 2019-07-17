@@ -13,8 +13,6 @@ import {
 } from './playbackActions';
 import {
   closeFileServerLocal,
-  openFileServerLocal,
-  openPlayerLocal,
   closePlayerLocal,
 } from './devicesActions';
 import {
@@ -96,14 +94,18 @@ export function removeFirebaseListeners(userId, spotId) {
     const userRef = db.ref('users');
     const spotRef = db.ref('spots');
     const queRef = db.ref('que');
-        // user changes
-    userRef.child('private').child(userId).off();
-    userRef.child('public').child(userId).off();
-        // que
-    queRef.child(spotId).off();
-        // spot
-    spotRef.child('public').child(spotId).off();
-    spotRef.child('private').child(spotId).off();
+    if (userId) {
+      // user changes
+      userRef.child('private').child(userId).off();
+      userRef.child('public').child(userId).off();
+    }
+    if (spotId) {
+      // que
+      queRef.child(spotId).off();
+      // spot
+      spotRef.child('public').child(spotId).off();
+      spotRef.child('private').child(spotId).off();
+    }
   });
 }
 
@@ -114,13 +116,13 @@ export function logOut() {
     // first remove all database callbacks
     dispatch(removeFirebaseListeners(userId, spotId));
     // set spot as inactive
-    firebase.database().ref('spots/public').child(spotId).update({ active: false });
+    firebase.database().ref('spots/public').child(spotId).update({ active: false });    
+    // remove playlist
+    dispatch(removePlaylist());
     // disconnect player
     dispatch(disconnectPlayer());
     // close player
     dispatch(closePlayerLocal());
-    // remove playlist
-    dispatch(removePlaylist());
     // wipe queue
     dispatch(wipeQueue());
     // close fileServer

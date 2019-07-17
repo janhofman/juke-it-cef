@@ -668,6 +668,24 @@ void SqliteAPI::AddFiles() {
 	}
 }
 
+void SqliteAPI::RemoveFiles(const std::vector<std::string>& remove) {
+	for (size_t i = 0; i < remove.size(); i++)
+	{
+		sqlite3_stmt *statement;
+		std::string sql;
+		int rtc = 0;
+
+		// now insert song
+		std::stringstream ss;
+		ss << "DELETE FROM song WHERE id = ";
+		ss << remove[i];
+		sql = ss.str();
+		rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+		rtc = sqlite3_step(statement);
+		rtc = sqlite3_finalize(statement);
+	}
+}
+
 void SqliteAPI::AddSongToDatabase(const char *filename, SongMetadata& metadata) {
 	if (filename) {
 		sqlite3_stmt *statement;
@@ -940,7 +958,7 @@ SqliteAPI::ErrorCode SqliteAPI::AddSongsToPlaylist(std::uint32_t playlistId, std
 
 SqliteAPI::ErrorCode SqliteAPI::RemoveSongsFromPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& remove) {	
 	std::stringstream ss;
-	ss << "DELETE FROM playlistSong WHERE playlistId =" << playlistId << "AND songId IN (";
+	ss << "DELETE FROM playlistSong WHERE playlistId =" << playlistId << " AND songId IN (";
 	bool first = true;
 	for (size_t i = 0; i < remove.size(); i++)
 	{

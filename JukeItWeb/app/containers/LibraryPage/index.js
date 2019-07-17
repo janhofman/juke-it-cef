@@ -5,8 +5,20 @@ import Library from './../../components/Library';
 import {
     addSongs,
 } from './../../actions/libraryActions';
+import { loadPlaylists } from './../../actions/playlistsActions';
 
 class LibraryPage extends Component {
+  constructor(props) {
+    super(props);
+    props.dispatch(loadPlaylists());
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { playlistsLoaded, dispatch } = this.props;
+    if (nextProps.playlistsLoaded === false && playlistsLoaded === true) {
+      dispatch(loadPlaylists());
+    }
+  }
 
   openFile(title) {
     const { dispatch } = this.props;
@@ -26,5 +38,7 @@ class LibraryPage extends Component {
 export default connect((store) => ({
   firebase: store.firebase,
   user: store.userData.user,
-  libLoading: store.library.loading,
+  playlistsLoaded: store.playlists.playlistsLoaded,
+  playbackReady: store.playback.activePlaylist !== null,
+  localConnected: store.devices.fileServer.local.connected,
 }))(LibraryPage);

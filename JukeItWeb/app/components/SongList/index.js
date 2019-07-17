@@ -3,17 +3,10 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import {SortDirection} from 'react-virtualized/dist/es/Table';
 import SongListDumb from '../SongListDumb';
-import { loadPlaylists, addSongsToPlaylist } from './../../actions/playlistsActions';
+import { addSongToPlaylist, addSongsToPlaylist, removeSongsFromPlaylist } from './../../actions/playlistsActions';
 import {
-  makeSelectable,
-  makeStatic,
-  openOptions,
-  closeOptions,
-  selectionChanged,
-  openContextMenu,
-  closeContextMenu,
-} from './../../actions/songListActions';
-import { addToEndOfQueue } from './../../actions/playbackActions';
+  removeFiles,
+} from './../../actions/libraryActions';
 import { makeCancelable } from './../../utils';
 
 class SongList extends Component {
@@ -31,56 +24,83 @@ class SongList extends Component {
         sortBy: null,
         desc: false,
       },
+      selection: {
+        removeFiles: false,
+        removeSongs: false,
+        addToPlaylist: false,
+      },
       search: {
         value: '',
         filter: null,        
       },
+      contextMenu: {
+        open: false,
+        anchor: null,
+        songId: null,
+      }
     };
 
     this.loadNextPage = this.loadNextPage.bind(this);
     this.onRowChecked = this.onRowChecked.bind(this);
-    this.finishAddToPlaylist = this.finishAddToPlaylist.bind(this);
+    this.finishSelection = this.finishSelection.bind(this);
     this.onAddSelectionToPlaylist = this.onAddSelectionToPlaylist.bind(this);
     this.onAddToPlaylistMenuClick = this.onAddToPlaylistMenuClick.bind(this);
     this.onSort= this.onSort.bind(this);
     this.onSearch = this.onSearch.bind(this);
     this.onSearchValueChange = this.onSearchValueChange.bind(this);
+    this.onAddSongToPlaylist = this.onAddSongToPlaylist.bind(this);
+    this.onCloseContextMenu = this.onCloseContextMenu.bind(this);
+    this.onSongRightClick = this.onSongRightClick.bind(this);
+    this.onRemoveFilesOption = this.onRemoveFilesOption.bind(this);
+    this.onRemoveSelectedFiles = this.onRemoveSelectedFiles.bind(this);
+    this.onRemoveSongsFromPlaylistOption = this.onRemoveSongsFromPlaylistOption.bind(this);
+    this.onRemoveSelectedSongsFromPlaylist = this.onRemoveSelectedSongsFromPlaylist.bind(this);
   }
 
-  addSongToPlaylistAction(playlistId) {
-    const { dispatch, songId } = this.props;
-    const selectedSongs = [];
-    console.log('SongID: ', songId);
-    selectedSongs.push(songId);
-    dispatch(addSongsToPlaylist(playlistId, selectedSongs));
-    dispatch(closeContextMenu());
+  onAddSongToPlaylist(playlistId) {
+    const { 
+      contextMenu: {
+        songId,
+      }
+    } = this.state;    
+    const { dispatch } = this.props;
+
+   
+    dispatch(addSongToPlaylist(playlistId, songId));
+    this.onCloseContextMenu();
   }
 
-  addSongToQueueAction() {
-    const { dispatch, songId } = this.props;
-    dispatch(addToEndOfQueue(songId));
-    dispatch(closeContextMenu());
+  onCloseContextMenu() {
+    this.setState((state) => ({
+      ...state,
+      contextMenu: {
+        ...state.contextMenu,
+        open: false,
+        anchor: null,
+        songId: null,
+      }
+    }));
   }
 
-  handleCloseContextMenu() {
-    this.props.dispatch(closeContextMenu());
-  }
-
-  cancelSelectable() {
-    this.props.dispatch(makeStatic());
-  }
-
-  songOnMouseUp(event, songId) {
+  onSongRightClick({event, index, rowData}) {
     if (event.button === 2) {
       event.preventDefault();
       event.persist();
       const { dispatch } = this.props;
       const target = event.currentTarget;
-      dispatch(openContextMenu(target, songId));
+
+      this.setState((state) => ({
+        ...state,
+        contextMenu: {
+          ...state.contextMenu,
+          open: true,
+          anchor: target,
+          songId: rowData.id,
+        }
+      }));
     }
   }
 
-  // new methods
   componentWillUnmount() {
     const {
       loadPromise,
@@ -182,6 +202,10 @@ class SongList extends Component {
       ...state,
       selectable: true,
       playlistId,
+      selection: {
+        ...state.selection,
+        addToPlaylist: true,
+      }
     }));
   }
 
@@ -199,20 +223,21 @@ class SongList extends Component {
       }
     }
     dispatch(addSongsToPlaylist(playlistId, selectedSongs));
-    this.finishAddToPlaylist();
+    this.finishSelection();
   }
 
-  finishAddToPlaylist() {
-    const { rows } = this.state;  
-    for (let i = 0; i < rows.length; i++) {
-      rows[i].selected = false;
-    }
-
+  finishSelection() {    
     this.setState((state) => ({
       ...state,
       selectable: false,
       playlistId: null,
-      rows,
+      selection: {
+        addToPlaylist: false,
+        removeFiles: false,
+        removeSongs: false,
+      },
+      rows: [], // clean cache
+      hasNextPage: true, // clean cache
     }));
   }
 
@@ -253,6 +278,62 @@ class SongList extends Component {
     }));
   }
 
+  onRemoveFilesOption() {
+    this.setState((state) => ({
+      ...state,
+      selectable: true,
+      selection: {
+        ...state.selection,
+        removeFiles: true,
+      }
+    }));
+  }
+
+  onRemoveSelectedFiles() {
+    const { 
+      rows,
+    } = this.state;    
+    const { dispatch } = this.props;
+
+    const selectedSongs = [];
+    for (let i = 0; i < rows.length; i++) {
+      if(rows[i].selected === true) {
+        selectedSongs.push(rows[i].id);
+      }
+    }
+    dispatch(removeFiles(selectedSongs));
+    this.finishSelection();
+  }
+
+  onRemoveSongsFromPlaylistOption() {
+    this.setState((state) => ({
+      ...state,
+      selectable: true,
+      selection: {
+        ...state.selection,
+        removeSongs: true,
+      }
+    }));
+  }
+
+  onRemoveSelectedSongsFromPlaylist() {
+    const { 
+      rows,
+    } = this.state;    
+    const { dispatch, playlistId } = this.props;
+
+    if(playlistId){
+      const selectedSongs = [];
+      for (let i = 0; i < rows.length; i++) {
+        if(rows[i].selected === true) {
+          selectedSongs.push(rows[i].id);
+        }
+      }
+      dispatch(removeSongsFromPlaylist(playlistId, selectedSongs));
+    }
+    this.finishSelection();
+  }
+
   render() {
     const {
       title,
@@ -261,13 +342,16 @@ class SongList extends Component {
       playerConnected,
       playAction,
       playlists,
+      manageable,
+      playlistId,
     } = this.props;
 
     const {
       selectable,
       loading,
       hasNextPage,
-      rows,      
+      rows,    
+      selection,  
     } = this.state;
 
     const sort = {
@@ -279,6 +363,11 @@ class SongList extends Component {
       ...this.state.search,
       onSearch: this.onSearch,
       onSearchValueChange: this.onSearchValueChange,
+    }
+
+    const contextMenu = {
+      ...this.state.contextMenu,
+      onClose: this.onCloseContextMenu,
     }
 
     return (
@@ -295,15 +384,24 @@ class SongList extends Component {
         hasNextPage={hasNextPage}
         isNextPageLoading={loading}
         rows={rows}
+        contextMenu={contextMenu}
+        manageable={manageable}
+        selection={selection}
+        playlistId={playlistId}
 
         // actions
         playAction={playAction}
-        songOnMouseUp={this.songOnMouseUp.bind(this)}
         loadNextPage={this.loadNextPage}
         onRowChecked={this.onRowChecked}
+        onAddSongToPlaylist={this.onAddSongToPlaylist}
         onAddSelectionToPlaylist={this.onAddSelectionToPlaylist}
         onAddToPlaylistMenuClick={this.onAddToPlaylistMenuClick}
-        onCancelSelection={this.finishAddToPlaylist}
+        onCancelSelection={this.finishSelection}
+        onSongRightClick={this.onSongRightClick}
+        onRemoveFilesOption={this.onRemoveFilesOption}
+        onRemoveSelectedFiles={this.onRemoveSelectedFiles}        
+        onRemoveSongsFromPlaylistOption={this.onRemoveSongsFromPlaylistOption}
+        onRemoveSelectedSongsFromPlaylist={this.onRemoveSelectedSongsFromPlaylist}
       />
     );
   }
@@ -322,19 +420,12 @@ SongList.propTypes = {
 };
 
 export default connect((store) => {
-  const { playlists, songList, player, devices } = store;
+  const { playlists, player, devices } = store;
   return ({
     playlists: playlists.playlists,
     playlistsLoaded: playlists.playlistsLoaded,
-    optionsOpen: songList.optionsOpen,
-    optionsAnchor: songList.optionsAnchor,
-    selectable: songList.selectable,
-    selected: songList.selected,
-    playlistId: songList.playlistId,
-    contextMenuOpen: songList.contextMenuOpen,
-    contextMenuAnchor: songList.contextMenuAnchor,
-    songId: songList.songId,
     playerConnected: player.playerConnected,
     fsBaseAddress: devices.fileServer.baseAddress,
+    manageable: store.playback.activePlaylist === null && store.devices.fileServer.local.connected,
   });
 })(SongList);

@@ -33,6 +33,9 @@ MsgHandler_FileServer::CommandName MsgHandler_FileServer::GetCommandName(const w
 				else if (StartsWith(command, "FLS_ADD_FILES")) {
 					return CommandName::ADD_FILES;
 				}
+				else if (StartsWith(command, "FLS_REMOVE_FILES")) {
+					return CommandName::REMOVE_FILES;
+				}
 				else {
 					return CommandName::NOT_SUPPORTED;
 				}
@@ -79,6 +82,10 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 	}
 	case CommandName::ADD_FILES: {
 		AddFiles(callback);
+		return true;
+	}
+	case CommandName::REMOVE_FILES: {
+		RemoveFiles(requestJSON, callback);
 		return true;
 	}
 
@@ -202,5 +209,43 @@ void MsgHandler_FileServer::AddFiles(CefRefPtr<Callback> callback) {
 			callback->Failure(123, "Adding files failed");
 		}
 	});
+}
+
+void MsgHandler_FileServer::RemoveFiles(web::json::value request, CefRefPtr<Callback> callback) {
+	if (request.is_object()) {
+		std::vector<std::string> remove;
+		auto payloadIt = request.as_object().find(U("payload"));
+		if (payloadIt != request.as_object().end() && payloadIt->second.is_object()) {
+			auto payload = payloadIt->second.as_object();
+
+			auto valIt = payload.find(U("remove"));
+			if (valIt != payload.end()) {
+				if (valIt->second.is_array()) {
+					auto removeArray = valIt->second.as_array();
+					for (auto it = removeArray.begin(); it < removeArray.end(); it++)
+					{
+						if (it->is_string()) {
+							remove.push_back(utility::conversions::to_utf8string(it->as_string()));
+						}
+					}
+				}
+			}
+		}
+
+		try {
+			sqliteAPI_->RemoveFiles(remove);
+
+			web::json::value response;
+			response[U("status")] = web::json::value::number(0);
+
+			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+		}
+		catch (...) {
+			callback->Failure(124, "Removing files failed");
+		}
+	}
+	else {
+		callback->Failure(ReturnCode::BAD_REQUEST, "Bad request.");
+	}
 }
 

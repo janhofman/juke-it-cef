@@ -65,6 +65,7 @@ namespace MusicPlayer {
 			PLAY,
 			PAUSE,
 			NEXT,
+			RESET,
 			CLOSE,
 			
 			INITIALIZE,
@@ -80,7 +81,8 @@ namespace MusicPlayer {
 			NOT_SUPPORTED_ACTION = 11,
 			MALFORMED_REQUEST = 12,
 			FILESERVER_NOT_SET = 13,
-			EMPTY_QUEUES = 21
+			EMPTY_QUEUES = 21,
+			FILESERVER_UNREACHABLE = 55
 		};
 
 		//webSocket methods
@@ -98,6 +100,7 @@ namespace MusicPlayer {
 		ResponseErrorCode PauseAction();
 		ResponseErrorCode NextAction();
 		ResponseErrorCode CloseAction();
+		ResponseErrorCode ResetAction();
 		ResponseErrorCode InitializeAction(const web::json::object& payload);
 		ResponseErrorCode VolumeAction(const web::json::object& payload);
 		ResponseErrorCode SeekAction(const web::json::object& payload);

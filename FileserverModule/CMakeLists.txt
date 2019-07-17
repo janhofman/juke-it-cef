@@ -52,6 +52,7 @@ set(CPPRESTSDK_FILES
   bcrypt.lib
   crypt32.lib
   winhttp.lib
+  httpapi.lib
 )
 set(CPPRESTSDK_FILES_DEBUG
   ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib

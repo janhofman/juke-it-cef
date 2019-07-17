@@ -45,7 +45,7 @@ function fileServerCloseError(error) {
     payload: error,
   };
 }
-
+/*
 export function openFileServer(hostName = null, port = null) {
   return (dispatch) => {
     // TODO: check if server is already opened
@@ -72,6 +72,37 @@ export function openFileServer(hostName = null, port = null) {
 
     dispatch(makeRequest('FLS_OPEN_SERVER', payload, onSuccess, onFailure));
   };
+}
+*/
+export function openFileServer(hostName = null, port = null) {
+  return (dispatch) => new Promise(function(resolve, reject) {
+    // TODO: check if server is already opened
+    let payload = null;
+    if (hostName || port) {
+      payload = { hostName, port };
+    }
+
+    const onSuccess = (responseStr) => {
+      const response = JSON.parse(responseStr);
+      if (response.status === 0) {
+        dispatch(fileServerOpened(response.address));
+      } else {
+        // here warnings can be handled
+        dispatch(fileServerOpened(response.address)); 
+      }       
+      dispatch(connectFsLocal())
+        .then(() => resolve())
+        .catch((error) => reject(error));
+    };
+
+    const onFailure = (errorCode, errorMessage) => {
+      console.log("Fileserver open error. Code: ", errorCode, ", Message: ", errorMessage);
+      dispatch(fileServerOpenError({ errorCode, errorMessage }));
+      reject(errorCode, errorMessage);
+    };
+
+    dispatch(makeRequest('FLS_OPEN_SERVER', payload, onSuccess, onFailure));
+  });
 }
 
 export function closeFileServer() {

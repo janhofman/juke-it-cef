@@ -39,6 +39,14 @@ export default defineMessages({
   },
   invalidName: {
     id: 'Register.invalidName',
-    defaultMessage: 'Name must be at least characters long',
+    defaultMessage: 'Name must be at least 3 characters long',
+  },
+  genericError: {
+    id: 'Register.genericError',
+    defaultMessage: 'An error occured during registration',
+  },
+  errorEmailInUse: {
+    id: 'Register.errorEmailInUse',
+    defaultMessage: 'The e-mail address is already in use by another account',
   },
 });

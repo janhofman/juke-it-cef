@@ -50,8 +50,31 @@ const styles = {
 class Register extends Component {
 
   render() {
-    const { invalidEmail, invalidPasswd, invalidName, working, signUp, intl } = this.props;
-    const { formatMessage } = intl;
+    const { 
+      invalidEmail,
+      invalidPasswd, 
+      invalidName, 
+      working, 
+      signUp,
+      error,
+      intl: {
+        formatMessage,
+      },
+    } = this.props;
+
+    let emailError = null;
+    if(invalidEmail) {
+      emailError = formatMessage(messages.invalidEmail);
+    } else if(error) {
+      switch(error.code) {
+        case 'auth/email-already-in-use':
+          emailError = formatMessage(messages.errorEmailInUse);
+          break;
+        default:
+          emailError = formatMessage(messages.genericError);
+          break;
+      }
+    }
     return (
       <div>
         <img src={logoNegative} style={styles.logo} />
@@ -61,7 +84,7 @@ class Register extends Component {
             hintText={formatMessage(messages.emailHint)}
             type="email"
             id="email"
-            errorText={invalidEmail ? formatMessage(messages.invalidEmail) : null}
+            errorText={emailError}
           />
         </div>
         <div style={styles.textfield}>

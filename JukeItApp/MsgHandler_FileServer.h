@@ -35,6 +35,7 @@ private:
 		OPEN_SERVER,
 		CLOSE_SERVER,
 		ADD_FILES,
+		REMOVE_FILES,
 
 		NOT_SUPPORTED
 	};
@@ -50,6 +51,7 @@ private:
 	void OpenServer(web::json::value request, CefRefPtr<Callback> callback);
 	void CloseServer(CefRefPtr<Callback> callback);
 	void AddFiles(CefRefPtr<Callback> callback);
+	void RemoveFiles(web::json::value request, CefRefPtr<Callback> callback);
 
 	const CefString startup_url_;
 

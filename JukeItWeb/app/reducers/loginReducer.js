@@ -3,7 +3,8 @@ const initialState = {
     emptyEmail: false,
     authorizing: false,
     authorized: false,
-    error: null,
+    errorCode: null,
+    errorMessage: null
 }
 
 export default function reducer(state = initialState, action){
@@ -18,7 +19,8 @@ export default function reducer(state = initialState, action){
                         emptyPasswd: false,
                         emptyEmail: false,
                         authorizing: true,
-                        error: null,
+                        errorCode: null,
+                        errorMessage: null
             };
         case 'LOGIN_SUCCESSFUL':
             return { 

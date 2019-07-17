@@ -6,8 +6,10 @@ const initialState = {
   queueKey: null,
   onFinishAction: null,
   webSocket: null,
+  initialized: false,
   playerConnected: false,
   volume: 100,
+  webSocketManager: null,
 };
 
 export default function reducer(state = initialState, action) {
@@ -27,12 +29,32 @@ export default function reducer(state = initialState, action) {
     case 'PLAYER_VOLUME':
       return { ...state, volume: action.payload };
     case 'PLAYER_SET_ONFINISHACTION':
-      return { ...state, onFinishAction: action.payload };
+      return { ...state, onFinishAction: action.payload };    
+    case 'PLAYER_INITIALIZED':
+      return { ...state, initialized: action.payload };
     case 'PLAYER_SET_WEBSOCKET': {
       if (state.webSocket) {
         state.webSocket.close();
       }
-      return { ...state, webSocket: action.payload };
+      return { ...state, webSocket: action.payload, webSocketManager: action.payload ? {} : null, initialized: false };
+    }
+    case 'PLAYER_REGISTER_WEBSOCKET_CALLBACK': {
+      if (state.webSocketManager) {
+        const { id, onSuccess, onFailure } = action.payload;
+        let manager = {...state.webSocketManager};
+        manager[id] = { onSuccess, onFailure };
+        return { ...state, webSocketManager: manager };
+      }
+      return { ...state };
+    }
+    case 'PLAYER_REMOVE_WEBSOCKET_CALLBACK': {
+      if (state.webSocketManager) {
+        const { id } = action.payload;        
+        let manager = {...state.webSocketManager};
+        delete manager[id];
+        return { ...state, webSocketManager: manager };
+      }
+      return { ...state };
     }
     case 'PLAYER_RESET':
       return {

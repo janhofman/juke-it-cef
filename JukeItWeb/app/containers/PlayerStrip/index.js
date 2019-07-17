@@ -45,17 +45,20 @@ class PlayerStrip extends Component {
       priorityQueue,
       playerConnected,
       playbackStarted,
-      dispatch
+      dispatch,
+      initialized
     } = this.props;
 
     if(nextProps.playerConnected &&
         nextProps.playbackStarted &&
+        nextProps.initialized &&
         (
           !this.arraysEqual(playlistQueue, nextProps.playlistQueue) 
           || !this.arraysEqual(orderQueue, nextProps.orderQueue)
           || !this.arraysEqual(priorityQueue, nextProps.priorityQueue)
           || playerConnected !== nextProps.playerConnected
           || playbackStarted !== nextProps.playbackStarted
+          || initialized !== nextProps.initialized
         )
     ) {
       // send queue change to player
@@ -164,6 +167,7 @@ export default connect((store) => {
     queueKey: player.queueKey,
     playerConnected: player.playerConnected,
     volume: player.volume,
+    initialized: player.initialized,
     firebase,
     spotId: store.userData.user.adminForSpot,
     orderQueue: playback.orderQueue,

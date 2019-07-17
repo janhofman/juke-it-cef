@@ -166,6 +166,10 @@ namespace MusicPlayer {
 						rtc = NextAction();
 						break;
 					}
+					case Session::RESET: {
+						rtc = ResetAction();
+						break;
+					}
 					default: {
 						// find payload and handle the rest of actions					
 						auto payloadPtr = request.find(utility::conversions::to_string_t("params"));
@@ -212,9 +216,7 @@ namespace MusicPlayer {
 			rtc = ResponseErrorCode::MALFORMED_REQUEST;
 		}
 
-		if (rtc == ResponseErrorCode::OK) {
-
-		}
+		SendResponse(rtc, idPtr != request.end() ? idPtr->second : web::json::value::null());
 
 		// same numbers mean successful request, so we reset fail counter
 		if (failAtStart == failCounter_) {
@@ -279,6 +281,17 @@ namespace MusicPlayer {
 		return ResponseErrorCode::OK;
 	}
 
+	Session::ResponseErrorCode Session::ResetAction() {
+		// we only need to take care of situation where the cache has already been initialized
+		if (cache_.get() != nullptr) {
+			player_.Close();
+			playing_ = false;
+			currentSong_.reset();
+			cache_->Reset();
+		}
+		return ResponseErrorCode::OK;
+	}
+
 	Session::ResponseErrorCode Session::CloseAction() {
 		// we only need to take care of situation where the cache has already been initialized
 		if (cache_.get() != nullptr) {
@@ -296,10 +309,15 @@ namespace MusicPlayer {
 			if (it->second.is_string()) {
 				auto url = utility::conversions::to_utf8string(it->second.as_string());
 				cache_ = std::make_unique<SongCache>(url);
-				player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
-				player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
-				// ask for a song
-				RequestPlaylistSong();
+				if (cache_->TestConnection()) {
+					player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
+					player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
+					// ask for a song
+					RequestPlaylistSong();
+				}
+				else {
+					return ResponseErrorCode::FILESERVER_UNREACHABLE;
+				}
 			}	
 		}
 		else {
@@ -411,6 +429,9 @@ namespace MusicPlayer {
 		}
 		else if (action == "CLOSE") {
 			return ActionEnum::CLOSE;
+		}
+		else if (action == "RESET") {
+			return ActionEnum::RESET;
 		}
 		else if (action == "UPDATEQUEUE") {
 			return ActionEnum::UPDATE_QUEUE;
