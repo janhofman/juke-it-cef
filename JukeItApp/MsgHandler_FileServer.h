@@ -4,7 +4,7 @@
 #include <string>
 #include <mutex>
 
-#include "cpprestsdk/include/pplx/pplxtasks.h"
+#include "pplx/pplxtasks.h"
 
 #include "abstract_message_handler.h"
 #include "AudioInspector.h"

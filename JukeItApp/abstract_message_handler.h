@@ -7,8 +7,8 @@
 
 #include "include/wrapper/cef_helpers.h"
 #include "include/wrapper/cef_message_router.h"
-#include "cpprestsdk/include/cpprest/json.h"
-#include "cpprestsdk/include/cpprest/details/basic_types.h"
+#include "cpprest/json.h"
+#include "cpprest/details/basic_types.h"
 
 class AbstractMessageHandler : public CefMessageRouterBrowserSide::Handler {
 public:

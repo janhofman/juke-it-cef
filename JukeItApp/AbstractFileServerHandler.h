@@ -2,7 +2,7 @@
 #define ABSTRACTFILESERVERHANDLER_H_
 
 #include <vector>
-#include "cpprestsdk/include/cpprest/json.h"
+#include "cpprest/json.h"
 
 class AbstractFileServerHandler {
 public:

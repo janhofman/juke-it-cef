@@ -3,13 +3,13 @@
 
 #define _TURN_OFF_PLATFORM_STRING // we need to turn this off, because the U() macro from cpprest it messes up some boost templates
 
-#include "cpprestsdk/include/cpprest/json.h"
-#include "cpprestsdk/include/cpprest/http_client.h"
-#include "cpprestsdk/include/cpprest/uri.h"
-#include "cpprestsdk/include/cpprest/asyncrt_utils.h"
-#include "cpprestsdk/include/pplx/pplxtasks.h"
-#include "cpprestsdk/include/cpprest/http_msg.h"
-#include "cpprestsdk/include/cpprest/containerstream.h"
+#include "cpprest/json.h"
+#include "cpprest/http_client.h"
+#include "cpprest/uri.h"
+#include "cpprest/asyncrt_utils.h"
+#include "pplx/pplxtasks.h"
+#include "cpprest/http_msg.h"
+#include "cpprest/containerstream.h"
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 

@@ -267,29 +267,67 @@ if(OS_WINDOWS)
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  set(FFMPEG_LIB_LOCATION 
-      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avcodec.lib
-      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avutil.lib
-      ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/ffmpeg-4.0-win64-dev/lib/avformat.lib
-     )
+  
+  #
+  # set differences for x64 / x86
+  #
+  
+  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+    # x64
+    set(FFMPEG_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/ffmpeg/win64")
+    set(CPPRESTSDK_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/cpprestsdk/win64")
+  else()
+    # x86
+    set(FFMPEG_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/ffmpeg/win32")
+    set(CPPRESTSDK_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/cpprestsdk/win32")
+  endif()
+
+  #
+  #   FFMPEG SETTINGS
+  #  
+  
+  include_directories("${FFMPEG_DIRECTORY}/include")
      
+  set(FFMPEG_LIB_LOCATION 
+    ${FFMPEG_DIRECTORY}/lib/avcodec.lib
+    ${FFMPEG_DIRECTORY}/lib/avutil.lib
+    ${FFMPEG_DIRECTORY}/lib/avformat.lib
+  )
+          
+  #
+  #   CPPRESTSDK SETTINGS
+  #  
+  
+  include_directories("${CPPRESTSDK_DIRECTORY}/include")
   
   set(CPPRESTSDK_FILES
-  bcrypt.lib
-  crypt32.lib
-  winhttp.lib
-  httpapi.lib
+    bcrypt.lib
+    crypt32.lib
+    winhttp.lib
+    httpapi.lib
   )
   set(CPPRESTSDK_FILES_DEBUG
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Debug/libcpprest140d_2_10.lib
+    "${CPPRESTSDK_DIRECTORY}/debug/lib/cpprest_2_10d.lib"
   )
   set(CPPRESTSDK_FILES_RELEASE
-     ${CMAKE_CURRENT_SOURCE_DIR}/../cpprestsdk/Binaries/x64/Release/cpprest_2_10.lib
-  )
+     "${CPPRESTSDK_DIRECTORY}/lib/cpprest_2_10.lib"
+  )               
   
   add_definitions(-D_NO_ASYNCRTIMP -D_NO_PPLXIMP)   
   
-  target_link_libraries(${CEF_TARGET} general ${CPPRESTSDK_FILES} debug ${CPPRESTSDK_FILES_DEBUG} optimized ${CPPRESTSDK_FILES_RELEASE} ${FFMPEG_LIB_LOCATION} sqlite3 portaudio_static libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  # link all libraries
+  target_link_libraries(
+    ${CEF_TARGET} 
+    general ${CPPRESTSDK_FILES} 
+    debug ${CPPRESTSDK_FILES_DEBUG} 
+    optimized ${CPPRESTSDK_FILES_RELEASE} 
+    ${FFMPEG_LIB_LOCATION} 
+    sqlite3 
+    portaudio_static 
+    libcef_lib 
+    libcef_dll_wrapper 
+    ${CEF_STANDARD_LIBS}
+  )
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

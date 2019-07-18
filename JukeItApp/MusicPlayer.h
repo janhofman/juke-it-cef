@@ -7,13 +7,13 @@
 #include <functional>
 #include <vector>
 
-#include "cpprestsdk/include/cpprest/containerstream.h"
+#include "cpprest/containerstream.h"
 
 extern "C" {
-#include "ffmpeg/include/libavcodec/avcodec.h"
-#include "ffmpeg/include/libavutil/frame.h"
-#include "ffmpeg/include/libavutil/mem.h"
-#include "ffmpeg/include/libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+#include "libavutil/frame.h"
+#include "libavutil/mem.h"
+#include "libavformat/avformat.h"
 #include "portaudio/include/portaudio.h"
 }
 

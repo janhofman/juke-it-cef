@@ -7,7 +7,7 @@
 #include <vector>
 #include <fstream>
 
-#include "cpprestsdk/include/cpprest/json.h"
+#include "cpprest/json.h"
 #include "AudioInspector.h"
 
 extern "C" {

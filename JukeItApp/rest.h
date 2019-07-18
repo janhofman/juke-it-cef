@@ -1,14 +1,15 @@
 #ifndef REST_API_H_
 #define REST_API_H_
 
-#include "cpprestsdk/include/cpprest/json.h"
-#include "cpprestsdk/include/cpprest/http_listener.h"
-#include "cpprestsdk/include/cpprest/uri.h"
-#include "cpprestsdk/include/cpprest/asyncrt_utils.h"
-#include "cpprestsdk/include/pplx/pplxtasks.h"
-#include "cpprestsdk/include/cpprest/filestream.h"
-//#include "cpprestsdk/include/cpprest/containerstream.h"
-//#include "cpprestsdk/include/cpprest/producerconsumerstream.h"
+#include "cpprest/json.h"
+#include "cpprest/http_listener.h"
+#include "cpprest/uri.h"
+#include "cpprest/asyncrt_utils.h"
+#include "pplx/pplxtasks.h"
+#include "cpprest/filestream.h"
+
+//#include "cpprest/containerstream.h"
+//#include "cpprest/producerconsumerstream.h"
 
 #include "AbstractFileServerHandler.h"
 #include <exception>

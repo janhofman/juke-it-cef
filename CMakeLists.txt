@@ -191,6 +191,9 @@ find_package(CEF REQUIRED)
 # Define CEF-based targets.
 #
 
+# Set path to libraries so subdirectories can access it   
+set(JUKEIT_LIBRARIES_DIR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries")
+
 # Include the libcef_dll_wrapper target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.

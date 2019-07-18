@@ -4,8 +4,8 @@
 #include "AbstractFileServerHandler.h"
 #include "SqliteAPI.h"
 
-#include "cpprestsdk/include/cpprest/json.h"
-#include "cpprestsdk/include/cpprest/details/basic_types.h"
+#include "cpprest/json.h"
+#include "cpprest/details/basic_types.h"
 
 class FileServerHandler : public AbstractFileServerHandler {
 public:

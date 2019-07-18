@@ -3,7 +3,7 @@
 
 #define _TURN_OFF_PLATFORM_STRING // we need to turn this off, because the U() macro from cpprest it messes up some boost templates
 
-#include "cpprestsdk/include/cpprest/json.h"
+#include "cpprest/json.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
