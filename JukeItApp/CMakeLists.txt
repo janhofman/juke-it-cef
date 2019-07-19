@@ -280,6 +280,11 @@ if(OS_WINDOWS)
     # x86
     set(FFMPEG_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/ffmpeg/win32")
     set(CPPRESTSDK_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/cpprestsdk/win32")
+    # FFMPEG is built with SAFESEH:NO, we must propagate this further
+    SET(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS} /D \"SAFESEH:NO\"")
+    SET(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+    SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
   endif()
 
   #
@@ -304,7 +309,8 @@ if(OS_WINDOWS)
     bcrypt.lib
     crypt32.lib
     winhttp.lib
-    httpapi.lib
+    httpapi.lib       
+    "${CPPRESTSDK_DIRECTORY}/lib/zlib.lib"
   )
   set(CPPRESTSDK_FILES_DEBUG
     "${CPPRESTSDK_DIRECTORY}/debug/lib/cpprest_2_10d.lib"
@@ -337,8 +343,16 @@ if(OS_WINDOWS)
 
   # Add the custom manifest files to the executable.
   ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${CEF_TARGET}" "exe")
+  
+  set(FFMPEG_BINARY_FILES
+    avcodec-58.dll   
+    avutil-56.dll
+    avformat-58.dll       
+    swresample-3.dll
+  )      
 
   # Copy binary and resource files to the target output directory.
   COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
   COPY_FILES("${CEF_TARGET}" "${CEF_RESOURCE_FILES}" "${CEF_RESOURCE_DIR}" "${CEF_TARGET_OUT_DIR}")
+  COPY_FILES("${CEF_TARGET}" "${FFMPEG_BINARY_FILES}" "${FFMPEG_DIRECTORY}/bin" "${CEF_TARGET_OUT_DIR}")
 endif()

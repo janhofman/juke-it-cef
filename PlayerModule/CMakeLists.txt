@@ -87,6 +87,11 @@ if(OS_WINDOWS)
     # x86
     set(FFMPEG_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/ffmpeg/win32")
     set(CPPRESTSDK_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/cpprestsdk/win32")
+    # FFMPEG is built with SAFESEH:NO, we must propagate this further
+    SET(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS} /D \"SAFESEH:NO\"")
+    SET(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+    SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
   endif()
 
   #
@@ -110,8 +115,8 @@ if(OS_WINDOWS)
   set(CPPRESTSDK_FILES
     bcrypt.lib
     crypt32.lib
-    winhttp.lib
-    #httpapi.lib
+    winhttp.lib          
+    "${CPPRESTSDK_DIRECTORY}/lib/zlib.lib"
   )
   set(CPPRESTSDK_FILES_DEBUG
     "${CPPRESTSDK_DIRECTORY}/debug/lib/cpprest_2_10d.lib"
