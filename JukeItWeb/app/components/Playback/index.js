@@ -120,7 +120,6 @@ class Playback extends Component {
     const { formatMessage } = this.props.intl;
     const {
             playlist,
-            onSongDoubleClick,
             onSongRightClick,
             contextMenuOpen,
             contextMenuAnchor,

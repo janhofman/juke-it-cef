@@ -72,7 +72,7 @@ class Settings extends Component{
                             />
                             <StyledTextField
                                 floatingLabelText={formatMessage(messages.playerLocalPortLabel)}
-                                onChange={(event) => onPlayerLocalChange({port: event.target.value})}
+                                onChange={(event) => onPlayerLocalChange({port: Number(event.target.value)})}
                                 type={'number'}
                                 value={player.local.port}
                             />
@@ -99,7 +99,7 @@ class Settings extends Component{
                             />
                             <StyledTextField
                                 floatingLabelText={formatMessage(messages.playerRemotePortLabel)}
-                                onChange={(event) => onPlayerRemoteChange({port: event.target.value})}
+                                onChange={(event) => onPlayerRemoteChange({port: Number(event.target.value)})}
                                 type={'number'}
                                 value={player.remote.port}
                             />
@@ -128,7 +128,7 @@ class Settings extends Component{
                             />
                             <StyledTextField
                                 floatingLabelText={formatMessage(messages.fsLocalPortLabel)}
-                                onChange={(event) => onFsLocalChange({port: event.target.value})}
+                                onChange={(event) => onFsLocalChange({port: Number(event.target.value)})}
                                 type={'number'}
                                 value={fileServer.local.port}
                             />
@@ -155,9 +155,12 @@ class Settings extends Component{
                             />
                             <StyledTextField
                                 floatingLabelText={formatMessage(messages.fsRemotePortLabel)}
-                                onChange={(event) => onFsRemoteChange({port: event.target.value})}
+                                onChange={(event) => onFsRemoteChange({port: Number(event.target.value)})}
                                 type={'number'}
                                 value={fileServer.remote.port}
+                                min={1}
+                                max={65535}
+                                step={1}
                             />
                             <Toggle 
                                 label={formatMessage(messages.fsConnectOnStartLabel)}

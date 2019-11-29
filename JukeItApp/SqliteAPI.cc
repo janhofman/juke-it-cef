@@ -576,6 +576,7 @@ SqliteAPI::ErrorCode SqliteAPI::GetSongPath(const std::uint32_t songId, std::str
 //}
 
 sqlite3* SqliteAPI::GetDbHandle() {
+	std::lock_guard<std::mutex> guard(dbHandleMutex_);
 	if (!db_handle_) {
 		// first check if database file exists
 		if (!FileExists(database_name_)) {

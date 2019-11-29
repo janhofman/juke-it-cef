@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
+#include <mutex>
 
 #include "cpprest/json.h"
 #include "AudioInspector.h"
@@ -100,6 +101,7 @@ private:
 
 	bool FileExists(const std::string& filename);
 	sqlite3* GetDbHandle();
+	std::mutex dbHandleMutex_;
 	void CreateDatabase();
 	std::string TextFieldToString(const unsigned char *field);
 

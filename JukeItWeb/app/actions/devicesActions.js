@@ -244,7 +244,7 @@ export function loadPlayerSettings() {
 export function initialize() {
   return (dispatch) => {
     dispatch(initializeFileServer())
-      .then(dispatch(initializePlayer()));
+      .then(() => dispatch(initializePlayer()));
   }
 }
 

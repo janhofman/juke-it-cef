@@ -4,24 +4,24 @@ const initialState = {
       busy: false,
       running: false,
       hostname: 'localhost',
-      port: 26331,
+      port: 26341,
       error: null,
       connected: false,
     },
     remote: {
       hostname: '',
-      port: 26331,
+      port: 26341,
       connected: false,
     },
     connected: false,
-    baseAddress: 'http://localhost:26331/api/',
+    baseAddress: 'http://localhost:26341/api/',
   },
   player: {
     local: {
       busy: false,
       running: false,
       hostname: 'localhost',
-      port: 26341,
+      port: 26331,
       error: null,
     },
     remote: {

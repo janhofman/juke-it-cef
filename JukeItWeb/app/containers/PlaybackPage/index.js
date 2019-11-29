@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Playback from './../../components/Playback';
 import {
-    addToEndOfQueue,
     openContextMenu,
     closeContextMenu,
     removePlaylist,
@@ -34,9 +33,6 @@ class PlaybackPage extends Component {
     this.onSongRightClick = this.onSongRightClick.bind(this);
     this.addToPlaylistQueueOpt = this.addToPlaylistQueueOpt.bind(this);
     this.addToPriorityQueueOpt = this.addToPriorityQueueOpt.bind(this);
-  }
-  onSongDoubleClick(songId) {
-    this.props.dispatch(addToEndOfQueue(songId));
   }
 
   onSongRightClick({event, index, rowData}) {
@@ -115,7 +111,6 @@ class PlaybackPage extends Component {
     return (
       <Playback
         {...this.props}
-        onSongDoubleClick={this.onSongDoubleClick.bind(this)}
         onSongRightClick={this.onSongRightClick}
         addToPlaylistQueueOpt={this.addToPlaylistQueueOpt}
         addToPriorityQueueOpt={this.addToPriorityQueueOpt}

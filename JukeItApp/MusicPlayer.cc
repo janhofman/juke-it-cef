@@ -409,6 +409,7 @@ namespace MusicPlayer {
 		_streamInfo.io_context = avio_alloc_context(ioBuffer, ioBufferSize, 0, (void*)(&is), &readFunction, NULL, &seekFunction);
 		_streamInfo.ctx_format = avformat_alloc_context();
 		_streamInfo.ctx_format->pb = _streamInfo.io_context;
+		_streamInfo.ctx_format->flags &= AVFMT_FLAG_CUSTOM_IO; // we supplied custom IO
 		
 
 		if (int ret = avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL) != 0) {

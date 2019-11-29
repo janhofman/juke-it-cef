@@ -549,6 +549,7 @@ namespace MusicPlayer {
 
 		if (ec) {
 			fail(ec, "accept");
+			return;
 		}
 		else
 		{

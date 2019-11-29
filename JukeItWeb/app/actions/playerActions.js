@@ -474,6 +474,7 @@ export function connectToLocalPlayer() {
         url += hostname;
       }
       url += `:${port}`;
+
       dispatch(connect(url))
         .then(() => resolve())
         .catch((error) => reject(error));
@@ -561,6 +562,7 @@ function connect(address) {
         reject(ex);
       }
     } else {
+      console.log('Connect failed, address: ', address, ', baseAddress: ', baseAddress);
       reject(); // fileserver not connected
     }
   });

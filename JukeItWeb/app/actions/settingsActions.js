@@ -1,5 +1,5 @@
 import {
-    initialize as initilaizeDevices,
+    initialize as initializeDevices,
 } from './devicesActions';
 
 export function fsLocalChange(changes) {
@@ -74,12 +74,12 @@ export function load() {
                     dispatch(settingsLoaded(response.player, response.fileServer));
                 } catch (e) { console.log('Parsing settings failed. ', e) }
 
-                dispatch(initilaizeDevices());
+                dispatch(initializeDevices());
             },
             onFailure: (errorCode, errorMessage) => {
                 console.log("Loading settings failed. Code: ", errorCode, ", Message: ", errorMessage);
                 // dispatch initialization anyway, reducer defaults will be initialized
-                dispatch(initilaizeDevices());
+                dispatch(initializeDevices());
             }
         });        
     }

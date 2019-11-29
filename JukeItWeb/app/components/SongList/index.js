@@ -415,8 +415,7 @@ SongList.propTypes = {
   songs: PropTypes.arrayOf(PropTypes.object),
   loaded: PropTypes.bool.isRequired,
   playerConnected: PropTypes.bool.isRequired,
-  playAction: PropTypes.func,
-  onSongDoubleClick: PropTypes.func,
+  playAction: PropTypes.func
 };
 
 export default connect((store) => {
