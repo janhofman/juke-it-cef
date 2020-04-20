@@ -17,6 +17,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <thread>
 #include <unordered_map>
 
 namespace MusicPlayer {

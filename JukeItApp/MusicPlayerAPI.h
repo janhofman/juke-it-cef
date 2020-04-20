@@ -16,6 +16,7 @@
 #include <string>
 #include <queue>
 #include <mutex>
+#include <thread>
 
 #include "MusicPlayer.h"
 #include "SongCache.h"

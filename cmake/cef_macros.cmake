@@ -287,9 +287,12 @@ endmacro()
 # SET_EXECUTABLE_TARGET_PROPERTIES() instead of calling this macro directly.
 macro(SET_COMMON_TARGET_PROPERTIES target)
   # Compile flags.
-  target_compile_options(${target} PRIVATE ${CEF_COMPILER_FLAGS} ${CEF_CXX_COMPILER_FLAGS})
-  target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_CXX_COMPILER_FLAGS_DEBUG}>)
-  target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_CXX_COMPILER_FLAGS_RELEASE}>)
+  target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CEF_COMPILER_FLAGS} ${CEF_CXX_COMPILER_FLAGS}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_CXX_COMPILER_FLAGS_DEBUG}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_CXX_COMPILER_FLAGS_RELEASE}>)
+  target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:C>:${CEF_COMPILER_FLAGS} ${CEF_C_COMPILER_FLAGS}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_C_COMPILER_FLAGS_DEBUG}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_C_COMPILER_FLAGS_RELEASE}>)
 
   # Compile definitions.
   target_compile_definitions(${target} PRIVATE ${CEF_COMPILER_DEFINES})

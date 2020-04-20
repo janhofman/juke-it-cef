@@ -76,7 +76,7 @@ namespace MusicPlayer {
 		{
 			int i, ch;
 			int ret, data_size;
-			int rtc = 0;
+			size_t rtc = 0;
 			uint8_t *out = outbuffer;
 			// resolve our data size
 			data_size = av_get_bytes_per_sample(streamInfo->ctx_codec->sample_fmt);
@@ -154,7 +154,7 @@ namespace MusicPlayer {
 			}
 			*bufferEnd = out;
 			// return number of processed frames
-			return rtc;
+			return (int)rtc;
 		}		
 
 		static int PaCallback(const void *inputBuffer, void *outputBuffer,
@@ -217,7 +217,7 @@ namespace MusicPlayer {
 			Close();
 		}
 
-		if (int ret = avformat_open_input(&_streamInfo.ctx_format, filename.c_str(), nullptr, nullptr) != 0) {
+		if (avformat_open_input(&_streamInfo.ctx_format, filename.c_str(), nullptr, nullptr) != 0) {
 			return;
 		}
 		if (avformat_find_stream_info(_streamInfo.ctx_format, nullptr) < 0) {
@@ -412,7 +412,7 @@ namespace MusicPlayer {
 		_streamInfo.ctx_format->flags &= AVFMT_FLAG_CUSTOM_IO; // we supplied custom IO
 		
 
-		if (int ret = avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL) != 0) {
+		if (avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL) != 0) {
 			return;
 		}
 		if (avformat_find_stream_info(_streamInfo.ctx_format, nullptr) < 0) {

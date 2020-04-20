@@ -23,10 +23,6 @@ bool MsgHandler_Configuration::OnQuery(CefRefPtr<CefBrowser> browser,
 	}
 	CommandName command = GetCommandName(requestJSON);
 
-	if (command == CommandName::NOT_SUPPORTED) {
-		return false;
-	}
-
 	switch (command) {
 	case CommandName::GET_CONFIG: {
 		GetConfig(callback);
@@ -36,6 +32,8 @@ bool MsgHandler_Configuration::OnQuery(CefRefPtr<CefBrowser> browser,
 		SaveConfig(requestJSON, callback);
 		return true;
 	}
+	default:
+		return false;
 	}
 	return false;
 }
@@ -111,7 +109,7 @@ void MsgHandler_Configuration::SaveConfig(web::json::value request, CefRefPtr<Ca
 
 			web::json::value response;
 			response[utility::conversions::to_string_t("result")] = web::json::value::number(0);
-			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
 		}
 	}
 	callback->Failure(12, "Malformed request");
@@ -125,7 +123,7 @@ void MsgHandler_Configuration::GetConfig(CefRefPtr<Callback> callback) {
 		settingsLoaded_ = true;
 	}
 
-	callback->Success(utility::conversions::to_utf8string(settings_.ToJSON().to_string()));
+	callback->Success(utility::conversions::to_utf8string(settings_.ToJSON().serialize()));
 }
 
 web::json::value MsgHandler_Configuration::Settings::ToJSON() {

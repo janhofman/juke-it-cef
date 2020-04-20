@@ -5,7 +5,7 @@
 ### Prerequisities
 1. CMake 3.0 or higher ([download](https://cmake.org/download/))
 2. NodeJS 8.0 or higher ([download](https://nodejs.org/en/download/))
-3.  Visual Studio 2017 or newer ([download](https://visualstudio.microsoft.com/downloads/))
+3. Visual Studio 2017 or newer ([download](https://visualstudio.microsoft.com/downloads/))
 4. Boost v 1.67 with pre-built binaries ([link](https://www.boost.org/doc/libs/1_67_0/more/getting_started/windows.html))
 
 To build boost libraries, follow these steps
@@ -16,7 +16,7 @@ To build boost libraries, follow these steps
 5. From the command line, navigate to unpacked directory and run following commands:
   `bootstrap`
   `.\b2 --build-dir=build-directory toolset=toolset-name --build-type=complete stage --with-system --with-date_time`, where build-directory is a temporary directory for intermediate build files and toolset-name is name of build tool (use msvc for building with Visual Studio)
-Refer to the Get started manual available via Boost link in case of assitional questions.
+Refer to the Get started manual available via Boost link in case of additional questions.
 
 ### Cloning and setting up working directory
 1. Clone the repository
@@ -47,3 +47,15 @@ Refer to the Get started manual available via Boost link in case of assitional q
 3. In Debug environment, the web application supports hot reloading on code changes. To run hot reload server during debugging, run `npm start`
 4. To build the web application in Release environment,  run `npm run build`. After that, copy 'build' directory into root directory of built Release version of JukeIt App and rename it to 'app'
     * `xcopy build ..\build\JukeItApp\Release\app\ /E /Q`
+
+
+---------------
+Linux
+apt-get build-essential //gcc
+install openssh // https://cloudwafer.com/blog/installing-openssl-on-ubuntu-16-04-18-04/
+download cmake, 
+run ./bootstrap -- -DCMAKE_BUILD_TYPE:STRING=Release -DOPENSSL_ROOT_DIR=/usr/local/ssl -DOPENSSL_LIBRARIES=/usr/local/ssl/lib
+    make
+    sudo make install
+sudo ./b2 install --build-dir=~/Downloads/boost_build toolset=gcc --build-type=complete stage --with-system --with-date_time --layout=versioned --prefix=/usr/
+

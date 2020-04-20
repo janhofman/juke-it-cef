@@ -447,7 +447,7 @@ void FileServerAPI::v1_Playlists_Create(web::http::http_request message, const s
 				Reply(message, web::http::status_codes::BadRequest);
 			}
 		}
-		catch (std::exception) {
+		catch (std::exception&) {
 			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
@@ -497,7 +497,7 @@ void FileServerAPI::v1_Playlist_Modify(web::http::http_request message, const st
 				Reply(message, web::http::status_codes::BadRequest);
 			}			
 		}
-		catch (std::exception) {
+		catch (std::exception&) {
 			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
@@ -513,7 +513,7 @@ void FileServerAPI::v1_Playlist_Delete(web::http::http_request message, const st
 			auto rtc = fsHandler_->v1_Playlist_Delete(userId, playlistId);
 			Reply(message, MapStatusCode(rtc));			
 		}
-		catch (std::exception) {
+		catch (std::exception&) {
 			Reply(message, web::http::status_codes::InternalError);
 		}
 	});
@@ -578,7 +578,7 @@ void FileServerAPI::v1_PlaylistSongs_Modify(web::http::http_request message, con
 				Reply(message, web::http::status_codes::BadRequest);
 			}
 		}
-		catch (std::exception) {
+		catch (std::exception&) {
 			Reply(message, web::http::status_codes::InternalError);
 		}
 	});

@@ -55,10 +55,6 @@ bool MsgHandler_MusicPlayer::OnQuery(CefRefPtr<CefBrowser> browser,
 	}
 	CommandName command = GetCommandName(requestJSON);
 
-	if (command == CommandName::NOT_SUPPORTED) {
-		return false;
-	}
-
 	switch (command) {
 	case CommandName::OPEN_PLAYER: {
 		OpenPlayer(requestJSON, callback);
@@ -68,6 +64,8 @@ bool MsgHandler_MusicPlayer::OnQuery(CefRefPtr<CefBrowser> browser,
 		ClosePlayer(callback);
 		return true;
 	}
+	default: 
+		return false;
 	}
 	return false;
 }
@@ -122,7 +120,7 @@ void MsgHandler_MusicPlayer::OpenPlayer(web::json::value request, CefRefPtr<Call
 			response[utility::conversions::to_string_t("status")] = web::json::value::number(0);			
 			response[utility::conversions::to_string_t("address")] = web::json::value::string(utility::conversions::to_string_t(playerApi_->GetAddress()));
 
-			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
 		}
 	}
 	callback->Failure(12, "Malformed request");
@@ -140,7 +138,7 @@ void MsgHandler_MusicPlayer::ClosePlayer(CefRefPtr<Callback> callback) {
 
 	web::json::value response;
 	response[utility::conversions::to_string_t("status")] = web::json::value::number(0);
-	callback->Success(utility::conversions::to_utf8string(response.to_string()));
+	callback->Success(utility::conversions::to_utf8string(response.serialize()));
 }
 
 

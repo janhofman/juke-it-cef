@@ -25,7 +25,7 @@ bool AudioInspector::GetMetadata(const char * filename, SongMetadata *song) {
 				auto metadata = ctx_format->metadata;
 				int size = av_dict_count(metadata);
 				AVDictionaryEntry *val = NULL;
-				for (size_t i = 0; i < size; i++)
+				for (int i = 0; i < size; i++)
 				{
 					val = av_dict_get(metadata, "", val, AV_DICT_IGNORE_SUFFIX);
 					if (title && CompareStringIgnoreCase(val->key, "title")) {
@@ -51,7 +51,7 @@ bool AudioInspector::GetMetadata(const char * filename, SongMetadata *song) {
 					metadata = aud_stream->metadata;
 					size = av_dict_count(metadata);
 					val = NULL;
-					for (size_t i = 0; i < size; i++)
+					for (int i = 0; i < size; i++)
 					{
 						val = av_dict_get(metadata, "", val, AV_DICT_IGNORE_SUFFIX);
 						if (title && CompareStringIgnoreCase(val->key, "title")) {
@@ -78,7 +78,7 @@ bool AudioInspector::GetMetadata(const char * filename, SongMetadata *song) {
 
 				// if we didn't get title, try to get it from filename
 				if (song->title.size() == 0) {
-					std::experimental::filesystem::path path(filename);
+					std::filesystem::path path(filename);
 					auto name = path.stem();
 					song->title = name.string();
 				}

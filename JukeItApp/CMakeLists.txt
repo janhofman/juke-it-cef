@@ -74,9 +74,9 @@ set(CEF_SRCS
 
 set(CEF_SRCS_LINUX
   cefsimple_linux.cc
-  simple_handler_linux.cc
   client_util_linux.cc
   resource_util_linux.cc
+  resource_util_posix.cc
   )
 set(CEF_SRCS_MACOSX
   cefsimple_mac.mm
@@ -166,16 +166,70 @@ SET_CEF_TARGET_OUT_DIR()
 #
 
 if(OS_LINUX)
+  # find Boost and include it
+  set(Boost_USE_STATIC_LIBS OFF) 
+  set(Boost_USE_MULTITHREADED ON)  
+  set(Boost_USE_STATIC_RUNTIME OFF) 
+  find_package(Boost 1.67.0) 
+  
+  if(Boost_FOUND)
+      include_directories(${Boost_INCLUDE_DIRS})   
+      link_directories(${Boost_LIBRARY_DIRS})
+  endif()
+
+  # find FFmpeg and include it
+  find_package(FFMPEG REQUIRED) 
+  
+  if(FFMPEG_FOUND)
+      include_directories(${FFMPEG_INCLUDE_DIRS})   
+      link_directories(${FFMPEG_LIBRARIES})
+      message(STATUS "FFMPEG DEFINITIONS:                     ${FFMPEG_DEFINITIONS}")  
+  endif()
+
+  set(FFMPEG_LINK_LIBRARIES
+    ${AVCODEC_LIBRARIES}
+    ${AVUTIL_LIBRARIES}
+    ${AVFORMAT_LIBRARIES}
+  )  
+
+  # find CPPRESTSDK
+  set(cpprestsdk_DIR /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/cmake/)
+  message(STATUS "CPP REST SDK DIRECTORY:   ${cpprestsdk_DIR}")  
+  find_package(cpprestsdk REQUIRED)
+
+  list(APPEND CEF_COMPILER_FLAGS
+    -Wno-error=maybe-uninitialized           # don't treat this warning as error, causes false positives on gcc
+    -Wno-error=format-security               # don't treat error output formatting as errors
+    -Wno-error=unused-but-set-variable       # unfinished return values
+    -Wno-error=format-overflow               # tinyfiledialogs sprintf errors
+    -Wno-error=parentheses                   # boost library issues
+    )
+
   # Executable target.
   add_executable(${CEF_TARGET} ${JUKEITAPP_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
+  target_link_libraries(
+    ${CEF_TARGET}
+    PRIVATE boost_system
+    PRIVATE cpprestsdk::cpprest
+    sqlite3 
+    portaudio_static
+    ${FFMPEG_LINK_LIBRARIES} 
+    libcef_lib
+    libcef_dll_wrapper
+    ${CEF_STANDARD_LIBS}
+    ${CMAKE_DL_LIBS} # dynamic linking
+    stdc++fs # filesystem library
+  )
 
   # Set rpath so that libraries can be placed next to the executable.
   set_target_properties(${CEF_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
   set_target_properties(${CEF_TARGET} PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
   set_target_properties(${CEF_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CEF_TARGET_OUT_DIR})
+
+  # Force using C++ 17
+  set_target_properties(${CEF_TARGET} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
   # Copy binary and resource files to the target output directory.
   COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")

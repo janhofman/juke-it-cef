@@ -1,5 +1,5 @@
 #include "app_browser_impl.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include <algorithm>
 
 namespace message_router {
@@ -14,7 +14,7 @@ namespace message_router {
 #if _DEBUG
 		return std::string("http://localhost:3000");
 #else
-		auto current = std::experimental::filesystem::current_path();
+		auto current = std::filesystem::current_path();
 		auto index = current.append("app").append("index.html").string();
 		std::replace(index.begin(), index.end(), '\\', '/');
 		return std::string("file:///") + index;

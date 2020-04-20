@@ -67,10 +67,6 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 	}
 	CommandName command = GetCommandName(requestJSON);
 
-	if (command == CommandName::NOT_SUPPORTED) {
-		return false;
-	}
-
 	switch (command) {
 	case CommandName::OPEN_SERVER: {
 		OpenServer(requestJSON, callback);
@@ -87,6 +83,8 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 	case CommandName::REMOVE_FILES: {
 		RemoveFiles(requestJSON, callback);
 		return true;
+	default:
+		return false;
 	}
 
 	}
@@ -138,7 +136,7 @@ void MsgHandler_FileServer::OpenServer(web::json::value request, CefRefPtr<Callb
 						response[U("status")] = web::json::value::number(0);
 						response[U("address")] = web::json::value::string(fileserver_->GetAddress());
 
-						callback->Success(utility::conversions::to_utf8string(response.to_string()));
+						callback->Success(utility::conversions::to_utf8string(response.serialize()));
 					}
 					catch (...)
 					{						
@@ -176,7 +174,7 @@ void MsgHandler_FileServer::CloseServer(CefRefPtr<Callback> callback) {
 					web::json::value response;
 					response[U("status")] = web::json::value::number(0);
 
-					callback->Success(utility::conversions::to_utf8string(response.to_string()));
+					callback->Success(utility::conversions::to_utf8string(response.serialize()));
 				}
 				catch (...)
 				{
@@ -188,7 +186,7 @@ void MsgHandler_FileServer::CloseServer(CefRefPtr<Callback> callback) {
 			web::json::value response;
 			response[U("status")] = web::json::value::number(0);
 
-			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
 		}
 	});
 }
@@ -203,7 +201,7 @@ void MsgHandler_FileServer::AddFiles(CefRefPtr<Callback> callback) {
 			web::json::value response;
 			response[U("status")] = web::json::value::number(0);
 
-			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
 		}
 		catch (...) {
 			callback->Failure(123, "Adding files failed");
@@ -238,7 +236,7 @@ void MsgHandler_FileServer::RemoveFiles(web::json::value request, CefRefPtr<Call
 			web::json::value response;
 			response[U("status")] = web::json::value::number(0);
 
-			callback->Success(utility::conversions::to_utf8string(response.to_string()));
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
 		}
 		catch (...) {
 			callback->Failure(124, "Removing files failed");
