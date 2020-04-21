@@ -389,7 +389,7 @@ if(OS_WINDOWS)
     WINVER=0x0601 _WIN32_WINNT=0x601  # Targeting Windows 7
     NOMINMAX                          # Use the standard's templated min/max
     WIN32_LEAN_AND_MEAN               # Exclude less common API declarations
-    _HAS_EXCEPTIONS=0                 # Disable exceptions
+    #_HAS_EXCEPTIONS=0                 # Disable exceptions
     )
   list(APPEND CEF_COMPILER_DEFINES_RELEASE
     NDEBUG _NDEBUG                    # Not a debug build

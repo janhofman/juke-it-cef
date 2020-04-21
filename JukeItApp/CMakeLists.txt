@@ -321,6 +321,7 @@ if(OS_WINDOWS)
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
+  set_target_properties(${CEF_TARGET} PROPERTIES CXX_STANDARD 17)
   
   #
   # set differences for x64 / x86

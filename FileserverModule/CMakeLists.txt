@@ -45,6 +45,7 @@ if(OS_WINDOWS)
   # Executable target
   #    
   add_executable(${TARGET} WIN32 ${FILESERVER_SRCS})
+  set_target_properties(${TARGET} PROPERTIES CXX_STANDARD 17)
   
   set(FS_COMPILER_FLAGS_DEBUG
     /MTd          # Multithreaded debug runtime  

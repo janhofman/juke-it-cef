@@ -19,6 +19,7 @@
 #include <vector>
 #include <thread>
 #include <unordered_map>
+#include <exception>
 
 namespace MusicPlayer {
 	typedef Concurrency::streams::container_buffer<std::vector<uint8_t>> AsyncBuffer;

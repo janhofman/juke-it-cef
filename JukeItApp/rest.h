@@ -15,6 +15,7 @@
 #include <exception>
 #include <string>
 #include <tuple>
+#include <filesystem>
 
 class FileServerAPI
 {

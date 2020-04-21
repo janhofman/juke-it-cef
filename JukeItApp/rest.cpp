@@ -592,27 +592,32 @@ void FileServerAPI::v1_GetSong(web::http::http_request message, const std::vecto
 		auto rtc = fsHandler_->v1_GetSong(songId, songPath);
 
 		if (rtc == AbstractFileServerHandler::ResponseCode::CODE_200_OK) {
-			auto filePath = utility::conversions::to_string_t(songPath);
-			concurrency::streams::fstream::open_istream(filePath, std::ios::in).then([=](concurrency::streams::istream is)
-			{
-				is.seek(0, std::ios::end);
-				auto length = is.tell();
-				is.seek(0, std::ios::beg);
+			if (std::filesystem::exists(songPath)) {
+				auto filePath = utility::conversions::to_string_t(songPath);
+				concurrency::streams::fstream::open_istream(filePath, std::ios::in).then([=](concurrency::streams::istream is)
+				{
+					is.seek(0, std::ios::end);
+					auto length = is.tell();
+					is.seek(0, std::ios::beg);
 
-				message.reply(web::http::status_codes::OK, is, length, U("application/octet-stream"));
-			}).then([=](pplx::task<void> t)
-			{
-				try
+					message.reply(web::http::status_codes::OK, is, length, U("application/octet-stream"));
+				}).then([=](pplx::task<void> t)
 				{
-					t.get();
-				}
-				catch (...)
-				{
-					// opening the file (open_istream) failed.
-					// Reply with an error.
-					Reply(message, web::http::status_codes::InternalError);
-				}
-			});
+					try
+					{
+						t.get();
+					}
+					catch (...)
+					{
+						// opening the file (open_istream) failed.
+						// Reply with an error.
+						Reply(message, web::http::status_codes::InternalError);
+					}
+				});
+			}
+			else {
+				Reply(message, web::http::status_codes::NotFound);
+			}
 		}
 		else {
 			Reply(message, MapStatusCode(rtc));

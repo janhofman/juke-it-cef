@@ -13,12 +13,14 @@ namespace MusicPlayer {
 		auto path = String_t("/v1/download/songs/" + songId);
 		auto task = httpClient_.request(web::http::methods::GET, path)
 			.then([=](web::http::http_response response) {
+			web::http::http_response response;
+			
 			if (response.status_code() == web::http::status_codes::OK) {
 				return response.body().read_to_end(songPtr->GetBuffer());
 			}
 			else {
 				// TODO: throw an exception
-				throw (int)response.status_code();
+				throw std::exception();
 			}
 		}).then([=](pplx::task<size_t> t) {
 			try {
@@ -33,7 +35,7 @@ namespace MusicPlayer {
 					songPtr->MakeReady();
 				}
 			}
-			catch (...) {
+			catch (const std::exception&) {
 				songPtr->Fail();
 			}
 		});
@@ -158,7 +160,7 @@ namespace MusicPlayer {
 	}
 
 	void SongCache::UpdateCache() {
-		// check first three elements and verfy that they are being cached
+		// check first three elements and verify that they are being cached
 		for (size_t i = 0; i < queue_.size() && i < 3; i++)
 		{
 			auto it = cache_.find(queue_[i].itemId);
