@@ -3,6 +3,7 @@
 
 #define _TURN_OFF_PLATFORM_STRING
 
+#include <filesystem>
 #include <unordered_map>
 #include <vector>
 #include <fstream>
@@ -67,23 +68,31 @@ public:
 		std::string userId;
 	} PlaylistResult;
 
+	// web interface methods
 	ErrorCode SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SongResult>& result);
 	ErrorCode AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<AlbumResult>& result);
 	ErrorCode Artist(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<ArtistResult>& result);
 	ErrorCode Genres(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<GenreResult>& result);
-	ErrorCode Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<PlaylistResult>& result);
-	void AddFiles();
-	void RemoveFiles(const std::vector<std::string>& remove);
-	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
+	ErrorCode Playlists(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<PlaylistResult>& result);	
 	ErrorCode AddPlaylist(const std::string& userId, const std::string& name, const std::string& description, PlaylistResult& result);
 	ErrorCode ModifyPlaylist(const PlaylistResult& changes, bool nameChange, bool descriptionChange, PlaylistResult& result);
 	ErrorCode RemovePlaylist(const std::uint32_t playlistId, const std::string& userId);
 	ErrorCode ModifyPlaylistSongs(std::uint32_t playlistId, const std::string& userId, std::vector<std::uint32_t>& add, std::vector<std::uint32_t>& remove);
 	ErrorCode GetSongPath(const std::uint32_t songId, std::string& path);
+	
 
 	ErrorCode BeginTransaction();
 	ErrorCode CommitTransaction();
 	ErrorCode RollbackTransaction();
+
+	// management interface methods
+	void AddFiles();
+	void RemoveFiles(const std::vector<std::string>& remove);
+	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
+	void RunFileAvailiabilityCheck();
+	bool HasNotFoundFiles();
+
+
 
 	static const char * FILTER_PARAM;
 	static const char * ORDERBY_PARAM;
@@ -97,9 +106,8 @@ public:
 private:	
 	ErrorCode AddSongsToPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& add);
 	ErrorCode RemoveSongsFromPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& remove);
+	void SetSongNotFound(const bool notFound, const std::uint32_t songId);	 
 
-
-	bool FileExists(const std::string& filename);
 	sqlite3* GetDbHandle();
 	std::mutex dbHandleMutex_;
 	void CreateDatabase();

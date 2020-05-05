@@ -3,6 +3,7 @@ import FlatButton from 'material-ui/FlatButton';
 import { injectIntl } from 'react-intl';
 import { Switch, Route, Link } from 'react-router-dom';
 import CancelIcon from 'material-ui/svg-icons/navigation/cancel';
+import Snackbar from 'material-ui/Snackbar';
 import messages from './messages';
 import PlayerStrip from '../../containers/PlayerStrip';
 import OrangeDivider from './../OrangeDivider';
@@ -30,6 +31,9 @@ class Home extends Component {
       location: { 
         pathname,
       },
+      notificationMsg,
+      notificationOpen,
+      onSnackbarRequestClose,
     } = this.props;
 
     const establishmentPath = match.url;
@@ -95,6 +99,12 @@ class Home extends Component {
           </Switch>
         </div>
         <PlayerStrip height={ '50px' }/>
+        <Snackbar
+          open={notificationOpen}
+          message={notificationMsg}
+          autoHideDuration={5000}
+          onRequestClose={onSnackbarRequestClose}
+        />
       </div>
     );
   }

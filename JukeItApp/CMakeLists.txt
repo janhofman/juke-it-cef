@@ -45,6 +45,8 @@ set(MSGHANDLER_SRCS
   MsgHandler_MusicPlayer.cc
   MsgHandler_Configuration.h
   MsgHandler_Configuration.cc
+  MsgHandler_WebLogger.h
+  MsgHandler_WebLogger.cc
   )   
   
 source_group("JukeItApp\\\\Message Handlers" FILES ${MSGHANDLER_SRCS})
@@ -319,7 +321,7 @@ if(OS_WINDOWS)
   endif()
   
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3)
+  add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3 spdlog)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   set_target_properties(${CEF_TARGET} PROPERTIES CXX_STANDARD 17)
   
@@ -385,6 +387,7 @@ if(OS_WINDOWS)
     ${FFMPEG_LIB_LOCATION} 
     sqlite3 
     portaudio_static 
+    spdlog::spdlog_header_only
     libcef_lib 
     libcef_dll_wrapper 
     ${CEF_STANDARD_LIBS}

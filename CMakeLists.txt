@@ -211,6 +211,7 @@ add_subdirectory(sqlite3)
 add_subdirectory(portaudio)
 add_subdirectory(PlayerModule)  
 add_subdirectory(FileserverModule)
+add_subdirectory(spdlog)
 
 
 # Display configuration settings.

@@ -38,6 +38,9 @@ namespace message_router {
 
 			config_handler.reset(new MsgHandler_Configuration(startup_url_));
 			message_router_->AddHandler(config_handler.get(), false);
+
+			webLogger_handler.reset(new MsgHandler_WebLogger(startup_url_));
+			message_router_->AddHandler(webLogger_handler.get(), false);
 		}
 
 		browser_ct_++;
@@ -59,10 +62,12 @@ namespace message_router {
 			message_router_->RemoveHandler(fileserver_handler.get());
 			message_router_->RemoveHandler(musicplayer_handler.get());
 			message_router_->RemoveHandler(config_handler.get());
+			message_router_->RemoveHandler(webLogger_handler.get());
 			 
 			fileserver_handler.reset();
 			musicplayer_handler.reset();
 			config_handler.reset();
+			webLogger_handler.reset();
 			message_router_ = NULL;
 		}
 

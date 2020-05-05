@@ -11,6 +11,7 @@
 #include "MsgHandler_FileServer.h"
 #include "MsgHandler_MusicPlayer.h"
 #include "MsgHandler_Configuration.h"
+#include "MsgHandler_WebLogger.h"
 
 namespace message_router {
 
@@ -70,6 +71,7 @@ namespace message_router {
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> fileserver_handler;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> musicplayer_handler;
 		scoped_ptr<CefMessageRouterBrowserSide::Handler> config_handler;
+		scoped_ptr<CefMessageRouterBrowserSide::Handler> webLogger_handler;
 
 		const CefString startup_url_;
 

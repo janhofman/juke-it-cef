@@ -8,6 +8,8 @@
 
 #include "include/cef_sandbox_win.h"
 
+#include "spdlog/spdlog.h"
+
 #include "app_factory.h"
 #include "client_manager.h"
 #include "main_util.h"
@@ -84,6 +86,9 @@ namespace shared {
 
 		// Shut down CEF.
 		CefShutdown();
+
+		// shut down logger
+		spdlog::shutdown();
 
 		return 0;
 	}

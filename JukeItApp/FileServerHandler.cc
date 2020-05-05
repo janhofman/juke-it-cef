@@ -533,13 +533,15 @@ bool FileServerHandler::TryParseUint(const std::string& str, std::uint32_t& resu
 }
 
 FileServerHandler::ResponseCode FileServerHandler::MapErrorCode(SqliteAPI::ErrorCode errCode) {
-	// TODO: fill properly
-	if (errCode == SqliteAPI::ErrorCode::OK) {
+	switch (errCode)
+	{
+	case SqliteAPI::ErrorCode::OK:
 		return ResponseCode::CODE_200_OK;
-	}
-	else {
+	case SqliteAPI::ErrorCode::NOT_FOUND:
+		return ResponseCode::CODE_404_NOT_FOUND;
+	default:
 		return ResponseCode::CODE_500_INTERNAL_SERVER_ERROR;
-	}
+	}	
 }
 
 

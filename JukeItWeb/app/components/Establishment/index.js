@@ -1,8 +1,12 @@
-// @flow
 import React, { Component } from 'react';
 import { injectIntl } from 'react-intl';
+import IconButton from 'material-ui/IconButton';
+import EditIcon from 'material-ui/svg-icons/editor/mode-edit';
+import CheckIcon from 'material-ui/svg-icons/navigation/check';
+import CancelIcon from 'material-ui/svg-icons/navigation/close';
 import ScrollPane from './../../containers/ScrollPane';
 import TileGrid from './../../containers/TileGrid';
+import StyledTextField from './../StyledTextField';
 import Star from './../Star';
 import Widget from './../Widget';
 import OrangeDivider from './../OrangeDivider';
@@ -38,19 +42,42 @@ const styles = {
   },
   yellow: {
     color: '#FFA3B6',
-  },
+  },  
   title: {
     fontSize: '1.5em',
     margin: '0.2em 0',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  descriptionPar: {
+    whiteSpace: 'pre-wrap',
   },
 };
 
 class Establishment extends Component {
-
   render() {
-    const { formatMessage } = this.props.intl;
-    const { spot, user, auth } = this.props;
-        // prepare widgets
+    const { 
+      spot, 
+      user,
+      auth,
+      editingName,
+      editedNameValue,      
+      editingDescription,
+      editedDescriptionValue,
+      onBtnEditDescriptionClick,
+      onBtnCancelEditDescriptionClick,
+      onBtnChangeDescriptionClick,
+      onDescriptionValueChange,
+      onBtnEditNameClick,
+      onBtnCancelEditNameClick,
+      onBtnChangeNameClick,
+      onNameValueChange,
+      intl: {
+        formatMessage,
+      },
+    } = this.props;
+    // prepare widgets
     const widgets = [];
     widgets.push({
       title: formatMessage(messages.address),
@@ -64,30 +91,106 @@ class Establishment extends Component {
     return (
       <ScrollPane>
         <div style={styles.wrapper}>
-          <div style={styles.widgets}>
-            <p style={styles.title}>{spot.name}</p>
+          <div style={styles.widgets}>            
+            {
+              editingName
+              ? (
+                <div style={styles.title}>
+                  <div style= {{flexGrow: 1}}> 
+                  <StyledTextField                    
+                    value={editedNameValue}
+                    onChange={onNameValueChange}
+                    floatingLabelText={formatMessage(messages.tbEditNameLbl)}
+                    errorText={editedNameValue.length === 0 ? formatMessage(messages.tbEditNameEmptyErr) : null}                    
+                  />
+                  </div>
+                  <div style= {{flexGrow: 0}}>
+                    <IconButton
+                      onTouchTap={onBtnChangeNameClick}
+                      disabled={editedNameValue.length === 0}
+                    >
+                      <CheckIcon/>
+                    </IconButton>
+                    <IconButton
+                      onTouchTap={onBtnCancelEditNameClick}
+                    >
+                      <CancelIcon/>
+                    </IconButton>
+                  </div>
+                </div>
+              )
+              : (
+                <div style={styles.title}>
+                  {spot.name}
+                  <IconButton
+                  onTouchTap={onBtnEditNameClick}
+                  >
+                    <EditIcon/>
+                  </IconButton>
+                </div>
+              )
+            }
             <OrangeDivider />
             <TileGrid>
               {
-                                widgets.map((widget, idx) =>
-                                    (
-                                      <Widget
-                                        title={widget.title}
-                                        items={widget.items}
-                                        key={idx}
-                                      />
-                                    ))
-                            }
+                widgets.map((widget, idx) =>
+                    (
+                      <Widget
+                        title={widget.title}
+                        items={widget.items}
+                        key={idx}
+                      />
+                    ))
+            }
             </TileGrid>
           </div>
           <div style={styles.description}>
-            <p style={styles.title}>
+            <div style={styles.title}>
               {formatMessage(messages.description)}
-            </p>
+              {
+                editingDescription
+                ? (
+                  <div>
+                    <IconButton
+                      onTouchTap={onBtnChangeDescriptionClick}
+                    >
+                      <CheckIcon/>
+                    </IconButton>
+                    <IconButton
+                      onTouchTap={onBtnCancelEditDescriptionClick}
+                    >
+                      <CancelIcon/>
+                    </IconButton>
+                  </div>
+                )
+                : (
+                  <IconButton
+                    onTouchTap={onBtnEditDescriptionClick}
+                  >
+                    <EditIcon/>
+                  </IconButton>
+                )
+              }      
+            </div>
             <OrangeDivider />
-            <p>
-              {spot.description}
-            </p>
+            {
+              editingDescription
+              ? (
+                <StyledTextField
+                  value={editedDescriptionValue}
+                  onChange={onDescriptionValueChange}
+                  floatingLabelText={formatMessage(messages.tbEditDescriptionLbl)}
+                  multiLine={true}
+                  rowsMax={20}
+                />
+              )
+              : (
+                <p style= {styles.descriptionPar}>
+                  {spot.description}
+                </p>                
+              )
+            }
+            
             <p style={styles.title}>
               {formatMessage(messages.image)}
             </p>
@@ -102,4 +205,4 @@ class Establishment extends Component {
   }
 }
 
-export default injectIntl(Establishment);
+export default Establishment;

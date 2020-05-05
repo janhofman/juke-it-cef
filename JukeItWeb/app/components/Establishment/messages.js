@@ -16,5 +16,22 @@ export default defineMessages({
   image: {
       id: 'Establishment.image',
       defaultMessage: 'Cover Image',
-  },      
+  },
+  tbEditNameLbl: {
+    id: 'Establishment.tbEditNameLbl',
+    defaultMessage: 'Edit name',
+  },   
+  tbEditNamePlaceholder: {
+    id: 'Establishment.tbEditNamePlaceholder',
+    defaultMessage: 'Enter new name',
+  }, 
+  tbEditNameEmptyErr: {
+    id: 'Establishment.tbEditNameEmptyErr',
+    defaultMessage: 'Name cannot be empty',
+  }, 
+  tbEditDescriptionLbl: {
+    id: 'Establishment.tbEditDescriptionLbl',
+    defaultMessage: 'Edit description',
+  },    
+  
 });

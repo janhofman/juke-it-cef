@@ -15,6 +15,7 @@ import songList from './songListReducer';
 import playlists from './playlistsReducer';
 import devices from './devicesReducer';
 import settings from './settingsReducer';
+import eventLog from './eventLogReducer'
 import languageProviderReducer from './../containers/LanguageProvider/reducer';
 
 /*
@@ -61,6 +62,7 @@ export default function createReducer(injectedReducers) {
     playlists,
     devices,
     settings,
+    eventLog,
     firebase: (state = {}) => state,
     cefQuery: (state = {}) => state,
     ...injectedReducers,

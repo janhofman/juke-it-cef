@@ -13,32 +13,30 @@ namespace MusicPlayer {
 		auto path = String_t("/v1/download/songs/" + songId);
 		auto task = httpClient_.request(web::http::methods::GET, path)
 			.then([=](web::http::http_response response) {
-			web::http::http_response response;
-			
-			if (response.status_code() == web::http::status_codes::OK) {
-				return response.body().read_to_end(songPtr->GetBuffer());
-			}
-			else {
-				// TODO: throw an exception
-				throw std::exception();
-			}
-		}).then([=](pplx::task<size_t> t) {
-			try {
-				// call get to verify that the download was successful
-				t.get();
-
-				// FOR TESTING ONLY - simulates buffering
-				//std::this_thread::sleep_for(std::chrono::seconds(20));
-
-				if (!songPtr->IsCancelled()) {
-					// set song ready as it would throw otherwise
-					songPtr->MakeReady();
+				if (response.status_code() == web::http::status_codes::OK) {
+					return response.body().read_to_end(songPtr->GetBuffer());
 				}
-			}
-			catch (const std::exception&) {
-				songPtr->Fail();
-			}
-		});
+				else {
+					// TODO: throw an exception
+					throw std::exception();
+				}
+			}).then([=](pplx::task<size_t> t) {
+				try {
+					// call get to verify that the download was successful
+					t.get();
+
+					// FOR TESTING ONLY - simulates buffering
+					//std::this_thread::sleep_for(std::chrono::seconds(20));
+
+					if (!songPtr->IsCancelled()) {
+						// set song ready as it would throw otherwise
+						songPtr->MakeReady();
+					}
+				}
+				catch (const std::exception&) {
+					songPtr->Fail();
+				}
+			});
 	}
 
 	/*
