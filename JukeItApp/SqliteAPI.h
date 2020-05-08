@@ -68,6 +68,14 @@ public:
 		std::string userId;
 	} PlaylistResult;
 
+	typedef struct {
+		std::uint32_t id;
+		std::string title;
+		std::string artistName;
+		std::string albumName;
+		std::string path;
+	} NotFoundSongResult;
+
 	// web interface methods
 	ErrorCode SongView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<SongResult>& result);
 	ErrorCode AlbumView(const std::unordered_map<std::string, std::string>& params, std::uint32_t limit, std::uint32_t start, bool desc, std::vector<AlbumResult>& result);
@@ -87,12 +95,13 @@ public:
 
 	// management interface methods
 	void AddFiles();
-	void RemoveFiles(const std::vector<std::string>& remove);
+	bool RemoveFiles(const std::vector<std::string>& remove);
+	bool RemoveFile(const std::string& songId);
 	void AddSongToDatabase(const char *filename, SongMetadata& metadata);
-	void RunFileAvailiabilityCheck();
+	bool RunFileAvailiabilityCheck();
+	bool RefreshFileAvailability(const std::string& songId, bool& available);
 	bool HasNotFoundFiles();
-
-
+	bool GetNotFoundFiles(std::vector<NotFoundSongResult>& result);
 
 	static const char * FILTER_PARAM;
 	static const char * ORDERBY_PARAM;
@@ -107,6 +116,8 @@ private:
 	ErrorCode AddSongsToPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& add);
 	ErrorCode RemoveSongsFromPlaylist(std::uint32_t playlistId, std::vector<std::uint32_t>& remove);
 	void SetSongNotFound(const bool notFound, const std::uint32_t songId);	 
+	bool CleanUpAfterRemoval();
+	bool RemoveSong(const std::string& songId);
 
 	sqlite3* GetDbHandle();
 	std::mutex dbHandleMutex_;

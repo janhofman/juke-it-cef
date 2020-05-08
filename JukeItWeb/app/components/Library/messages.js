@@ -25,9 +25,17 @@ export default defineMessages({
       id: 'Library.searchHint',
       defaultMessage: "Search...",
   },
-  addLabel: {
-      id: 'Library.addLabel',
+  addFilesOpt: {
+      id: 'Library.addFilesOpt',
       defaultMessage: "Add files",
+  },
+  libraryManagementHint: {
+    id: 'Library.libraryManagementHint',
+    defaultMessage: "Library management",
+  },
+  fileAvailabilityToolOpt: {
+    id: 'Library.fileAvailabilityToolOpt',
+    defaultMessage: "Open file availability tool",
   },
   openDialogTitle: {
       id: 'Library.openDialogTitle',

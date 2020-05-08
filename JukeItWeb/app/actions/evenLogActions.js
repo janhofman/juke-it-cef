@@ -9,8 +9,24 @@ export function logEvent() {
 
 }
 
-export function logError() {
+export function logError(message) {
+  return (dispatch, getState) => {
+    const { cefQuery } = getState();
 
+    let requestObj = {
+      command: 'LOG_ERROR',
+      payload: {
+        message,
+      }
+    };
+
+    const request = JSON.stringify(requestObj);
+    cefQuery({
+      request,
+      onSuccess: () => {},
+      onFailure: () => {},
+    });    
+  };
 }
 
 export function handleRequestClose () {

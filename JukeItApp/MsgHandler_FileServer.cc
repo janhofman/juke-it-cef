@@ -36,6 +36,18 @@ MsgHandler_FileServer::CommandName MsgHandler_FileServer::GetCommandName(const w
 				else if (StartsWith(command, "FLS_REMOVE_FILES")) {
 					return CommandName::REMOVE_FILES;
 				}
+				else if (StartsWith(command, "FLS_REMOVE_ONE_FILE")) {
+					return CommandName::REMOVE_ONE_FILE;
+				}
+				else if (StartsWith(command, "FLS_GET_NOT_FOUND_FILES")) {
+					return CommandName::GET_NOT_FOUND_FILES;
+				}
+				else if (StartsWith(command, "FLS_FILE_AVAILABILITY_CHECK")) {
+					return CommandName::FILE_AVAILABILITY_CHECK;
+				}
+				else if (StartsWith(command, "FLS_REFRESH_FILE_AVAILABILITY")) {
+					return CommandName::REFRESH_FILE_AVAILABILITY;
+				}
 				else {
 					return CommandName::NOT_SUPPORTED;
 				}
@@ -83,15 +95,30 @@ bool MsgHandler_FileServer::OnQuery(CefRefPtr<CefBrowser> browser,
 	case CommandName::REMOVE_FILES: {
 		RemoveFiles(requestJSON, callback);
 		return true;
+	}
+	case CommandName::REMOVE_ONE_FILE: {
+		RemoveFile(requestJSON, callback);
+		return true;
+	}
+	case CommandName::GET_NOT_FOUND_FILES: {
+		GetNotFoundFiles(callback);
+		return true;
+	}
+	case CommandName::FILE_AVAILABILITY_CHECK: {
+		RunFileAvailabilityCheck(callback);
+		return true;
+	}
+	case CommandName::REFRESH_FILE_AVAILABILITY: {
+		RefreshFileAvailability(requestJSON, callback);
+		return true;
+	}
 	default:
 		return false;
-	}
-
 	}
 	return false;
 }
 
-void MsgHandler_FileServer::OpenServer(web::json::value request, CefRefPtr<Callback> callback) {
+void MsgHandler_FileServer::OpenServer(const web::json::value& request, CefRefPtr<Callback> callback) {
 	// get payload
 	if (request.is_object()) {
 		std::string hostName = "*";
@@ -209,7 +236,7 @@ void MsgHandler_FileServer::AddFiles(CefRefPtr<Callback> callback) {
 	});
 }
 
-void MsgHandler_FileServer::RemoveFiles(web::json::value request, CefRefPtr<Callback> callback) {
+void MsgHandler_FileServer::RemoveFiles(const web::json::value& request, CefRefPtr<Callback> callback) {
 	if (request.is_object()) {
 		std::vector<std::string> remove;
 		auto payloadIt = request.as_object().find(U("payload"));
@@ -247,3 +274,137 @@ void MsgHandler_FileServer::RemoveFiles(web::json::value request, CefRefPtr<Call
 	}
 }
 
+void MsgHandler_FileServer::RemoveFile(const web::json::value& request, CefRefPtr<Callback> callback) {
+	if (request.is_object()) {
+		auto payloadIt = request.as_object().find(U("payload"));
+		if (payloadIt != request.as_object().end() && payloadIt->second.is_object()) {
+			auto payload = payloadIt->second.as_object();
+
+			auto valIt = payload.find(U("songId"));
+			if (valIt != payload.end()) {
+				if (valIt->second.is_string()) {
+					auto songId = utility::conversions::to_utf8string(valIt->second.as_string());
+
+					try {
+						bool success = sqliteAPI_->RemoveFile(songId);
+
+						web::json::value response;
+						response[U("success")] = web::json::value::boolean(success);
+
+						callback->Success(utility::conversions::to_utf8string(response.serialize()));
+					}
+					catch (...) {
+						callback->Failure(-1, "Removing file failed");
+					}
+				}
+			}
+		}
+	}	
+	callback->Failure(ReturnCode::BAD_REQUEST, "Bad request.");
+}
+
+void MsgHandler_FileServer::GetNotFoundFiles(CefRefPtr<Callback> callback) {
+	pplx::create_task([=]() {
+		std::vector<SqliteAPI::NotFoundSongResult> result;
+		auto success = sqliteAPI_->GetNotFoundFiles(result);
+		if (success) {
+			return result;
+		}
+		else {
+			throw new std::exception("SqliteAPI::GetNotFoundFiles returned false");
+		}
+	}).then([=](pplx::task<std::vector<SqliteAPI::NotFoundSongResult>> t) {
+		try {
+			auto result = t.get();
+
+			auto response = web::json::value::array(result.size());
+			for (size_t i = 0; i < result.size(); i++)
+			{
+				auto& itm = result[i];
+				web::json::value song;
+				song[U("id")] = IdValue(itm.id);
+				song[U("title")] = StringValue(itm.title);
+				song[U("artistName")] = StringValue(itm.artistName);
+				song[U("albumName")] = StringValue(itm.albumName);
+				song[U("path")] = StringValue(itm.path);
+
+				response.as_array()[i] = song;
+			}			
+
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
+		}
+		catch (const std::exception& e) {
+			callback->Failure(-1, e.what());
+		}
+		catch (...) {
+			callback->Failure(-1, "MsgHandler_FileServer::GetNotFoundFiles: Unknown exception occured");
+		}
+	});
+}
+
+void MsgHandler_FileServer::RunFileAvailabilityCheck(CefRefPtr<Callback> callback) {
+	pplx::create_task([=]() {
+		auto success = sqliteAPI_->RunFileAvailiabilityCheck();
+		return success;
+	}).then([=](pplx::task<bool> t) {
+		try {
+			auto result = t.get();
+
+			web::json::value response;
+			response[U("success")] = web::json::value::boolean(result);
+
+			callback->Success(utility::conversions::to_utf8string(response.serialize()));
+		}
+		catch (const std::exception& e) {
+			callback->Failure(-1, e.what());
+		}
+		catch (...) {
+			callback->Failure(-1, "MsgHandler_FileServer::RunFileAvailabilityCheck: Unknown exception occured");
+		}
+	});
+}
+
+void MsgHandler_FileServer::RefreshFileAvailability(const web::json::value& request, CefRefPtr<Callback> callback) {
+	if (request.is_object()) {
+		auto payloadIt = request.as_object().find(U("payload"));
+		if (payloadIt != request.as_object().end() && payloadIt->second.is_object()) {
+			auto payload = payloadIt->second.as_object();
+
+			auto valIt = payload.find(U("songId"));
+			if (valIt != payload.end()) {
+				if (valIt->second.is_string()) {
+					auto songId = utility::conversions::to_utf8string(valIt->second.as_string());
+
+					try {
+						bool available = false;
+						bool success = sqliteAPI_->RefreshFileAvailability(songId, available);
+
+						web::json::value response;
+						response[U("success")] = web::json::value::boolean(success);
+						response[U("available")] = web::json::value::boolean(available);
+
+						callback->Success(utility::conversions::to_utf8string(response.serialize()));
+					}
+					catch (...) {
+						callback->Failure(-1, "Refreshing file availability failed");
+					}
+				}
+			}
+		}
+	}
+	callback->Failure(ReturnCode::BAD_REQUEST, "Bad request.");
+}
+
+web::json::value MsgHandler_FileServer::StringValue(std::string& str) {
+	if (str.empty()) {
+		return web::json::value::null();
+	}
+	return web::json::value::string(utility::conversions::to_string_t(str));
+}
+
+web::json::value MsgHandler_FileServer::IdValue(std::uint32_t id) {
+	if (id == 0) {
+		return web::json::value::null();
+	}
+	return web::json::value::string(utility::conversions::to_string_t(std::to_string(id)));
+}

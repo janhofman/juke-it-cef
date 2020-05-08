@@ -16,10 +16,7 @@ import { randomCoverArtGenerator } from '../../utils';
 import Paper from 'material-ui/Paper';
 
 
-const styles={  
-    base:{
-        padding: '10px',
-    },
+const styles={
     header: {
         fontSize: '2em',
         margin: '0.5em 0'
@@ -64,8 +61,7 @@ class Playlists extends Component{
         } = this.props;
         const generator = randomCoverArtGenerator();
         return (
-            <div style={styles.base}>
-                <ScrollPane>
+            <ScrollPane>
                 <div style={styles.wrapper}>
                     <p style={styles.header}>{formatMessage(messages.header)}</p>
                     <OrangeDivider/>
@@ -93,8 +89,7 @@ class Playlists extends Component{
                     <NewPlaylistDialog handleCancel={closeDialog} handleSave={saveNewPlaylist} open={dialog}/>
                     {/*<div style={!dialog ? styles.shadow : {...styles.shadow, ...styles.shadowActive}}/>*/}
                 </div>
-                </ScrollPane>
-            </div>
+            </ScrollPane>
         )
     }
 }

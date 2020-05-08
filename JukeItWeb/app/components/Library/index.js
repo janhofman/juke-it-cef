@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
-import FlatButton from 'material-ui/FlatButton';
-import AddIcon from 'material-ui/svg-icons/content/add';
+import {
+  IconButton,
+  IconMenu,
+  MenuItem  
+} from 'material-ui';
+import SettingsIcon from 'material-ui/svg-icons/action/settings';
 import { injectIntl } from 'react-intl';
 import { Switch, Route } from 'react-router-dom';
 
@@ -68,6 +72,8 @@ class Library extends Component {
       },
       playbackReady,
       localConnected,
+      onAddFiles,
+      onOpenFileAvailabilityTool,
     } = this.props;
 
     const songsPath = match.url;
@@ -108,13 +114,42 @@ class Library extends Component {
           </div>
     <div style={styles.ghost} />*/}
           <div style={styles.tabs}>
-            { localConnected && !playbackReady &&
-              <FlatButton
-                label={formatMessage(messages.addLabel)}
-                icon={<AddIcon />}
-                containerElement="label"
-                onClick={() => this.props.openFile(formatMessage(messages.openDialogTitle))}
-              />
+            { localConnected && !playbackReady &&              
+              <IconMenu
+                iconButtonElement={
+                  <IconButton
+                    tooltip={formatMessage(messages.libraryManagementHint)}
+                    tooltipPosition={'top-left'}
+                  >
+                    <SettingsIcon />
+                  </IconButton>
+                }
+                anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                useLayerForClickAway={true}
+              >
+                <MenuItem
+                  primaryText={formatMessage(messages.addFilesOpt)}
+                  onTouchTap={() => onAddFiles(formatMessage(messages.openDialogTitle))}
+                />
+                <MenuItem
+                  primaryText={formatMessage(messages.fileAvailabilityToolOpt)}
+                  onTouchTap={onOpenFileAvailabilityTool}
+                />
+
+                {/*manageable &&
+                  <MenuItem
+                    primaryText={formatMessage(messages.removeFilesOpt)}
+                    onTouchTap={onRemoveFilesOption}
+                  />*/
+                }
+                {/*playlistId &&
+                  <MenuItem
+                  primaryText={formatMessage(messages.removeSongsOpt)}
+                  onTouchTap={onRemoveSongsFromPlaylistOption}
+                  />*/
+                }
+              </IconMenu>
             }
           </div>
         </div>

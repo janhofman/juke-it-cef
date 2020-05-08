@@ -19,6 +19,33 @@ function makeRequest(command, payload = null, onSuccess = function () {}, onFail
   };
 }
 
+function makeRequestWithPromise(command, payload = null) {
+  return (dispatch, getState) => {
+    const { cefQuery } = getState();
+
+    const requestObj = { command };
+    if (payload) {
+      requestObj.payload = payload;
+    }
+
+    const request = JSON.stringify(requestObj);
+
+    let promise = new Promise((resolve, reject) => {
+      cefQuery({
+        request,
+        onSuccess: (responseStr) => {
+          const response = JSON.parse(responseStr);
+          resolve(response);
+        },
+        onFailure: (errorCode, errorMessage) => { 
+          reject({ errorCode, errorMessage }); 
+        },
+      });
+    });
+    return promise;    
+  };
+}
+
 function fileServerOpened(address) {
   return {
     type: 'FILESERVER_OPEN',
@@ -124,5 +151,35 @@ export function closeFileServer() {
     };
 
     dispatch(makeRequest('FLS_CLOSE_SERVER', null, onSuccess, onFailure));
+  };
+}
+
+export function getUnavailableFiles() {
+  return (dispatch) => {
+    return dispatch(makeRequestWithPromise('FLS_GET_NOT_FOUND_FILES'));
+  };
+}
+
+export function runFileAvailabilityCheck() {
+  return (dispatch) => {
+    return dispatch(makeRequestWithPromise('FLS_FILE_AVAILABILITY_CHECK'));
+  };
+}
+
+export function removeFile(songId) {
+  return (dispatch) => {
+    const payload = {
+      songId
+    };
+    return dispatch(makeRequestWithPromise('FLS_REMOVE_ONE_FILE', payload));
+  };
+}
+
+export function refreshFileAvailability(songId) {
+  return (dispatch) => {
+    const payload = {
+      songId
+    };
+    return dispatch(makeRequestWithPromise('FLS_REFRESH_FILE_AVAILABILITY', payload));
   };
 }

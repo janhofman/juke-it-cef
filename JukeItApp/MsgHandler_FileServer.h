@@ -3,6 +3,7 @@
 
 #include <string>
 #include <mutex>
+#include <exception>
 
 #include "pplx/pplxtasks.h"
 
@@ -36,6 +37,10 @@ private:
 		CLOSE_SERVER,
 		ADD_FILES,
 		REMOVE_FILES,
+		REMOVE_ONE_FILE,
+		GET_NOT_FOUND_FILES,
+		FILE_AVAILABILITY_CHECK,
+		REFRESH_FILE_AVAILABILITY,
 
 		NOT_SUPPORTED
 	};
@@ -48,10 +53,16 @@ private:
 	};
 
 	CommandName GetCommandName(const web::json::value& request);
-	void OpenServer(web::json::value request, CefRefPtr<Callback> callback);
+	void OpenServer(const web::json::value& request, CefRefPtr<Callback> callback);
 	void CloseServer(CefRefPtr<Callback> callback);
 	void AddFiles(CefRefPtr<Callback> callback);
-	void RemoveFiles(web::json::value request, CefRefPtr<Callback> callback);
+	void RemoveFiles(const web::json::value& request, CefRefPtr<Callback> callback);
+	void RemoveFile(const web::json::value& request, CefRefPtr<Callback> callback);
+	void GetNotFoundFiles(CefRefPtr<Callback> callback);
+	void RunFileAvailabilityCheck(CefRefPtr<Callback> callback);
+	void RefreshFileAvailability(const web::json::value& request, CefRefPtr<Callback> callback);
+	web::json::value StringValue(std::string& str);
+	web::json::value IdValue(std::uint32_t id);
 
 	const CefString startup_url_;
 

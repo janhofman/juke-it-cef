@@ -599,9 +599,14 @@ void SqliteAPI::CreateDatabase() {
 		"CREATE TABLE genre(id INTEGER PRIMARY KEY ASC, name TEXT UNIQUE NOT NULL);"
 		"CREATE TABLE album(id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL, artistId INTEGER"
 		"	CONSTRAINT fk_artist_album REFERENCES artist(id), CONSTRAINT uq_album_name_artist UNIQUE(name, artistId) ON CONFLICT IGNORE);"
+		"CREATE INDEX ix_artist_album ON album(artistId);"
 		"CREATE TABLE song(id INTEGER PRIMARY KEY ASC, title TEXT, artistId INTEGER CONSTRAINT fk_artist_song REFERENCES artist(id),"
 		"	albumId INTEGER CONSTRAINT fk_album_song REFERENCES album(id), genreId INTEGER CONSTRAINT fk_genre_song REFERENCES genre(id),"
 		"	length INTEGER, path TEXT UNIQUE NOT NULL, notFound BOOLEAN NOT NULL DEFAULT 0 CHECK (notFound IN (0,1)));"
+		"CREATE INDEX ix_artist_song ON song(artistId);"
+		"CREATE INDEX ix_album_song ON song(albumId);"
+		"CREATE INDEX ix_genre_song ON song(genreId);"
+		"CREATE INDEX ix_notFound_song ON song(notFound);"
 		//"CREATE TABLE variables(name TEXT PRIMARY KEY NOT NULL, intValue INTEGER, textValue TEXT);"
 		"CREATE TABLE playlist(id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL, description TEXT, userId TEXT NOT NULL,"
 		"	CONSTRAINT uq_playlist UNIQUE(name, userId) ON CONFLICT IGNORE);"
@@ -670,40 +675,110 @@ void SqliteAPI::AddFiles() {
 	}
 }
 
-void SqliteAPI::RemoveFiles(const std::vector<std::string>& remove) {
-	for (size_t i = 0; i < remove.size(); i++)
-	{
-		sqlite3_stmt *statement;
-		std::string sql;
-		int rtc = 0;
+bool SqliteAPI::RemoveFiles(const std::vector<std::string>& remove) {
+	bool isOk = BeginTransaction() == ErrorCode::OK;
 
-		// now insert song
-		std::stringstream ss;
-		ss << "DELETE FROM song WHERE id = ";
-		ss << remove[i];
-		sql = ss.str();
-		rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
-		rtc = sqlite3_step(statement);
-		rtc = sqlite3_finalize(statement);
+	for (size_t i = 0; i < remove.size(); i++)
+	{		
+		isOk = isOk && RemoveSong(remove[i]);
+		if (!isOk) {
+			break;
+		}
 	}
 
+	isOk = isOk && CleanUpAfterRemoval();
+
+	if (isOk) {
+		isOk = CommitTransaction() == ErrorCode::OK;
+	}
+	else {
+		RollbackTransaction();
+	}
+
+	return isOk;	
+}
+
+bool SqliteAPI::RemoveFile(const std::string& songId) {
+	bool isOk = BeginTransaction() == ErrorCode::OK;
+	isOk = isOk && RemoveSong(songId);
+	isOk = isOk && CleanUpAfterRemoval();
+	if (isOk) {
+		isOk = CommitTransaction() == ErrorCode::OK;
+	}
+	else {
+		RollbackTransaction();
+	}
+
+	return isOk;
+}
+
+bool SqliteAPI::RemoveSong(const std::string& songId) {
+	sqlite3_stmt *statement;
+	std::string sql;
+	int rtc = 0;
+	bool result = false;
+
+	// now insert song
+	std::stringstream ss;
+	ss << "DELETE FROM song WHERE id = ";
+	ss << songId;
+	sql = ss.str();
+	rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			result = true;
+		}
+	}
+	sqlite3_finalize(statement);
+	return result;
+}
+
+bool SqliteAPI::CleanUpAfterRemoval() {
 	// clean up potentionally empty genres, artists and albums
 	sqlite3_stmt *statement;
+	bool isOk = false;
+	int rtc;
 
 	auto sql = "DELETE FROM artist WHERE NOT EXISTS (SELECT * FROM song WHERE artistId = artist.id)";
-	sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
-	sqlite3_step(statement);
+	rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (rtc == SQLITE_DONE) {
+			isOk = true;
+		}
+	}
 	sqlite3_finalize(statement);
 
-	sql = "DELETE FROM genre WHERE NOT EXISTS (SELECT * FROM song WHERE genreId = genre.id)";
-	sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
-	sqlite3_step(statement);
-	sqlite3_finalize(statement);
+	if (isOk) {
+		isOk = false;
 
-	sql = "DELETE FROM album WHERE NOT EXISTS (SELECT * FROM song WHERE albumId = album.id)";
-	sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
-	sqlite3_step(statement);
-	sqlite3_finalize(statement);
+		sql = "DELETE FROM genre WHERE NOT EXISTS (SELECT * FROM song WHERE genreId = genre.id)";
+		rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+		if (rtc == SQLITE_OK) {
+			rtc = sqlite3_step(statement);
+			if (rtc == SQLITE_DONE) {
+				isOk = true;
+			}
+		}
+		sqlite3_finalize(statement);
+	}
+
+	if (isOk) {
+		isOk = false;
+
+		sql = "DELETE FROM album WHERE NOT EXISTS (SELECT * FROM song WHERE albumId = album.id)";
+		rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+		if (rtc == SQLITE_OK) {
+			rtc = sqlite3_step(statement);
+			if (rtc == SQLITE_DONE) {
+				isOk = true;
+			}
+		}
+		sqlite3_finalize(statement);
+	}
+
+	return isOk;
 }
 
 void SqliteAPI::AddSongToDatabase(const char *filename, SongMetadata& metadata) {
@@ -809,7 +884,7 @@ bool SqliteAPI::RunFileAvailiabilityCheck() {
 		while (SQLITE_ROW == rtc) {
 			std::uint32_t id = sqlite3_column_int(statement, 0);
 			auto path = TextFieldToString(sqlite3_column_text(statement, 1));
-			bool notFound = sqlite3_column_int(statement, 8) == 1;
+			bool notFound = sqlite3_column_int(statement, 2) == 1;
 
 			bool exists = std::filesystem::exists(path);
 
@@ -882,6 +957,81 @@ bool SqliteAPI::RunFileAvailiabilityCheck() {
 	}
 
 	return isOk;
+}
+
+bool SqliteAPI::RefreshFileAvailability(const std::string& songId, bool& available) {
+	bool isOk = false;
+	sqlite3_stmt* statement;
+	std::stringstream ss;
+
+	ss << "SELECT path, notFound FROM song WHERE id = " << songId;
+	auto initialSql = ss.str();
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), initialSql.c_str(), -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		if (SQLITE_ROW == rtc) {
+			auto path = TextFieldToString(sqlite3_column_text(statement, 0));
+			available = sqlite3_column_int(statement, 1) == 0;
+
+			bool exists = std::filesystem::exists(path);
+			if ((!exists && available) || (exists && !available)) {
+				// clean up after last command
+				ss.str(std::string());
+				sqlite3_finalize(statement);
+
+				// prepare new command
+				ss << "UPDATE song SET notFound=" << (exists ? 0 : 1) << " WHERE id=" << songId;
+				auto sql = ss.str();
+				rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
+				if (rtc == SQLITE_OK) {
+					rtc = sqlite3_step(statement);
+					if (SQLITE_DONE == rtc) {
+						isOk = true;
+						available = exists;
+					}
+				}
+			}
+			else {
+				// no state changed, but the operation completed successfully
+				isOk = true;
+			}
+		}
+	}
+	// clean up whatever statement was used last
+	sqlite3_finalize(statement);
+	
+	return isOk;
+}
+
+
+bool SqliteAPI::GetNotFoundFiles(std::vector<SqliteAPI::NotFoundSongResult>& result) {
+	sqlite3_stmt* statement;
+	auto sql =	"SELECT s.id, s.title, art.name, alb.name, s.path"
+				" FROM song AS s"
+				" INNER JOIN artist AS art ON s.artistId = art.id"
+				" INNER JOIN album AS alb ON s.albumId = alb.id"
+				" WHERE s.notFound = 1";
+	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql, -1, &statement, NULL);
+	if (rtc == SQLITE_OK) {
+		rtc = sqlite3_step(statement);
+		while (SQLITE_ROW == rtc) {
+			NotFoundSongResult song;
+			song.id = sqlite3_column_int(statement, 0);
+			song.title = TextFieldToString(sqlite3_column_text(statement, 1));
+			song.artistName = TextFieldToString(sqlite3_column_text(statement, 2));
+			song.albumName = TextFieldToString(sqlite3_column_text(statement, 3));
+			song.path = TextFieldToString(sqlite3_column_text(statement, 4));
+			result.push_back(song);
+
+			rtc = sqlite3_step(statement);
+		}
+		sqlite3_finalize(statement);
+		return true;
+	}
+	else {
+		// TODO: log
+		return false;
+	}
 }
 
 SqliteAPI::ErrorCode SqliteAPI::AddPlaylist(const std::string& userId, const std::string& name, const std::string& description, SqliteAPI::PlaylistResult& result) {

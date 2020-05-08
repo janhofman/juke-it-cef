@@ -83,9 +83,9 @@ bool MsgHandler_WebLogger::OnQuery(CefRefPtr<CefBrowser> browser,
 
 void MsgHandler_WebLogger::LogError(web::json::value request, CefRefPtr<Callback> callback) {	
 	if (request.is_object()) {		
-		auto messageIt = request.as_object().find(utility::conversions::to_string_t("message"));
-		if (messageIt != request.as_object().end() && messageIt->second.is_string()) {
-			auto message = utility::conversions::to_utf8string(messageIt->second.as_string());
+		auto messageIt = request.as_object().find(utility::conversions::to_string_t("payload"));
+		if (messageIt != request.as_object().end()) {
+			auto message = utility::conversions::to_utf8string(messageIt->second.serialize());
 
 			logger_->error(message);
 
@@ -98,7 +98,7 @@ void MsgHandler_WebLogger::LogError(web::json::value request, CefRefPtr<Callback
 
 void MsgHandler_WebLogger::LogDebug(web::json::value request, CefRefPtr<Callback> callback) {
 	if (request.is_object()) {
-		auto messageIt = request.as_object().find(utility::conversions::to_string_t("message"));
+		auto messageIt = request.as_object().find(utility::conversions::to_string_t("payload"));
 		if (messageIt != request.as_object().end() && messageIt->second.is_string()) {
 			auto message = utility::conversions::to_utf8string(messageIt->second.as_string());
 

@@ -12,6 +12,7 @@ import EstablishmentPage from './../../containers/EstablishmentPage';
 import SettingsPage from './../../containers/SettingsPage';
 import PlaybackPage from './../../containers/PlaybackPage';
 import DevicesPage from '../../containers/DevicesPage';
+import FileAvailabilityToolPage from '../../containers/FileAvailabilityToolPage';
 
 const styles = {
   disabledLink: {
@@ -41,18 +42,17 @@ class Home extends Component {
     const playbackPath = `${match.url}/playback`;
     const devicesPath = `${match.url}/devices`;
     const settingsPath = `${match.url}/settings`;
+    const fileAvailabilityToolPath = `${match.url}/fileAvailabilityTool`;
 
-    let establishmentMatch = pathname == establishmentPath; // it is an exact match
-    let libraryMatch  = pathname.startsWith(libraryPath);
+    let establishmentMatch = pathname === establishmentPath; // it is an exact match
+    let libraryMatch  = pathname.startsWith(libraryPath) || pathname.startsWith(fileAvailabilityToolPath);
     let playbackMatch  = pathname.startsWith(playbackPath);
     let devicesMatch  = pathname.startsWith(devicesPath);
     let settingsMatch  = pathname.startsWith(settingsPath);
 
     const libraryEnabled = fsConnected;
     const playbackEnabled = fsConnected && playerConnected;
-
-
-    console.log('location: ', this.props.location, 'match: ', match);
+    
     return (
       <div>
         <div style={{ backgroundColor: '#1a1a1a' }}>          
@@ -96,6 +96,7 @@ class Home extends Component {
             <Route path={playbackPath} component={PlaybackPage} />
             <Route path={devicesPath} component={DevicesPage} />
             <Route path={settingsPath} component={SettingsPage} />
+            <Route path={fileAvailabilityToolPath} component={FileAvailabilityToolPage} />
           </Switch>
         </div>
         <PlayerStrip height={ '50px' }/>

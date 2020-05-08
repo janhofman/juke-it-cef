@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 import Library from './../../components/Library';
 
 import {
@@ -11,6 +12,9 @@ class LibraryPage extends Component {
   constructor(props) {
     super(props);
     props.dispatch(loadPlaylists());
+
+    this.handleAddFiles = this.handleAddFiles.bind(this);
+    this.handleOpenFileAvailabilityTool = this.handleOpenFileAvailabilityTool.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -20,16 +24,22 @@ class LibraryPage extends Component {
     }
   }
 
-  openFile(title) {
+  handleAddFiles(title) {
     const { dispatch } = this.props;
     dispatch(addSongs());
+  }
+
+  handleOpenFileAvailabilityTool() {
+    const { dispatch } = this.props;
+    dispatch(push('/home/fileAvailabilityTool'));
   }
 
   render() {
     return (
       <Library
         {...this.props}
-        openFile={this.openFile.bind(this)}
+        onAddFiles={this.handleAddFiles}
+        onOpenFileAvailabilityTool={this.handleOpenFileAvailabilityTool}
       />
     );
   }

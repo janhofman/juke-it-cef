@@ -162,7 +162,7 @@ export function loadSongs() {
     } = getState();
 
     if (!songsLoaded) {
-      dispatch(cleanSongs);
+      dispatch(cleanSongs());
       let promise = getAllSongs(baseAddress);
       promise = makeCancelable(promise);
       promise.promise
