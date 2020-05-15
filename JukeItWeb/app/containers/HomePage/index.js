@@ -41,6 +41,7 @@ export default connect((store) => {
   return({
     fsConnected: devices.fileServer.connected,
     playerConnected: player.playerConnected,
+    playerVisible: player.initialized,
     notificationMsg: eventLog.notificationMsg,
     notificationOpen: eventLog.notificationOpen,
   });

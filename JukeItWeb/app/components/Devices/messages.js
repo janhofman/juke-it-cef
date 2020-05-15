@@ -73,9 +73,13 @@ export default defineMessages({
     id: 'Devices.fsLocalStopBtn',
     defaultMessage: 'Stop',
   },
-  fsLocalReconnectBtn: {
-    id: 'Devices.fsLocalReconnectBtn',
-    defaultMessage: 'Reconnect',
+  fsLocalConnectBtn: {
+    id: 'Devices.fsLocalConnectBtn',
+    defaultMessage: 'Connect',
+  },
+  fsLocalDisconnectBtn: {
+    id: 'Devices.fsLocalDisconnectBtn',
+    defaultMessage: 'Disconnect',
   },
   fsRemoteConnectBtn: {
     id: 'Devices.fsRemoteConnectBtn',
@@ -109,9 +113,13 @@ export default defineMessages({
     id: 'Devices.playerLocalStopBtn',
     defaultMessage: 'Stop',
   },
-  playerLocalReconnectBtn: {
-    id: 'Devices.playerLocalReconnectBtn',
-    defaultMessage: 'Reconnect',
+  playerLocalConnectBtn: {
+    id: 'Devices.playerLocalConnectBtn',
+    defaultMessage: 'Connect',
+  },  
+  playerLocalDisconnectBtn: {
+    id: 'Devices.playerLocalDisconnectBtn',
+    defaultMessage: 'Disconnect',
   },
   playerRemoteHostnameLabel: {
     id: 'Devices.playerRemoteHostnameLabel',

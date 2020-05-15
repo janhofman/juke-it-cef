@@ -95,7 +95,7 @@ namespace MusicPlayer {
 
 	void Session::OnWrite(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
-    if (ec.value() == 995) {
+		if (ec.value() == 995) {
 			// connection closed
 			return;
 		}
@@ -450,7 +450,8 @@ namespace MusicPlayer {
 		}
 	}
 
-	void Session::SendResponse(Session::ResponseErrorCode responseCode, const web::json::value& id) {
+	void Session::SendResponse
+	(Session::ResponseErrorCode responseCode, const web::json::value& id) {
 		web::json::value response;
 		response[String_t("jsonrpc")] = web::json::value::string(String_t("2.0"));
 		response[String_t("id")] = id;

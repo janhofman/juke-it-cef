@@ -321,13 +321,10 @@ function pingFileServer(baseUrl) {
   }
   url = `${url}v1/ping`;
 
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return true;
+  return axios.get(url, {
+    validateStatus: function (status) {
+      return status === 200; // Resolve only if the status code is 200 OK
     }
-    return false;
-  }).catch((error) => {
-    return error;
   });
 }
 
@@ -346,16 +343,10 @@ export function connectFsLocal() {
 
     if (running && address) {      
       pingFileServer(address)
-        .then((available) => {
-          if (available) {
-            dispatch(fsLocalConnected());
-            dispatch(fsConnected(address));
-            resolve();            
-          } else {
-            // TODO: show error that fs is not available
-            reject();
-          }
-          
+        .then(() => {          
+          dispatch(fsLocalConnected());
+          dispatch(fsConnected(address));
+          resolve();   
         })
         .catch((error) => reject(error));
     } else {
@@ -388,16 +379,10 @@ export function connectFsRemote() {
       url += `:${port}/api`;
 
       pingFileServer(url)
-        .then((available) => {
-          if (available) {
-            dispatch(fsRemoteConnected());
-            dispatch(fsConnected(url));
-            resolve();            
-          } else {
-            // TODO: show error that fs is not available
-            reject();
-          }
-          
+        .then(() => {          
+          dispatch(fsRemoteConnected());
+          dispatch(fsConnected(url));
+          resolve();   
         })
         .catch((error) => reject(error));
     } else {

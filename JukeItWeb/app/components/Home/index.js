@@ -21,11 +21,20 @@ const styles = {
 };
 
 class Home extends Component {
+  componentDidUpdate(prevProps){
+    if(this.props.playerVisible !== prevProps.playerVisible) {
+      // hackish, but we want to trigger resize event to recompute
+      // any children scrollpane height due to PlayerStrip appearing
+      window.dispatchEvent(new Event('resize'));
+    }
+  }
+
   render() {
     const { 
       match,
       fsConnected,
       playerConnected,
+      playerVisible,
       intl: {
         formatMessage,
       },
@@ -56,25 +65,22 @@ class Home extends Component {
     return (
       <div>
         <div style={{ backgroundColor: '#1a1a1a' }}>          
-          <Link to={libraryPath} style={libraryEnabled ? null : styles.disabledLink}>
+          <Link to={libraryPath}>
             <FlatButton 
               label={formatMessage(messages.libTabTitle)} 
               labelPosition={'before'}
-              secondary={libraryMatch} 
-              icon={!libraryEnabled && <CancelIcon color={'red'}/>}
-              disabled={!libraryEnabled}
+              secondary={libraryMatch}
             />
           </Link>
           <Link to={establishmentPath}>
             <FlatButton label={formatMessage(messages.establishmentTabTitle)} secondary={establishmentMatch}/>
           </Link>
-          <Link to={playbackPath} style={playbackEnabled ? null : styles.disabledLink}>
+          <Link to={playbackPath}>
             <FlatButton 
               label={formatMessage(messages.playbackTabTitle)}
               labelPosition={'before'}
               secondary={playbackMatch}
               icon={!playbackEnabled && <CancelIcon color={'red'}/>}
-              disabled={!playbackEnabled}
             />
           </Link>
           <Link to={devicesPath}>
@@ -99,7 +105,9 @@ class Home extends Component {
             <Route path={fileAvailabilityToolPath} component={FileAvailabilityToolPage} />
           </Switch>
         </div>
-        <PlayerStrip height={ '50px' }/>
+        { playerVisible &&
+          <PlayerStrip height={ '50px' }/>
+        }
         <Snackbar
           open={notificationOpen}
           message={notificationMsg}

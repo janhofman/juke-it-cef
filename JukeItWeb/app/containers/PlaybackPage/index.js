@@ -149,7 +149,7 @@ export default connect((store) => {
     contextMenuOpen: playback.contextMenuOpen,
     songId: playback.songId,
     active: userData.spot.active,
-    playerEnabled: !!player.currentSong,
+    playerEnabled: player.initialized,
     playlistQueue: playback.playlistQueue,
     orderQueue: playback.orderQueue,
     priorityQueue: playback.priorityQueue,

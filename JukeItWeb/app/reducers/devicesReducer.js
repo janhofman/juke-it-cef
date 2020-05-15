@@ -23,6 +23,7 @@ const initialState = {
       hostname: 'localhost',
       port: 26331,
       error: null,
+      connected: false,
     },
     remote: {
       hostname: '',
@@ -30,6 +31,7 @@ const initialState = {
       connected: false,
     },
     address: null,
+    connected: false,
   },
   pageLayout: {
     fileServer: {
@@ -194,6 +196,52 @@ export default function reducer(state = initialState, action) {
       // player.local.running = true; CAN'T SET THIS, LET'S LEAVE IT AS IT WAS
       player.local.error = action.payload;
       return { ...state, player };
+    }
+    case 'PLAYER_LOCAL_CONNECTED': {
+      return {
+        ...state,
+        player: {
+          connected: true,
+          address: action.payload,
+          ...state.player,
+          local: {
+            ...state.player.local,
+            connected: true,
+          },
+        }
+      }
+    }
+    case 'PLAYER_REMOTE_CONNECTED': {
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          connected: true,
+          address: action.payload,
+          remote: {
+            ...state.player.remote,
+            connected: true,
+          },
+        }
+      }
+    }
+    case 'PLAYER_DISCONNECTED': {
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          connected: false,
+          address: null,
+          remote: {
+            ...state.player.remote,
+            connected: false,
+          },
+          local: {
+            ...state.player.local,
+            connected: false,
+          },
+        }
+      }
     }
     case 'LOGOUT':
       return initialState;

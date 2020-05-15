@@ -11,14 +11,17 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import { IntlProvider } from 'react-intl';
+import IntlGlobalProvider from './../../utils/IntlGlobalProvider';
 
 import { makeSelectLocale } from './selectors';
 
 export class LanguageProvider extends React.PureComponent { // eslint-disable-line react/prefer-stateless-function
   render() {
-    return (
+    return (      
       <IntlProvider locale={this.props.locale} key={this.props.locale} messages={this.props.messages[this.props.locale]}>
-        {React.Children.only(this.props.children)}
+        <IntlGlobalProvider>
+          {React.Children.only(this.props.children)}
+        </IntlGlobalProvider>
       </IntlProvider>
     );
   }

@@ -5,6 +5,7 @@ const initialState = {
   playlistQueue: [],
   orderQueue: [],
   priorityQueue: [],
+  randomSongsArray: [],
   queueOpen: false,
   contextMenuOpen: false,
   contextMenuAnchor: null,
@@ -135,6 +136,9 @@ export default function reducer(state = initialState, action) {
       const { priorityQueue } = state;
       const { songId, itemId } = payload;      
       return { ...state, priorityQueue: [...priorityQueue, { songId, itemId }] };
+    }
+    case 'PLAYBACK_SET_RANDOM_ARRAY': {
+      return { ...state, randomSongsArray: payload };
     }
     case 'LOGOUT':
       return initialState;

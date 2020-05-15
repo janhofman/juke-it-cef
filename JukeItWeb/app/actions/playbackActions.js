@@ -1,5 +1,9 @@
 import { push } from 'react-router-redux';
-import { addOrder, resetPlayer, play } from './playerActions';
+import { 
+  initializePlayer,
+  resetPlayer,
+  play 
+} from './playerActions';
 import {
   apiSongPromise,
   getAllEntitySongs,
@@ -61,6 +65,13 @@ export function toggleOrderQueue() {
   return {
     type: 'PLAYBACK_TOGGLE_ORDER_QUEUE',
   };
+}
+
+function setRandomSongsArray(arr) {
+  return ({
+    type: 'PLAYBACK_SET_RANDOM_ARRAY',
+    payload: arr,
+  });
 }
 
 /**
@@ -225,16 +236,35 @@ export function uploadSongsLib(title, subtitle) {
 
 export function startPlayback(){
   return (dispatch, getState) => {
-    dispatch({
-      type: 'PLAYBACK_START',
-    });
-    dispatch(play());
+    dispatch(initializePlayer());
+    // dispatch({
+    //   type: 'PLAYBACK_START',
+    // });
+    // dispatch(play());
   };
 }
 
 export function stopPlayback(){
   return (dispatch) => {
     dispatch(resetPlayer());
+  };
+}
+
+export function maintainPlaylistQueue() {
+  return (dispatch, getState) => {
+    const {
+      playback: { 
+        playlistQueue,
+        orderQueue,
+        priorityQueue,
+       },
+    } = getState();
+
+    const minimumQueueSize = 5;
+    if(playlistQueue.length + priorityQueue.length + orderQueue.length < minimumQueueSize) {
+      dispatch(generateNextSong()); // adds new random song
+      dispatch(maintainPlaylistQueue()); // recursively call to add more songs if it is required
+    }
   };
 }
 
@@ -277,18 +307,29 @@ function generateItemId() {
   return `p${new Date().valueOf().toString(36)}${Math.random().toString(36).substr(2)}`;
 }
 
-export function generateNextSong(playlist) {
-  if (playlist && playlist.songs.length > 0) {
-    const rand = Math.floor(Math.random() * playlist.songs.length);
-    const songId = playlist.songs[rand].id;
-    // generate unique ID for this song
-    const itemId = generateItemId();
-    return ({
-      songId,
-      itemId,
-    });
-  }
-  return null;
+function generateNextSong() {
+  return (dispatch, getState) => {
+    const {
+      playback: {
+        activePlaylist,
+        randomSongsArray
+      },
+    } = getState();
+
+    if (activePlaylist && activePlaylist.songs.length > 0) {
+      let arr = randomSongsArray;
+      if(arr.length === 0) {
+        arr = activePlaylist.songs.map(song => song.id);
+      }
+      const rand = Math.floor(Math.random() * arr.length);
+      const songId = arr[rand];
+      // remove song from random array in immutable way
+      arr = arr.filter((_, i) => i !== rand);
+      // add song to playlist queue
+      dispatch(playlistQueueAddItem(songId));      
+      dispatch(setRandomSongsArray(arr));
+    }
+  };
 }
 
 export function orderQueueChildAdded(itemId, queueItem) {
@@ -367,5 +408,7 @@ export function removeQueueItem(itemId) {
       type: 'PLAYBACK_REMOVE_QUEUE_ITEM',
       payload: { itemId },
     });
+    // maintain integrity of queues
+    dispatch(maintainPlaylistQueue());
   }
 }

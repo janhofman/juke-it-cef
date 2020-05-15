@@ -55,11 +55,11 @@ export default defineMessages({
     },
     startPlaying: {
         id: 'Playback.startPlaying',
-        defaultMessage: 'Start playing',
+        defaultMessage: 'Start playback',
     },
     stopPlaying: {
         id: 'Playback.stopPlaying',
-        defaultMessage: 'Stop playing',
+        defaultMessage: 'Stop playback',
     },
     title: {
         id: 'Playback.title',

@@ -5,10 +5,10 @@ const initialState = {
   length: -1,
   queueKey: null,
   onFinishAction: null,
-  webSocket: null,
   initialized: false,
   playerConnected: false,
-  volume: 100,
+  volume: 100,  
+  webSocket: null,
   webSocketManager: null,
 };
 
@@ -32,10 +32,7 @@ export default function reducer(state = initialState, action) {
       return { ...state, onFinishAction: action.payload };    
     case 'PLAYER_INITIALIZED':
       return { ...state, initialized: action.payload };
-    case 'PLAYER_SET_WEBSOCKET': {
-      if (state.webSocket) {
-        state.webSocket.close();
-      }
+    case 'PLAYER_SET_WEBSOCKET': {      
       return { ...state, webSocket: action.payload, webSocketManager: action.payload ? {} : null, initialized: false };
     }
     case 'PLAYER_REGISTER_WEBSOCKET_CALLBACK': {
@@ -65,8 +62,11 @@ export default function reducer(state = initialState, action) {
         length: -1,
         queueKey: null,
       };
-    case 'PLAYER_CONNECTION':
-      return { ...state, playerConnected: action.payload }
+    case 'PLAYER_LOCAL_CONNECTED':
+    case 'PLAYER_REMOTE_CONNECTED':
+      return { ...state, playerConnected: true }
+    case 'PLAYER_DISCONNECTED':
+      return { ...state, playerConnected: false }
     case 'LOGOUT':
       return initialState;
     default:

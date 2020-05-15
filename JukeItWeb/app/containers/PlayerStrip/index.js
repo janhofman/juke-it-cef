@@ -38,26 +38,36 @@ class PlayerStrip extends Component {
     this.onSliderChange = this.onSliderChange.bind(this);
   }
 
+  componentDidMount() {
+    const {
+      dispatch,
+      priorityQueue,
+      orderQueue,
+      playlistQueue
+    } = this.props;
+    // send queue to player
+    const queue = priorityQueue.concat(orderQueue).concat(playlistQueue);
+    console.log("Queue update: ", queue);
+    dispatch(updateQueue(queue));
+  }
+
   componentWillReceiveProps(nextProps){
     const {
       playlistQueue,
       orderQueue,
       priorityQueue,
       playerConnected,
-      playbackStarted,
       dispatch,
       initialized
     } = this.props;
 
     if(nextProps.playerConnected &&
-        nextProps.playbackStarted &&
         nextProps.initialized &&
         (
           !this.arraysEqual(playlistQueue, nextProps.playlistQueue) 
           || !this.arraysEqual(orderQueue, nextProps.orderQueue)
           || !this.arraysEqual(priorityQueue, nextProps.priorityQueue)
           || playerConnected !== nextProps.playerConnected
-          || playbackStarted !== nextProps.playbackStarted
           || initialized !== nextProps.initialized
         )
     ) {
@@ -173,7 +183,6 @@ export default connect((store) => {
     orderQueue: playback.orderQueue,
     playlistQueue: playback.playlistQueue,
     priorityQueue: playback.priorityQueue,
-    queue: playback.queue,
     queueOpen: playback.queueOpen,
     playbackStarted: playback.playbackStarted,
   });

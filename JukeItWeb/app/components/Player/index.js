@@ -204,18 +204,20 @@ class Player extends Component {
         <div>
           {/*<IconButton><Previous /></IconButton>*/}
           <IconButton
-            onTouchTap={currentSong ? (playing ? onPause : onPlay) : null}
+            //onTouchTap={currentSong ? (playing ? onPause : onPlay) : null}
+            onTouchTap={playing ? onPause : onPlay}
             tooltip={formatMessage(this.props.playing ? messages.pauseTooltip : messages.playTooltip)}
             tooltipPosition={'top-center'}
-            disabled={!currentSong || !playerConnected}
+            //disabled={!currentSong || !playerConnected}
           >
             {playing ? <Pause /> : <Play />}
           </IconButton>
           <IconButton
-            onTouchTap={currentSong ? onNext : null}
+            //onTouchTap={currentSong ? onNext : null}
+            onTouchTap={onNext}
             tooltip={formatMessage(messages.nextTooltip)}
             tooltipPosition={'top-center'}
-            disabled={!currentSong || !playerConnected}
+            //disabled={!currentSong || !playerConnected}
           >
             <Next />
           </IconButton>

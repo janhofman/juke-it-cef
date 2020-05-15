@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Devices from '../../components/Devices';
@@ -28,7 +29,9 @@ import {
   connectToRemotePlayer,
   disconnect as disconnectPlayer,
 } from '../../actions/playerActions';
-
+import { notify, logError } from '../../actions/evenLogActions';
+import messages from './messages';
+ 
 class DevicesPage extends Component {
   constructor(props) {
     super(props);
@@ -141,8 +144,12 @@ class DevicesPage extends Component {
   }
 
   onConnectToRemoteFileServer() {
-    const { dispatch } = this.props;
-    dispatch(connectFsRemote());
+    const { dispatch, intl: { formatMessage } } = this.props;
+    dispatch(connectFsRemote())
+      .catch((error) => {
+        dispatch(logError(error));
+        dispatch(notify(formatMessage(messages.fsConnectErr)));
+    });
   }
 
   onDisconnectFileServer() {
@@ -195,12 +202,20 @@ class DevicesPage extends Component {
 
   onConnectToLocalPlayer() {
     const { dispatch } = this.props;
-    dispatch(connectToLocalPlayer());
+    dispatch(connectToLocalPlayer())
+      .catch((error) => {
+        dispatch(logError(error));
+        dispatch(notify(formatMessage(messages.playerConnectErr)));
+    });
   }
 
   onConnectToRemotePlayer() {
-    const { dispatch } = this.props;
-    dispatch(connectToRemotePlayer());
+    const { dispatch, intl: { formatMessage } } = this.props;
+    dispatch(connectToRemotePlayer())
+      .catch((error) => {
+        dispatch(logError(error));
+        dispatch(notify(formatMessage(messages.playerConnectErr)));
+      });
   }
 
   onDisconnectPlayer() {
@@ -293,4 +308,4 @@ export default connect((store) => {
     pageLayout,
     playerConnected: playerStore.playerConnected,
   });
-})(DevicesPage);
+})(injectIntl(DevicesPage));

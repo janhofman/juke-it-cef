@@ -1,10 +1,25 @@
 import * as fb from 'firebase';
 import { format, parse } from 'json-rpc-protocol';
-import { playlistQueueAddItem, generateNextSong, playlistQueueRemoveItem, removeQueueItem } from './playbackActions';
+import { defineMessages } from 'react-intl';
+import { maintainPlaylistQueue, removeQueueItem } from './playbackActions';
+import { notify } from './evenLogActions';
+import { intl } from '../utils/IntlGlobalProvider';
+
+const intlStrings = defineMessages({
+  onWebSocketError: {
+    id: 'playerActions.onWebSocketError',
+    defaultMessage: 'Could not connect to player.',
+  },
+});
+
+/*** BUILDING PLAYER REQUESTS ***/
+
+function generateRequestId() {
+  return `rqst${new Date().valueOf().toString(36)}${Math.random().toString(36).substr(2)}`;
+}
 
 function buildRequest(action, payload) {
-  const d = new Date();
-  return format.request(d.getTime(), action, payload);
+  return format.request(generateRequestId(), action, payload);
 }
 
 function playRequest() {
@@ -28,7 +43,6 @@ function volumeRequest(volume) {
 }
 
 function initializeRequest(url) {
-  console.log('Initialize ',url );
   return buildRequest('INITIALIZE', { url });
 }
 
@@ -36,39 +50,71 @@ function updateQueueRequest(queue) {
   return buildRequest('UPDATEQUEUE', { queue });
 }
 
-
+/*** PLAYER ACTIONS ***/
 
 export function play() {
   return (dispatch, getState) => {
-    const { player: { webSocket } } = getState();
-    if (webSocket) {
-      const request = playRequest();
-      webSocket.send(request);
-      dispatch({
-        type: 'PLAYER_PLAY',
-      });
-    }
-  };
-}
+    const {
+      player: {
+        playerConnected,
+        webSocket,
+      },
+    } = getState();
 
-function sendVolume(volume) {
-  return (dispatch, getState) => {
-    const { player: { webSocket } } = getState();
-    if (webSocket) {   
-      const request = volumeRequest(volume);
-      webSocket.send(request);      
+    if (playerConnected) {
+      if (webSocket) {
+        const request = playRequest();
+        
+        const onSuccess = () => {
+          dispatch({
+            type: 'PLAYER_PLAY',
+          });
+        }
+
+        const onFailure = (error) => {
+          // TODO: notify
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log websocket missing error
+      }
     }
   };
 }
 
 export function setVolume(newVolume){
-  return (dispatch) => {
-    dispatch(sendVolume(newVolume));
-    dispatch({
-      type: 'PLAYER_VOLUME',
-      payload: newVolume,
-    });
-  };  
+  return (dispatch, getState) => {
+    const {
+      player: {
+        playerConnected,
+        webSocket,
+      },
+    } = getState();
+
+    if (playerConnected) {
+      if (webSocket) {
+        const request = volumeRequest(newVolume);
+        
+        const onSuccess = () => {
+          dispatch({
+            type: 'PLAYER_VOLUME',
+            payload: newVolume,
+          });
+        }
+
+        const onFailure = (error) => {
+          // TODO: notify
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log websocket missing error
+      }
+    }
+  };
 }
 
 export function setLength(length) {
@@ -85,35 +131,109 @@ export function playerInitialized(result) {
   });
 }
 
-function playerConnectionChanged(connected) {
-  return ({
-    type: 'PLAYER_CONNECTION',
-    payload: connected,
-  });
-}
-
 export function pause() {
   return (dispatch, getState) => {
-    const { player: { webSocket } } = getState();
+    const {
+      player: {
+        initialized,
+        webSocket,
+      },
+    } = getState();
+
     if (webSocket) {
-      const request = pauseRequest();
-      webSocket.send(request);
-      dispatch({
-        type: 'PLAYER_PAUSE',
-      });
+      if (initialized) {
+        const request = pauseRequest();
+        
+        const onSuccess = () => {
+          dispatch({
+            type: 'PLAYER_PAUSE',
+          });
+        }
+
+        const onFailure = (error) => {
+          // TODO: notify
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log websocket missing error
+      }
     }
   };
 }
 
 export function next() {
   return (dispatch, getState) => {
-    const { player: { webSocket } } = getState();
+    const {
+      player: {
+        initialized,
+        webSocket,
+      },
+    } = getState();
+
     if (webSocket) {
-      const request = nextRequest();
-      webSocket.send(request);
+      if (initialized) {
+        const request = nextRequest();
+        
+        const onSuccess = () => {};
+
+        const onFailure = (error) => {
+          // TODO: notify
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log websocket missing error
+      }
     }
   };
 }
+
+export function initializePlayer() {
+  return (dispatch, getState) => new Promise((resolve, reject) => {
+    const {
+      devices: {
+        fileServer: {
+          baseAddress: fsAddress,
+        },
+      },
+      player: {
+        initialized,
+        webSocket,
+        volume,
+      },
+    } = getState();
+
+    if (webSocket) {
+      if (!initialized) {
+        const request = initializeRequest(fsAddress);
+
+        const onSuccess = () => {
+          dispatch(setVolume(volume));
+          dispatch(playerInitialized(true));
+          resolve();
+        };
+
+        const onFailure = (error) => {
+          console.log("Init error", error);
+          dispatch(playerInitialized(false));
+          reject(error);
+        };
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log already initialized
+        reject({ message: 'already initialized'});
+      }
+    } else {
+      // TODO: log websocket missing error
+      reject({ message: 'websocket missing'});
+    }
+  });  
+}
+
 
 export function registerTimeUpdateCallback() {
   return (dispatch, getState) => {
@@ -179,6 +299,7 @@ function playerReset() {
   });
 }
 
+/*
 export function startedPlaying() {
   return (dispatch, getState) => {
     const { firebase, userData, player } = getState();
@@ -191,6 +312,7 @@ export function startedPlaying() {
             .update({ startedPlayingAt: fb.database.ServerValue.TIMESTAMP });
   };
 }
+*/
 
 export function seekTo(time) {
   return () => {
@@ -205,7 +327,7 @@ function handleError(payload) {
       switch (payload.errorCode) {
         case 21: {
           // empty queues
-          dispatch(requestPlaylist());
+          dispatch(maintainPlaylistQueue());
           const { player: { playing } } = getState();
           if (playing) {
             dispatch(play());
@@ -232,10 +354,21 @@ export function updateQueue(queue) {
 }
 
 function setWebsocket(webSocket) {
-  return ({
-    type: 'PLAYER_SET_WEBSOCKET',
-    payload: webSocket,
-  });
+  return (dispatch, getState) => {
+    const {
+      player: {
+        webSocket: oldWebSocket,
+      }
+    } = getState();
+
+    if (oldWebSocket) {
+      oldWebSocket.close();
+    }  
+    dispatch({
+      type: 'PLAYER_SET_WEBSOCKET',
+      payload: webSocket,
+    });
+  }
 }
 
 function createWebSocketCallback(id, onSuccess, onFailure) {
@@ -296,20 +429,6 @@ function webSocketResponse(msg) {
   }
 }
 
-function requestPlaylist() {
-  return (dispatch, getState) => {
-    const {
-      playback: { activePlaylist },
-      player: { webSocket },
-    } = getState();
-    const nextSong = generateNextSong(activePlaylist);
-    if (nextSong) {
-      const { songId, itemId } = nextSong;
-      dispatch(playlistQueueAddItem(songId, itemId));
-    }
-  };
-}
-
 function songStarted(payload) {
   return (dispatch, getState) => {
     if (payload.itemId) {
@@ -342,17 +461,18 @@ export function resetPlayer() {
   return (dispatch, getState) => {
     const {
       player: {
-        playerConnected,
+        initialized,
         webSocket,
       },
     } = getState();
 
-    if (playerConnected) {
-      if (webSocket) {
+    if (webSocket) {
+      if (initialized) {
         const request = resetRequest();
         
         const onSuccess = () => {
           dispatch(playerReset());
+          dispatch(playerInitialized(false));
         }
 
         const onFailure = (error) => {
@@ -399,13 +519,11 @@ function statusUpdate(status) {
 
 function webSocketOnMessage(dispatch, event) {
   try {
-    console.log('Websocket arrived: ', event.data);
     const msg = parse(event.data);
-    console.log('Websocket message: ', msg);
     if (msg.type === 'notification') {
       switch (msg.method) {
         case 'REQUESTPLAYLIST': {
-          dispatch(requestPlaylist());
+          dispatch(maintainPlaylistQueue());
           break;
         }
         default: {
@@ -475,7 +593,7 @@ export function connectToLocalPlayer() {
       }
       url += `:${port}`;
 
-      dispatch(connect(url))
+      dispatch(connect(url, true))
         .then(() => resolve())
         .catch((error) => reject(error));
     } else{
@@ -505,7 +623,7 @@ export function connectToRemotePlayer() {
         url += hostname;
       }
       url += `:${port}`;
-      dispatch(connect(url))
+      dispatch(connect(url, false))
       .then(() => resolve())
       .catch((error) => reject(error));
     } else{
@@ -514,55 +632,59 @@ export function connectToRemotePlayer() {
   });
 }
 
-function connect(address) {
-  return (dispatch, getState) => new Promise(function (resolve, reject) {
-    const {
-      devices: {
-        fileServer: {
-          baseAddress,
-        },
-      },
-      player: {
-        volume,
-      }
-    } = getState();
+function playerLocalConnected(address) {
+  return {
+    type: 'PLAYER_LOCAL_CONNECTED',
+    payload: address
+  };
+}
 
-    if (address && baseAddress) {
+function playerRemoteConnected(address) {
+  return {
+    type: 'PLAYER_REMOTE_CONNECTED',
+    payload: address
+  };
+}
+
+function playerDisconnected() {
+  return {
+    type: 'PLAYER_DISCONNECTED'
+  };
+}
+
+function connect(address, local) {
+  return (dispatch) => new Promise(function (resolve, reject) {
+    if (address) {
       try {
         const ws = new WebSocket(address);
         ws.onmessage = (event) => webSocketOnMessage(dispatch, event);
         ws.onopen = () => {
-          dispatch(playerConnectionChanged(true));
-          const init = initializeRequest(baseAddress);
-          const onSuccess = () => {
-            dispatch(sendVolume(volume));
-            dispatch(playerInitialized(true));
-          };
-          const onFailure = (error) => {
-            console.log("Init error", error);
-            dispatch(playerInitialized(false));
-            alert("Player could not connect to file server");
-            disconnect();
-          };
-          dispatch(webSocketRequest(init, onSuccess, onFailure));
-          //ws.send(init);
-          //sendVolume(volume);
+          if(local) {
+            dispatch(playerLocalConnected(address));      
+          } else {
+            dispatch(playerRemoteConnected(address));
+          }              
         };
         ws.onclose = () => {
-          dispatch(playerConnectionChanged(false));
+          dispatch(playerDisconnected());
           dispatch(setWebsocket(null));
           dispatch(playerReset());
         };
+        ws.onerror = (event) => {
+          if(event.target.readyState === 3) { // The connection is closed or couldn't be opened.
+            dispatch(notify(intl.formatMessage(intlStrings.onWebSocketError)));
+          }
+        }
         dispatch(setWebsocket(ws));
         resolve()
       } catch (ex) {
         console.log('Connection failed: ', ex);
-        dispatch(playerConnectionChanged(false));
+        dispatch(playerDisconnected());
         dispatch(setWebsocket(null));
         reject(ex);
       }
     } else {
-      console.log('Connect failed, address: ', address, ', baseAddress: ', baseAddress);
+      console.log('Connect failed, address: ', address);
       reject(); // fileserver not connected
     }
   });

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { injectIntl, IntlProvider } from 'react-intl';
+import { IntlProvider } from 'react-intl';
 import PropTypes from 'prop-types';
 import FlatButton from 'material-ui/FlatButton';
 import ExpandTransition from 'material-ui/internal/ExpandTransition';
@@ -7,6 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import DropDownIcon from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import DropUpIcon from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import BeadIcon from 'material-ui/svg-icons/image/brightness-1';
 
 import ScrollPane from '../../containers/ScrollPane';
 import OrangeDivider from '../OrangeDivider';
@@ -39,6 +40,10 @@ const styles = {
     marginLeft: '30px',
     maxWidth: '350px',
   },
+  toggleWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+  },
 };
 
 class Devices extends Component {
@@ -65,8 +70,10 @@ class Devices extends Component {
 
     const green = '#4cbb17';
     const red = '#ff2400';
+    const orange = '#ffa500';
 
     // Set up button settings
+    /*** LOCAL PLAYER START BUTTON ***/
     const playerLocalStartBtn = {
       disabled: player.local.busy,
       label: formatMessage(player.local.running ? messages.playerLocalStopBtn : messages.playerLocalStartBtn),
@@ -75,7 +82,48 @@ class Devices extends Component {
     playerLocalStartBtn.onTouchTap = playerLocalStartBtn.disabled 
       ? null 
       : (player.local.running ? ps.onCloseLocal : ps.onOpenLocal);
-    
+    /*** LOCAL PLAYER CONNECT BUTTON */
+    const playerLocalConnectBtn = {
+      disabled: player.remote.connected || !player.local.running,
+      label: formatMessage(player.local.connected ? messages.playerLocalDisconnectBtn : messages.playerLocalConnectBtn)
+    };
+    playerLocalConnectBtn.onTouchTap = playerLocalConnectBtn.disabled 
+      ? null
+      : (player.local.connected ? ps.onDisconnect : ps.onConnectLocal);
+    /*** REMOTE PLAYER CONNECT BUTTON */
+    const playerRemoteConnectBtn = {
+      disabled: player.local.connected,
+      label: formatMessage(player.remote.connected ? messages.playerRemoteDisconnectBtn : messages.playerRemoteConnectBtn)
+    };
+    playerRemoteConnectBtn.onTouchTap = playerRemoteConnectBtn.disabled 
+      ? null
+      : (player.remote.connected ? ps.onDisconnect : ps.onConnectRemote);
+    /*** LOCAL FILESERVER START BUTTON ***/
+    const fsLocalStartBtn = {
+      disabled: fileServer.local.busy,
+      label: formatMessage(fileServer.local.running ? messages.fsLocalStopBtn : messages.fsLocalStartBtn),
+      backgroundColor: fileServer.local.running ? red : green,
+    };
+    fsLocalStartBtn.onTouchTap = fsLocalStartBtn.disabled 
+      ? null 
+      : (fileServer.local.running ? fs.onCloseLocal : fs.onOpenLocal);
+    /*** LOCAL FILESERVER CONNECT BUTTON ***/
+    const fsLocalConnectBtn = {
+      disabled: fileServer.remote.connected || !fileServer.local.running,
+      label: formatMessage(fileServer.local.connected ? messages.fsLocalDisconnectBtn : messages.fsLocalConnectBtn)
+    };
+    fsLocalConnectBtn.onTouchTap = fsLocalConnectBtn.disabled 
+      ? null
+      : (fileServer.local.connected ? fs.onDisconnect : fs.onConnectLocal);
+    /*** REMOTE FILESERVER CONNECT BUTTON ***/
+    const fsRemoteConnectBtn = {
+      disabled: fileServer.local.connected,
+      label: formatMessage(fileServer.remote.connected ? messages.fsRemoteDisconnectBtn : messages.fsRemoteConnectBtn)
+    };
+    fsRemoteConnectBtn.onTouchTap = fsRemoteConnectBtn.disabled 
+      ? null
+      : (fileServer.remote.connected ? fs.onDisconnect : fs.onConnectRemote);
+
     const playerDialogActions = [      
       <FlatButton
         label="Yes"
@@ -121,12 +169,15 @@ class Devices extends Component {
             <OrangeDivider />
 
 {/*********** LOCAL FILE SERVER ***********/}
-            <FlatButton
-              label={formatMessage(messages.fileServerLocal)}
-              labelPosition={'before'}
-              icon={pageLayout.fileServer.localOpen ? <DropUpIcon /> : <DropDownIcon />}
-              onTouchTap={fs.toggleLocal}
-            />
+            <div style={styles.toggleWrapper}>
+              <BeadIcon color={fileServer.local.connected ? green : (fileServer.local.running ? orange : red)}/>
+              <FlatButton
+                label={formatMessage(messages.fileServerLocal)}
+                labelPosition={'before'}
+                icon={pageLayout.fileServer.localOpen ? <DropUpIcon /> : <DropDownIcon />}
+                onTouchTap={fs.toggleLocal}
+              />
+            </div>
             <ExpandTransition
               {...this.transitionProps}
               open={pageLayout.fileServer.localOpen}
@@ -149,30 +200,30 @@ class Devices extends Component {
                     value={fileServer.local.port}
                   />
                   <RaisedButton
-                    label={formatMessage(fileServer.local.running ? messages.fsLocalStopBtn : messages.fsLocalStartBtn)}
-                    backgroundColor={fileServer.local.running ? red : green}
-                    disabled={fileServer.local.busy}
-                    onTouchTap={fileServer.local.running ? fs.onCloseLocal : fs.onOpenLocal}
+                    label={fsLocalStartBtn.label}
+                    backgroundColor={fsLocalStartBtn.backgroundColor}
+                    disabled={fsLocalStartBtn.disabled}
+                    onTouchTap={fsLocalStartBtn.onTouchTap}
+                  />                    
+                  <FlatButton
+                    disabled={fsLocalConnectBtn.disabled}
+                    label={fsLocalConnectBtn.label}
+                    onTouchTap={fsLocalConnectBtn.onTouchTap}
                   />
-                  {
-                    fileServer.local.running && !fileServer.connected && (
-                      <FlatButton
-                        label={formatMessage(messages.fsLocalReconnectBtn)}
-                        onTouchTap={fs.onConnectLocal}
-                      />
-                    )
-                  }
                 </div>
               </div>
             </ExpandTransition>
 
 {/*********** REMOTE FILE SERVER ***********/}
-            <FlatButton
-              label={formatMessage(messages.fileServerRemote)}
-              labelPosition={'before'}
-              icon={pageLayout.fileServer.remoteOpen ? <DropUpIcon /> : <DropDownIcon />}
-              onTouchTap={fs.toggleRemote}
-            />
+            <div style={styles.toggleWrapper}>
+              <BeadIcon color={fileServer.remote.connected ? green : red}/>
+              <FlatButton
+                label={formatMessage(messages.fileServerRemote)}
+                labelPosition={'before'}
+                icon={pageLayout.fileServer.remoteOpen ? <DropUpIcon /> : <DropDownIcon />}
+                onTouchTap={fs.toggleRemote}
+              />
+            </div>
             <ExpandTransition
               {...this.transitionProps}
               open={pageLayout.fileServer.remoteOpen}
@@ -195,9 +246,9 @@ class Devices extends Component {
                     value={fileServer.remote.port}
                   />
                   <FlatButton
-                    label={formatMessage(fileServer.remote.connected ? messages.fsRemoteDisconnectBtn : messages.fsRemoteConnectBtn)}
-                    onTouchTap={fileServer.connected ? (fileServer.remote.connected ? fs.onDisconnect : null) : fs.onConnectRemote}
-                    disabled={fileServer.connected && !fileServer.remote.connected}
+                    label={fsRemoteConnectBtn.label}
+                    onTouchTap={fsRemoteConnectBtn.onTouchTap}
+                    disabled={fsRemoteConnectBtn.disabled}
                   />
                 </div>
               </div>
@@ -224,12 +275,15 @@ class Devices extends Component {
             <OrangeDivider />
 
 {/*********** LOCAL PLAYER ***********/}
-            <FlatButton
-              label={formatMessage(messages.playerLocal)}
-              labelPosition={'before'}
-              icon={pageLayout.player.localOpen ? <DropUpIcon /> : <DropDownIcon />}
-              onTouchTap={ps.toggleLocal}
-            />
+            <div style={styles.toggleWrapper}>
+              <BeadIcon color={player.local.connected ? green : (player.local.running ? orange : red)}/>
+              <FlatButton
+                label={formatMessage(messages.playerLocal)}
+                labelPosition={'before'}
+                icon={pageLayout.player.localOpen ? <DropUpIcon /> : <DropDownIcon />}
+                onTouchTap={ps.toggleLocal}
+              />
+            </div>
             <ExpandTransition
               {...this.transitionProps}
               open={pageLayout.player.localOpen}
@@ -256,26 +310,26 @@ class Devices extends Component {
                     backgroundColor={playerLocalStartBtn.backgroundColor}
                     disabled={playerLocalStartBtn.disabled}
                     onTouchTap={playerLocalStartBtn.onTouchTap}
+                  />                  
+                  <FlatButton
+                    label={playerLocalConnectBtn.label}
+                    onTouchTap={playerLocalConnectBtn.onTouchTap}
+                    disabled={playerLocalConnectBtn.disabled}
                   />
-                  {
-                    player.local.running && !playerConnected && (
-                      <FlatButton
-                        label={formatMessage(messages.playerLocalReconnectBtn)}
-                        onTouchTap={ps.onConnectLocal}
-                      />
-                    )
-                  }
                 </div>
               </div>
             </ExpandTransition>
 
 {/*********** REMOTE PLAYER ***********/}
-            <FlatButton
-              label={formatMessage(messages.playerRemote)}
-              labelPosition={'before'}
-              icon={pageLayout.player.remoteOpen ? <DropUpIcon /> : <DropDownIcon />}
-              onTouchTap={ps.toggleRemote}
-            />
+            <div style={styles.toggleWrapper}>
+              <BeadIcon color={player.remote.connected ? green : red}/>
+              <FlatButton
+                label={formatMessage(messages.playerRemote)}
+                labelPosition={'before'}
+                icon={pageLayout.player.remoteOpen ? <DropUpIcon /> : <DropDownIcon />}
+                onTouchTap={ps.toggleRemote}
+              />
+            </div>
             <ExpandTransition
               {...this.transitionProps}
               open={pageLayout.player.remoteOpen}
@@ -298,9 +352,9 @@ class Devices extends Component {
                       value={player.remote.port}
                     />
                     <FlatButton
-                      label={formatMessage(player.remote.connected ? messages.playerRemoteDisconnectBtn : messages.playerRemoteConnectBtn)}
-                      onTouchTap={playerConnected ? (player.remote.connected ? ps.onDisconnect : null) : ps.onConnectRemote}
-                      disabled={playerConnected && !player.remote.connected}
+                      label={playerRemoteConnectBtn.label}
+                      onTouchTap={playerRemoteConnectBtn.onTouchTap}
+                      disabled={playerRemoteConnectBtn.disabled}
                     />
                   </div>
                 </div>
@@ -323,4 +377,4 @@ Devices.propTypes = {
 };
 
 
-export default injectIntl(Devices);
+export default Devices;

@@ -11,6 +11,7 @@ export default class ScrollPane extends Component {
       height: 0,
     };
   }
+
   computeHeight(elem) {
     const box = elem.getBoundingClientRect();
     const body = document.body;
@@ -29,9 +30,11 @@ export default class ScrollPane extends Component {
         // console.log('top: ', top, ' bottom: ' , bottom, ' ownHeight: ', ownHeight, ' viewport: ', viewportHeight );
     return (height > 0 ? height : 100);
   }
+
   resize() {
     this.setState({ height: this.computeHeight(this.topDiv) });
   }
+  
   componentDidMount() {
     this.resize();
     if (typeof window !== 'undefined') { window.addEventListener('resize', this.resize, false); }

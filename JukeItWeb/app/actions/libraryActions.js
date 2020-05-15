@@ -737,4 +737,3 @@ export function getAllEntitySongs(baseUrl, entity, entityId, userId, orderby = n
   return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter)
     .then((result) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter, [], result));
 }
-
