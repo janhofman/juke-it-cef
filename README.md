@@ -14,13 +14,13 @@ To build boost libraries, follow these steps
 3. Create a temporary folder for intermediate boost build files
 4. Open command line and navigate to boost (boost_1_67_0) folder
 5. From the command line, navigate to unpacked directory and run following commands:
-  `bootstrap`
-  `.\b2 --build-dir=build-directory toolset=toolset-name --build-type=complete stage --with-system --with-date_time`, where build-directory is a temporary directory for intermediate build files and toolset-name is name of build tool (use msvc for building with Visual Studio)
+  * `bootstrap`
+  * `.\b2 --build-dir=build-directory toolset=toolset-name --build-type=complete stage --with-system --with-date_time`, where build-directory is a temporary directory for intermediate build files and toolset-name is name of build tool (use msvc for building with Visual Studio)
 Refer to the Get started manual available via Boost link in case of additional questions.
 
 ### Cloning and setting up working directory
 1. Clone the repository
-2. Download and unpack Standard Distribution of CEF for your OS from [here](http://opensource.spotify.com/cefbuilds/index.html), **version 3.3202.1683**, then copy **Debug** and **Release** directories to project root folder
+2. Download and unpack Standard Distribution of CEF for your OS from [here](http://opensource.spotify.com/cefbuilds/index.html), **version 3.3202.1683** (use version filter), then copy **Debug** and **Release** directories to project root folder
 3. Download and unpack additional external libraries from [here](https://www.dropbox.com/s/13az32lsxirskrf/libraries.zip?dl=0), copy the libraries folder to project root folder
 4. On command line, navigate to root folder of your working directory
     * `cd /path/to/project-root-folder`
@@ -36,15 +36,19 @@ Refer to the Get started manual available via Boost link in case of additional q
         * ~~Then, open build\cef.xcodeproj in Xcode and select Product > Build.~~
     * To perform a Windows build using a 32-bit CEF binary distribution:
         * `cmake -G "Visual Studio 15" ..`
-        * Then, open build\cef.sln in Visual Studio 2017 and select Build > Build Solution.
+        * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
     * To perform a Windows build using a 64-bit CEF binary distribution:
         * `cmake -G "Visual Studio 15 Win64" ..`
-        * Then, open build\cef.sln in Visual Studio 2017 and select Build > Build Solution.
+        * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
 
 ### Building and using web app:
-1. Go to JukeItWeb directory
+
+Desktop application uses web application as GUI. In Debug configuration, application accesses localhost:3000 and supports hot reloading, i.e. on code changes in web app, it is reloaded without the need for rebuilding. In Release configuration it accesses built web application in 'app' folder.
+
+1. From command line, go to JukeItWeb directory
+    * `cd path/to/project/JukeItWeb`
 2. First time, you will need to install packages - run `npm install` command
-3. In Debug environment, the web application supports hot reloading on code changes. To run hot reload server during debugging, run `npm start`
+3. In Debug environment, to run hot reloading server for debugging, run `npm start`.
 4. To build the web application in Release environment,  run `npm run build`. After that, copy 'build' directory into root directory of built Release version of JukeIt App and rename it to 'app'
     * `xcopy build ..\build\JukeItApp\Release\app\ /E /Q`
 

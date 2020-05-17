@@ -55,7 +55,7 @@ class PlaylistsPage extends Component {
     dispatch(showDialog(false));
   }
 
-  saveNewPlaylist(name, description, image) {
+  saveNewPlaylist(name, description) {
     const { dispatch } = this.props;
     dispatch(addNewPlaylist(name, description));
   }

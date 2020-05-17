@@ -7,7 +7,7 @@ import Dialog from 'material-ui/Dialog';
 import StyledTextField from './../StyledTextField';
 import messages from './messages';
 
-const styles={
+const styles = {
     wrapper: {
         //position: 'fixed',
         //top:'50%',
@@ -18,14 +18,6 @@ const styles={
         //marginTop: '-165px', /* Negative half of height. */
         //marginLeft: '-310px', /* Negative half of width. */
         //zIndex: 100,
-    },
-    imageChooser: {
-        float: 'left',
-        width: '200px',
-        height: '200px',
-        margin: '10px',
-        border: '1px dashed black',
-        textAlign: 'center',
     },
     inputs: {
         float: 'right',
@@ -43,9 +35,6 @@ const styles={
     buttonsSection: {
         clear:'both',
         textAlign: 'right',
-    },
-    imageButton: {
-        marginTop:'150px',
     },
 }
 
@@ -80,7 +69,7 @@ class NewPlaylistDialog extends Component{
                 label={formatMessage(messages.saveBtn)}
                 containerElement="label"
                 //style={styles.button}
-                onTouchTap={() => handleSave(name, description, image)}
+                onTouchTap={() => handleSave(name, description)}
             />,
             <FlatButton
                 label={formatMessage(messages.cancelBtn)}
@@ -96,15 +85,8 @@ class NewPlaylistDialog extends Component{
                 title={formatMessage(messages.title)}
                 modal={true}
                 open={open}
-            >
-                <div style={styles.imageChooser}>
-                    <FlatButton
-                    label={'Choose image'}
-                    containerElement="label"
-                    style={styles.imageButton}
-                />
-                </div>
-                <div style={styles.inputs}>
+            >                
+                <div>
                     <StyledTextField 
                         hintText={formatMessage(messages.nameHint)}
                         floatingLabelText={formatMessage(messages.nameLabel)}
