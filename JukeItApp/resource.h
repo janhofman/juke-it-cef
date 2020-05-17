@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2017 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
@@ -7,8 +7,8 @@
 // Used by cefsimple.rc
 //
 
-#define IDI_CEFSIMPLE 100
-#define IDI_SMALL 101
+#define BINARY 256
+#define IDS_MESSAGE_ROUTER_HTML 1000
 
 // Avoid files associated with MacOS
 #define _X86_

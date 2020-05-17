@@ -117,7 +117,7 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 # Project name.
 # TODO: Change this line to match your project name when you copy this file.
-project(cef)
+project(JukeIt)
 
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY OS_FOLDERS ON)
@@ -191,6 +191,9 @@ find_package(CEF REQUIRED)
 # Define CEF-based targets.
 #
 
+# Set path to libraries so subdirectories can access it   
+set(JUKEIT_LIBRARIES_DIR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries")
+
 # Include the libcef_dll_wrapper target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.
@@ -204,6 +207,11 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 #add_subdirectory(tests/gtest)
 #add_subdirectory(tests/ceftests)
 add_subdirectory(JukeItApp)
+add_subdirectory(sqlite3)
+add_subdirectory(portaudio)
+add_subdirectory(PlayerModule)  
+add_subdirectory(FileserverModule)
+add_subdirectory(spdlog)
 
 
 # Display configuration settings.
