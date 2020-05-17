@@ -6,7 +6,6 @@ import { removePlaylist, uploadAlbumLib } from '../../actions/playbackActions';
 import {
   clear,
   loadMetadataForAlbum,
-  loadSongsForAlbum,
 } from '../../actions/songListActions';
 import MusicEntityDetail from '../../components/MusicEntityDetail';
 import { EntityEnum } from '../../utils';

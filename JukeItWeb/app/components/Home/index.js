@@ -70,6 +70,7 @@ class Home extends Component {
               label={formatMessage(messages.libTabTitle)} 
               labelPosition={'before'}
               secondary={libraryMatch}
+              icon={!libraryEnabled && <CancelIcon color={'red'}/>}
             />
           </Link>
           <Link to={establishmentPath}>

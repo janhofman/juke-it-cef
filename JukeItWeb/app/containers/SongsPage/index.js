@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Songs from '../../components/Songs';
 import { uploadSongsLib, removePlaylist } from './../../actions/playbackActions';
-import { loadSongs, apiSongsPromise } from './../../actions/libraryActions';
+import { apiSongsPromise } from './../../actions/libraryActions';
 
 class SongsPage extends Component {
   constructor(props) {

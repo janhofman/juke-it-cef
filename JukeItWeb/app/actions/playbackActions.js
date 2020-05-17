@@ -12,10 +12,26 @@ import {
 import { EntityEnum } from './../utils';
 
 export function playlistChanged(playlist) {
-  return {
-    type: 'PLAYBACK_PLAYLIST_CHANGED',
-    payload: playlist,
-  };
+  return (dispatch, getState) => {
+    const payload = { playlist };
+    if(playlist) {
+      const {
+        devices: {
+          fileServer: {
+            baseAddress
+          }
+        }
+      } = getState();
+      payload.fileserverAddress = baseAddress;
+    } else{
+      payload.fileserverAddress = null;
+    }
+
+    dispatch({
+      type: 'PLAYBACK_PLAYLIST_CHANGED',
+      payload,
+    });
+  }  
 }
 
 export function toggleQueue() {
@@ -72,6 +88,13 @@ function setRandomSongsArray(arr) {
     type: 'PLAYBACK_SET_RANDOM_ARRAY',
     payload: arr,
   });
+}
+
+export function setFileserverAddress(address) {
+  return {
+    type: 'PLAYBACK_SET_FILESERVER_ADDRESS',
+    payload: address,
+  };
 }
 
 /**
@@ -208,6 +231,7 @@ function uploadLibrary(entityType, entityId, title, subtitle) {
             map,
           };
           dispatch(playlistChanged(playlist));
+
           dispatch(push('/home/playback'));
         });
     });
@@ -236,11 +260,7 @@ export function uploadSongsLib(title, subtitle) {
 
 export function startPlayback(){
   return (dispatch, getState) => {
-    dispatch(initializePlayer());
-    // dispatch({
-    //   type: 'PLAYBACK_START',
-    // });
-    // dispatch(play());
+    return dispatch(initializePlayer());
   };
 }
 

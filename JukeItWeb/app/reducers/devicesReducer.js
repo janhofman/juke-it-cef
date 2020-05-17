@@ -89,9 +89,9 @@ export default function reducer(state = initialState, action) {
     case 'DEVICES_FS_REMOTE_CHANGE':
         return { ...state, fileServer: { ...state.fileServer, remote: action.payload }};
     case 'DEVICES_PLAYER_LOCAL_CHANGE':
-        return { ...state, player: { ...state.player, local: action.payload }};
+        return { ...state, player: { ...state.player, local: { ...state.player.local, ...action.payload }}};
     case 'DEVICES_PLAYER_REMOTE_CHANGE':
-        return { ...state, player: { ...state.player, remote: action.payload }};
+        return { ...state, player: { ...state.player, remote: { ...state.player.remote, ...action.payload }}};
     case 'DEVICES_PLAYER_LOCAL_BUSY': {
       const player = { ...state.player };
       player.local.busy = action.payload;
@@ -201,9 +201,9 @@ export default function reducer(state = initialState, action) {
       return {
         ...state,
         player: {
+          ...state.player,
           connected: true,
           address: action.payload,
-          ...state.player,
           local: {
             ...state.player.local,
             connected: true,

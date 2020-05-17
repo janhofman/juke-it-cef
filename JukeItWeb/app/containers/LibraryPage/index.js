@@ -5,13 +5,16 @@ import Library from './../../components/Library';
 
 import {
     addSongs,
+    loadPlaylists,
 } from './../../actions/libraryActions';
-import { loadPlaylists } from './../../actions/playlistsActions';
 
 class LibraryPage extends Component {
   constructor(props) {
     super(props);
-    props.dispatch(loadPlaylists());
+    const { connected, dispatch } = this.props;
+    if(connected) {
+      dispatch(loadPlaylists());
+    }
 
     this.handleAddFiles = this.handleAddFiles.bind(this);
     this.handleOpenFileAvailabilityTool = this.handleOpenFileAvailabilityTool.bind(this);
@@ -51,4 +54,5 @@ export default connect((store) => ({
   playlistsLoaded: store.playlists.playlistsLoaded,
   playbackReady: store.playback.activePlaylist !== null,
   localConnected: store.devices.fileServer.local.connected,
+  connected: store.devices.fileServer.connected,
 }))(LibraryPage);

@@ -1,13 +1,19 @@
 import React, { Component } from 'react';
+import { injectIntl } from 'react-intl';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import {SortDirection} from 'react-virtualized/dist/es/Table';
 import SongListDumb from '../SongListDumb';
-import { addSongToPlaylist, addSongsToPlaylist, removeSongsFromPlaylist } from './../../actions/playlistsActions';
 import {
+  addSongToPlaylist,
+  addSongsToPlaylist,
+  removeSongsFromPlaylist,
   removeFiles,
 } from './../../actions/libraryActions';
+import { notify, logError } from '../../actions/evenLogActions';
+import { checkFsConnection } from '../../actions/devicesActions';
 import { makeCancelable } from './../../utils';
+import messages from './messages';
 
 class SongList extends Component {
   constructor(props) {
@@ -40,6 +46,7 @@ class SongList extends Component {
       }
     };
 
+    this.reload = this.reload.bind(this);
     this.loadNextPage = this.loadNextPage.bind(this);
     this.onRowChecked = this.onRowChecked.bind(this);
     this.finishSelection = this.finishSelection.bind(this);
@@ -55,6 +62,21 @@ class SongList extends Component {
     this.onRemoveSelectedFiles = this.onRemoveSelectedFiles.bind(this);
     this.onRemoveSongsFromPlaylistOption = this.onRemoveSongsFromPlaylistOption.bind(this);
     this.onRemoveSelectedSongsFromPlaylist = this.onRemoveSelectedSongsFromPlaylist.bind(this);
+  }
+
+  reload() {
+    this.setState((state) => {
+      if(state.loadPromise) {
+        state.loadPromise.cancel();
+      }
+
+      return {
+        rows: [],
+        hasNextPage: true,
+        loadPromise: null,
+        loading: false,
+      }
+    })
   }
 
   onAddSongToPlaylist(playlistId) {
@@ -143,8 +165,12 @@ class SongList extends Component {
   loadNextPage({startIndex, stopIndex}) {
     console.log(`loadNextPage start: ${startIndex}, stop: ${stopIndex}`);
     const {
+      dispatch,
       loadNextPage,
       fsBaseAddress,
+      intl: {
+        formatMessage,
+      }
     } = this.props;
 
     const {
@@ -176,8 +202,20 @@ class SongList extends Component {
         this.loadingFinished();
       })
       .catch((err) => {
-        console.log(err);    // TODO: add catch    
+        console.log('Loading next page error: ', err);    // TODO: add catch   
+        dispatch(logError(err)) ;
+        dispatch(notify(formatMessage(messages.onLoadingError)));
         this.loadingFinished();
+        // cancel loading
+        this.noMoreRows();
+        if(err.request && ! err.response) {
+          // we did not get any response from server
+          // it is possible that connection is compromised
+          dispatch(checkFsConnection()) // check connection
+            .catch((err) => {
+              dispatch(notify(formatMessage(messages.onFsDisconnected)));              
+            });
+        }
       });  
     this.setLoadPromise(promise);
     return promise.promise;
@@ -317,21 +355,28 @@ class SongList extends Component {
   }
 
   onRemoveSelectedSongsFromPlaylist() {
-    const { 
-      rows,
-    } = this.state;    
-    const { dispatch, playlistId } = this.props;
+    return new Promise((resolve, reject) => {
+      const { 
+        rows,
+      } = this.state;    
+      const { dispatch, playlistId } = this.props;
 
-    if(playlistId){
-      const selectedSongs = [];
-      for (let i = 0; i < rows.length; i++) {
-        if(rows[i].selected === true) {
-          selectedSongs.push(rows[i].id);
+      if(playlistId){
+        const selectedSongs = [];
+        for (let i = 0; i < rows.length; i++) {
+          if(rows[i].selected === true) {
+            selectedSongs.push(rows[i].id);
+          }
         }
-      }
-      dispatch(removeSongsFromPlaylist(playlistId, selectedSongs));
-    }
-    this.finishSelection();
+        dispatch(removeSongsFromPlaylist(playlistId, selectedSongs))
+          .then(() => { this.reload(); resolve(); })
+          .catch((err) => { reject(err); });
+        this.finishSelection();
+      } else {
+        this.finishSelection();
+        resolve();
+      }     
+    });
   }
 
   render() {
@@ -390,6 +435,7 @@ class SongList extends Component {
         playlistId={playlistId}
 
         // actions
+        onReload={this.reload}
         playAction={playAction}
         loadNextPage={this.loadNextPage}
         onRowChecked={this.onRowChecked}
@@ -427,4 +473,4 @@ export default connect((store) => {
     fsBaseAddress: devices.fileServer.baseAddress,
     manageable: store.playback.activePlaylist === null && store.devices.fileServer.local.connected,
   });
-})(SongList);
+})(injectIntl(SongList));

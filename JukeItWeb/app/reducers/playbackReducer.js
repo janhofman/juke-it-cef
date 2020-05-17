@@ -14,13 +14,21 @@ const initialState = {
   playlistQueueOpen: false,
   priorityQueueOpen: false,
   availableSongsOpen: true,
+  fileserverAddress: null,
 };
 
 export default function reducer(state = initialState, action) {
   const { type, payload } = action;
   switch (type) {
     case 'PLAYBACK_PLAYLIST_CHANGED':
-      return { ...state, activePlaylist: payload, playbackReady: (payload !== null) };
+      return { ...state, 
+        activePlaylist: payload.playlist, 
+        fileserverAddress: payload.fileserverAddress,
+        playbackReady: (payload !== null), 
+        randomSongsArray: []
+      };
+    case 'PLAYBACK_SET_FILESERVER_ADDRESS':
+      return { ...state, fileserverAddress: payload };
     case 'PLAYBACK_ADD_PLAYLIST_QUEUE': {
       const { playlistQueue } = state;
       const { songId, itemId } = payload;      

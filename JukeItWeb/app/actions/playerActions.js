@@ -2,14 +2,35 @@ import * as fb from 'firebase';
 import { format, parse } from 'json-rpc-protocol';
 import { defineMessages } from 'react-intl';
 import { maintainPlaylistQueue, removeQueueItem } from './playbackActions';
+import { checkFsConnection } from './devicesActions';
 import { notify } from './evenLogActions';
 import { intl } from '../utils/IntlGlobalProvider';
 
 const intlStrings = defineMessages({
   onWebSocketError: {
     id: 'playerActions.onWebSocketError',
-    defaultMessage: 'Could not connect to player.',
+    defaultMessage: 'Could not connect to player!',
   },
+  onSongFailed: {
+    id: 'playerActions.onSongFailed',
+    defaultMessage: 'Song \'{title}\' could not be played!',
+  },
+  onUnknownSongFailed: {
+    id: 'playerActions.onUnknownSongFailed',
+    defaultMessage: 'A song failed to load!',
+  },
+  onFileserverDisconnected: {
+    id: 'playerActions.onFileserverDisconnected',
+    defaultMessage: 'Player has disconnected from fileserver! The playback has been stopped.',
+  },
+  onInitFailed: {
+    id: 'playerActions.onInitFailed',
+    defaultMessage: 'Player could not connect to fileserver!',
+  },
+  onFsNotConnected: {
+    id: 'playerActions.onFsNotConnected',
+    defaultMessage: 'Fileserver is not connected!',
+  }
 });
 
 /*** BUILDING PLAYER REQUESTS ***/
@@ -219,6 +240,14 @@ export function initializePlayer() {
         const onFailure = (error) => {
           console.log("Init error", error);
           dispatch(playerInitialized(false));
+          if(error.code === 55) {
+            // player could not connect to fileserver
+            dispatch(notify(intl.formatMessage(intlStrings.onInitFailed)));
+            dispatch(checkFsConnection())
+              .catch(() => {
+                dispatch(notify(intl.formatMessage(intlStrings.onFsNotConnected)));
+              });
+          }
           reject(error);
         };
 
@@ -481,10 +510,56 @@ export function resetPlayer() {
 
         dispatch(webSocketRequest(request, onSuccess, onFailure));
       } else {
-        // TODO: log websocket missing error
+        dispatch(playerReset());
+        dispatch(playerInitialized(false));
       }
+    } else{
+      dispatch(playerReset());
+      dispatch(playerInitialized(false));
     }
   };
+}
+
+function handleSongFailed(itemId, songId) {
+  return (dispatch, getState) => {
+    if (itemId) {
+      // assume it is playing from queue when it's nonempty      
+      const { 
+        playback: { 
+          orderQueue,
+          playlistQueue,
+          priorityQueue,
+          activePlaylist: { 
+            map
+          }
+        },
+      } = getState();
+
+      let queue = priorityQueue.concat(orderQueue).concat(playlistQueue);
+      for(let i in queue){
+        if (queue[i].itemId === itemId) {
+          dispatch(removeQueueItem(itemId));
+          // get song
+          const song = map[songId];
+          if(song) {
+            dispatch(notify(intl.formatMessage(intlStrings.onSongFailed, { title: song.title }))); 
+          } else {
+            dispatch(notify(intl.formatMessage(intlStrings.onUnknownSongFailed)));
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+
+function handleFileserverDisconnected() {
+  return (dispatch) => {
+    dispatch(playerReset());
+    dispatch(playerInitialized(false));
+    dispatch(notify(intl.formatMessage(intlStrings.onFileserverDisconnected)));
+    dispatch(checkFsConnection());
+  }
 }
 
 function statusUpdate(status) {
@@ -520,10 +595,16 @@ function statusUpdate(status) {
 function webSocketOnMessage(dispatch, event) {
   try {
     const msg = parse(event.data);
+    console.log('Message received: ', msg);
     if (msg.type === 'notification') {
       switch (msg.method) {
         case 'REQUESTPLAYLIST': {
           dispatch(maintainPlaylistQueue());
+          break;
+        }
+        case 'FILESERVERDISCONNECTED': {
+          console.log('FILESERVERDISCONNECTED message received.');
+          dispatch(handleFileserverDisconnected());
           break;
         }
         default: {
@@ -537,6 +618,12 @@ function webSocketOnMessage(dispatch, event) {
               }
               case 'SONGSTARTED': {
                 dispatch(songStarted(msg.params));
+                break;
+              }
+              case 'SONGFAILED': {
+                console.log('SONGFAILED message received with params: ', msg.params);
+                const { songId, itemId } = msg.params;
+                dispatch(handleSongFailed(itemId, songId));
                 break;
               }
               case 'STATUS': {
@@ -600,7 +687,7 @@ export function connectToLocalPlayer() {
       resolve();
     }
   });
-}
+}     
 
 export function connectToRemotePlayer() {
   return (dispatch, getState) => new Promise(function(resolve, reject) {

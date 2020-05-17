@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { makeCancelable, EntityEnum } from './../utils';
+import { checkFsConnection } from './devicesActions';
 // import mm from 'musicmetadata';
 // import fs from 'fs';
 // import path from 'path';
@@ -41,6 +42,13 @@ export function genresChange(loaded, genres) {
   };
 }
 
+export function playlistsChange(loaded, playlists) {
+  return {
+    type: 'PLAYLISTS_CHANGE',
+    payload: { playlists, playlistsLoaded: loaded },
+  };
+}
+
 // PROMISE
 
 export function setSongsPromise(promise) {
@@ -67,6 +75,13 @@ export function setArtistsPromise(promise) {
 export function setGenresPromise(promise) {
   return {
     type: 'LIBRARY_SET_PROMISE_GENRES',
+    payload: promise,
+  };
+}
+
+export function setPlaylistsPromise(promise) {
+  return {
+    type: 'PLAYLISTS_SET_PROMISE',
     payload: promise,
   };
 }
@@ -113,65 +128,27 @@ export function cleanGenres() {
   };
 }
 
+export function cleanPlaylists() {
+  return (dispatch, getState) => {
+    const { playlistsPromise } = getState().playlists;
+    if (playlistsPromise) {
+      playlistsPromise.cancel();
+    }
+    dispatch(playlistsChange(false, []));
+  };
+}
+
 export function cleanLibrary() {
   return (dispatch) => {
     dispatch(cleanAlbums());
     dispatch(cleanArtists());
     dispatch(cleanGenres());
     dispatch(cleanSongs());
+    dispatch(cleanPlaylists());
   };
 }
 
 // LOAD
-
-export function loadSongs() {
-  return (dispatch, getState) => {
-    /*
-    const { cefQuery, library } = getState();
-    const { songsLoaded } = library;
-    if (!songsLoaded) {
-      dispatch(cleanSongs);
-      let promise = new Promise((resolve, reject) => {
-        cefQuery({
-          request: 'SQL_LOAD_SONGS',
-          onSuccess(response) {
-            console.log(response);
-            const data = JSON.parse(response);
-            resolve(data);
-          },
-          onFailure(errorCode, errorMessage) {
-            reject(errorCode, errorMessage);
-          },
-        });
-      });
-      promise = makeCancelable(promise);
-      promise.promise
-                .then((songs) => dispatch(songsChange(true, songs)))
-                .catch((err) => console.log(err));  // TODO: add catch
-      dispatch(setSongsPromise(promise));
-    }*/
-    const {
-      library: {
-        songsLoaded,
-      },
-      devices: {
-        fileServer: {
-          baseAddress,
-        },
-      },
-    } = getState();
-
-    if (!songsLoaded) {
-      dispatch(cleanSongs());
-      let promise = getAllSongs(baseAddress);
-      promise = makeCancelable(promise);
-      promise.promise
-        .then((songs) => dispatch(songsChange(true, songs)))
-        .catch((err) => console.log(err));  // TODO: add catch
-      dispatch(setSongsPromise(promise));
-    }
-  };
-}
 
 export function loadAlbums() {
   return (dispatch, getState) => {
@@ -194,56 +171,6 @@ export function loadAlbums() {
         .then((albums) => dispatch(albumsChange(true, albums)))
         .catch((err) => console.log(err));  // TODO: add catch
       dispatch(setAlbumsPromise(promise));
-    }
-  };
-}
-
-export function loadArtists() {
-  return (dispatch, getState) => {
-    const {
-      library: {
-        artistsLoaded,
-      },
-      devices: {
-        fileServer: {
-          baseAddress,
-        },
-      },
-    } = getState();
-
-    if (!artistsLoaded) {
-      dispatch(cleanArtists());
-      let promise = getAllArtists(baseAddress);
-      promise = makeCancelable(promise);
-      promise.promise
-        .then((artists) => dispatch(artistsChange(true, artists)))
-        .catch((err) => console.log(err));  // TODO: add catch
-      dispatch(setArtistsPromise(promise));
-    }
-  };
-}
-
-export function loadGenres() {
-  return (dispatch, getState) => {
-    const {
-      library: {
-        genresLoaded,
-      },
-      devices: {
-        fileServer: {
-          baseAddress,
-        },
-      },
-    } = getState();
-
-    if (!genresLoaded) {
-      dispatch(cleanGenres());
-      let promise = getAllGenres(baseAddress);
-      promise = makeCancelable(promise);
-      promise.promise
-        .then((genres) => dispatch(genresChange(true, genres)))
-        .catch((err) => console.log(err));  // TODO: add catch
-      dispatch(setGenresPromise(promise));
     }
   };
 }
@@ -303,14 +230,8 @@ export function apiSongPromise(baseUrl, songId) {
     url += '/';
   }
   url = `${url}v1/songs/${songId.toString()}`;
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -344,14 +265,8 @@ export function apiSongsPromise(baseUrl, limit = 100, start = 1, orderby = null,
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -402,14 +317,8 @@ export function apiAlbumsPromise(baseUrl, limit = 100, start = 1, orderby = null
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {    
+    return response.data;
   });
 }
 
@@ -419,14 +328,8 @@ export function apiAlbumPromise(baseUrl, albumId) {
     url += '/';
   }
   url = `${url}v1/albums/${albumId.toString()}`;
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -473,14 +376,8 @@ export function apiGenresPromise(baseUrl, limit = 100, start = 1, desc = false, 
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {    
+    return response.data;
   });
 }
 
@@ -490,14 +387,8 @@ export function apiGenrePromise(baseUrl, genreId) {
     url += '/';
   }
   url = `${url}v1/genres/${genreId.toString()}`;
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { validateStatus: validateStatus200_OK }).then((response) => {    
+    return response.data;
   });
 }
 
@@ -544,14 +435,8 @@ export function apiArtistsPromise(baseUrl, limit = 100, start = 1, desc = false,
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -578,14 +463,8 @@ export function apiArtistPromise(baseUrl, artistId) {
     url += '/';
   }
   url = `${url}v1/artists/${artistId.toString()}`;
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -616,14 +495,8 @@ export function apiPlaylistsPromise(baseUrl, userId, limit = 100, start = 1, des
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -650,14 +523,8 @@ export function apiPlaylistPromise(baseUrl, playlistId, userId) {
     url += '/';
   }
   url = `${url}v1/playlists/${userId.toString()}/${playlistId.toString()}`;
-  return axios.get(url).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -710,14 +577,8 @@ export function apiEntitySongsPromise(baseUrl, entity, entityId, userId = null, 
   if (filter) {
     params.filter = filter;
   }
-  return axios.get(url, { params }).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    }
-    return null;
-  }).catch((error) => {
-    console.log(error);
-    return null;
+  return axios.get(url, { params, validateStatus: validateStatus200_OK }).then((response) => {
+    return response.data;
   });
 }
 
@@ -736,4 +597,199 @@ export function getAllEntitySongs(baseUrl, entity, entityId, userId, orderby = n
   const start = 1;
   return apiEntitySongsPromise(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter)
     .then((result) => getAllEntitySongsContinuation(baseUrl, entity, entityId, userId, limit, start, orderby, desc, filter, [], result));
+}
+
+function validateStatus200_OK(status) {
+  return status === 200; // Resolve only if the status code is 200 OK
+}
+
+/*** PLAYLIST ACTIONS MOVED HERE ***/
+
+
+export function showDialog(show) {
+  return {
+    type: 'PLAYLISTS_SHOW_DIALOG',
+    payload: show,
+  };
+}
+
+export function loadPlaylists() {
+  return (dispatch, getState) => new Promise((resolve, reject) => {
+    const {
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+      userData: {
+        userId,
+      },
+      playlists: {
+        playlistsLoaded,
+      },
+    } = getState();
+
+    if (!playlistsLoaded) {
+      dispatch(cleanPlaylists());
+      let promise = getAllPlaylists(baseAddress, userId);
+      promise = makeCancelable(promise);
+      promise.promise
+        .then((playlists) => {
+          dispatch(playlistsChange(true, playlists));
+          resolve();
+        })
+        .catch((err) => {
+          dispatch(cleanPlaylists());
+          dispatch(checkFsConnection());
+          reject(err);
+        });
+      dispatch(setPlaylistsPromise(promise));
+    } else {
+      resolve()
+    }
+  });
+}
+
+export function addNewPlaylist(name, description) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    const url = `${baseAddress}/v1/playlists/${userId}`;
+    const newPlaylist = {
+      name,
+      description,
+    };
+
+    axios.post(url, newPlaylist)
+      .then((response) => {
+        console.log('Response: ', response);
+        dispatch(cleanPlaylists());
+        dispatch(loadPlaylists());
+        dispatch(showDialog(false));
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+        dispatch(showDialog(false));
+      });
+  };
+}
+
+/**
+ * Adds songs to playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {array(string)} songs Array of song IDs to be added to playlist.
+ * @returns {function} Dispatchable action.
+ */
+export function addSongsToPlaylist(playlistId, songs) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
+    }
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: songs,
+      remove: [],
+    };
+    axios.put(url, data)
+      .then((response) => {
+        console.log('Response: ', response);
+        dispatch(cleanPlaylists());
+      }).catch((error) => {
+        console.log('Error: ', error);
+      });
+  };
+}
+
+/**
+ * Adds single song to playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {string} songId ID of song to be added to playlist.
+ * @returns {function} Dispatchable action.
+ */
+export function addSongToPlaylist(playlistId, songId) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
+    }
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: [songId],
+      remove: [],
+    };
+    axios.put(url, data)
+      .then((response) => {
+        console.log('Response: ', response);
+        dispatch(cleanPlaylists());
+      }).catch((error) => {
+        console.log('Error: ', error);
+      });
+  };
+}
+
+/**
+ * Remove songs from playlist.
+ * @param {string} playlistId ID of playlist.
+ * @param {array(string)} songs Array of song IDs to be removed from playlist.
+ * @returns {function} Dispatchable action.
+ */
+export function removeSongsFromPlaylist(playlistId, songs) {
+  return (dispatch, getState) => {
+    const {
+      userData: {
+        userId,
+      },
+      devices: {
+        fileServer: {
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    let url = baseAddress;
+    if (!url.endsWith('/')) {
+      url += '/';
+    }
+    url = `${url}v1/playlists/${userId}/${playlistId}/songs`;
+
+    const data = {
+      add: [],
+      remove: songs,
+    };
+    return axios.put(url, data, { validateStatus: validateStatus200_OK });      
+  };
 }

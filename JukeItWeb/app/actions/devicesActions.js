@@ -13,6 +13,12 @@ import {
   connectToRemotePlayer,
 } from './playerActions';
 
+import {
+  stopPlayback
+} from './playbackActions'
+
+import { cleanLibrary } from './libraryActions';
+
 export function toggleFileServerLocal() {
   return ({
     type: 'DEVICES_TOGGLE_FS_LOCAL',
@@ -141,9 +147,13 @@ function fsConnected(address) {
 }
 
 export function disconnectFileServer() {
-  return ({
-    type: 'DEVICES_FS_DISCONNECT',
-  });
+  return (dispatch) => {
+    dispatch(cleanLibrary());
+    dispatch(stopPlayback());
+    dispatch({
+      type: 'DEVICES_FS_DISCONNECT',
+    });
+  };  
 }
 
 export function openFileServerLocal() {
@@ -387,6 +397,32 @@ export function connectFsRemote() {
         .catch((error) => reject(error));
     } else {
       resolve();
+    }
+  });
+}
+
+export function checkFsConnection() {
+  return (dispatch, getState) => new Promise(function (resolve, reject) {
+    const {
+      devices: {
+        fileServer: {
+          connected,
+          baseAddress,
+        },
+      },
+    } = getState();
+
+    if (connected) {
+      pingFileServer(baseAddress)
+        .then(() => {                    
+          resolve(true);   
+        })
+        .catch((error) => {
+          dispatch(disconnectFileServer());
+          reject(error);
+        });
+    } else {
+      resolve(false);
     }
   });
 }

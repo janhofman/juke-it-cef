@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { push } from "react-router-redux";
 import Playback from './../../components/Playback';
 import {
     openContextMenu,
@@ -16,6 +17,7 @@ import {
     togglePriorityQueue,
     playlistQueueAddItem,
     priorityQueueAddItem,
+    setFileserverAddress,
 } from './../../actions/playbackActions';
 import { toggleActive } from './../../actions/userDataActions';
 
@@ -33,6 +35,10 @@ class PlaybackPage extends Component {
     this.onSongRightClick = this.onSongRightClick.bind(this);
     this.addToPlaylistQueueOpt = this.addToPlaylistQueueOpt.bind(this);
     this.addToPriorityQueueOpt = this.addToPriorityQueueOpt.bind(this);
+    this.onFsDialogOptionContinue = this.onFsDialogOptionContinue.bind(this);
+    this.onFsDialogOptionRemove = this.onFsDialogOptionRemove.bind(this);
+    this.onFsDialogOptionReconnect = this.onFsDialogOptionReconnect.bind(this);
+    this.onFsDialogOptionCancel = this.onFsDialogOptionCancel.bind(this);
   }
 
   onSongRightClick({event, index, rowData}) {
@@ -68,7 +74,10 @@ class PlaybackPage extends Component {
   }
 
   removePlaylist() {
-    const { dispatch } = this.props;
+    const { dispatch, active } = this.props;
+    if(active) {
+      dispatch(toggleActive());
+    }
     dispatch(removePlaylist());
   }
 
@@ -107,6 +116,24 @@ class PlaybackPage extends Component {
     dispatch(toggleOrderQueue());
   }
 
+  onFsDialogOptionContinue() {
+    const { dispatch, fsCurrentAddress } = this.props;
+    dispatch(setFileserverAddress(fsCurrentAddress));
+  }
+
+  onFsDialogOptionRemove() {    
+    this.removePlaylist();
+  }
+
+  onFsDialogOptionReconnect() {
+    const { dispatch } = this.props
+    dispatch(push('/home/devices'));
+  }
+
+  onFsDialogOptionCancel() {    
+    this.props.history.goBack();
+  }
+
   render() {
     return (
       <Playback
@@ -124,6 +151,10 @@ class PlaybackPage extends Component {
         onTogglePlaylistQueue={this.onTogglePlaylistQueue}
         onTogglePriorityQueue={this.onTogglePriorityQueue}
         onToggleOrderQueue={this.onToggleOrderQueue}
+        onFsDialogOptionContinue={this.onFsDialogOptionContinue}
+        onFsDialogOptionRemove={this.onFsDialogOptionRemove}
+        onFsDialogOptionReconnect={this.onFsDialogOptionReconnect}
+        onFsDialogOptionCancel={this.onFsDialogOptionCancel}
       />
     );
   }
@@ -141,7 +172,7 @@ PlaybackPage.propTypes = {
 };
 
 export default connect((store) => {
-  const { playback, firebase, userData, player } = store;
+  const { playback, firebase, userData, player, devices } = store;
   return ({
     firebase,
     playlist: playback.activePlaylist,
@@ -150,6 +181,8 @@ export default connect((store) => {
     songId: playback.songId,
     active: userData.spot.active,
     playerEnabled: player.initialized,
+    playerConnected: devices.player.connected,
+    fsConnected: devices.fileServer.connected,
     playlistQueue: playback.playlistQueue,
     orderQueue: playback.orderQueue,
     priorityQueue: playback.priorityQueue,
@@ -157,5 +190,14 @@ export default connect((store) => {
     playlistQueueOpen: playback.playlistQueueOpen,
     priorityQueueOpen: playback.priorityQueueOpen,
     availableSongsOpen: playback.availableSongsOpen,
+    fsChangedDialogOpen: (
+      devices.fileServer.connected
+      && devices.fileServer.baseAddress
+      && playback.activePlaylist
+      && playback.fileserverAddress
+      && playback.fileserverAddress !== devices.fileServer.baseAddress
+    ),
+    fsCurrentAddress: devices.fileServer.baseAddress,
+    fsOriginalAddress: playback.fileserverAddress,
   });
 })(PlaybackPage);

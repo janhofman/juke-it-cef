@@ -113,6 +113,7 @@ namespace MusicPlayer {
 		// this function just handles raw song opening, calling function must verify 
 		// cache existence and catch exception caused by empty cache
 		void OpenNextSong();
+		void ResetPlayer();
 
 		ActionEnum GetAction(const std::string& action);
 		void SendResponse(ResponseErrorCode responseCode, const web::json::value& id);

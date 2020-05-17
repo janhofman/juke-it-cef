@@ -1,21 +1,66 @@
 import React, { Component } from 'react';
+import { injectIntl } from 'react-intl';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
-import { loadArtists } from './../../actions/libraryActions';
+import { 
+  cleanArtists,
+  getAllArtists,
+  artistsChange,
+  setArtistsPromise,
+} from './../../actions/libraryActions';
+import { notify } from './../../actions/evenLogActions';
+import { checkFsConnection } from './../../actions/devicesActions';
+import { makeCancelable } from '../../utils';
 import Artists from '../../components/Artists';
 import LoadScreen from '../../components/LoadScreen';
+import messages from './messages';
 
 class ArtistsPage extends Component {
   constructor(props) {
     super(props);
-    const { dispatch } = props;
-    dispatch(loadArtists());
+
+    this.showDetail = this.showDetail.bind(this);
+
+    this.loadArtists()
   }
 
   componentWillReceiveProps(nextProps) {
-    const { loaded, dispatch } = this.props;
+    const { loaded } = this.props;
     if (nextProps.loaded === false && loaded === true) {
-      dispatch(loadArtists());
+      this.loadArtists();
+    }
+  }
+
+  loadArtists() {    
+    const {
+      loaded,
+      fsAddress,
+      dispatch,
+      intl: {
+        formatMessage,
+      }
+    } = this.props;
+
+    if (!loaded) {
+      dispatch(cleanArtists());
+      let promise = getAllArtists(fsAddress);
+      promise = makeCancelable(promise);
+      promise.promise
+        .then((artists) => dispatch(artistsChange(true, artists)))
+        .catch((err) => {
+          dispatch(cleanArtists());
+          dispatch(notify(formatMessage(messages.onFetchError)));
+          if(err.request && ! err.response) {
+            // we did not get any response from server
+            // it is possible that connection is compromised
+            dispatch(checkFsConnection()) // check connection
+              .catch((err) => {
+                console.log(err);
+                dispatch(notify(formatMessage(messages.onFsDisconnected)));              
+              });
+          }
+        });
+      dispatch(setArtistsPromise(promise));
     }
   }
 
@@ -31,7 +76,7 @@ class ArtistsPage extends Component {
         <Artists
           {...this.props}
           artists={artists}
-          showDetail={this.showDetail.bind(this)}
+          showDetail={this.showDetail}
         />
       </LoadScreen>
     );
@@ -43,5 +88,6 @@ export default connect((store) => {
   return ({
     artists: library.artists,
     loaded: library.artistsLoaded,
+    fsAddress: store.devices.fileServer.baseAddress,
   });
-})(ArtistsPage);
+})(injectIntl(ArtistsPage));

@@ -8,21 +8,36 @@ import {
     loadPlaylists,
     showDialog,
     addNewPlaylist,
-} from './../../actions/playlistsActions';
+} from './../../actions/libraryActions';
+import { notify } from './../../actions/evenLogActions';
+import messages from './messages';
 
 class PlaylistsPage extends Component {
   constructor(props) {
     super(props);
-    props.dispatch(loadPlaylists());
+    const { dispatch } = this.props;
+    dispatch(loadPlaylists());
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log('WillReceiveProps');
     const { loaded, dispatch } = this.props;
     if (nextProps.loaded === false && loaded === true) {
-      console.log('Called update');
       dispatch(loadPlaylists());
     }
+  }
+
+  loadPlaylists() {
+    const {
+      dispatch,
+      intl: {
+        formatMessage,
+      }
+    } = this.props;
+
+    dispatch(loadPlaylists())
+      .catch((err) => {
+        dispatch(notify(formatMessage(messages.onFetchError)));
+      })
   }
 
   showDetail(playlistId) {

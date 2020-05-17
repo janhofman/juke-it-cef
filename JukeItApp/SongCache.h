@@ -90,8 +90,6 @@ namespace MusicPlayer {
 		};
 
 		SongPtr NextSong();
-		//void AddToOrderQueue(const std::string& songId, const std::string& itemId);
-		//void AddToPlaylistQueue(const std::string& songId, const std::string& itemId);
 		void Reset();
 		void UpdateQueue(const std::vector<QueueItem>& newQueue);
 		bool TestConnection();
@@ -99,16 +97,64 @@ namespace MusicPlayer {
 		inline bool HasEnoughSongs() {
 			return queue_.size() >= 3;
 		}
+
+		// exceptions
+		class FileserverDisconnectedException;
+		class FailedToLoadSongException;
+		class EmptyQueueException;
 	private:
 		void GetSongAsync(const std::string& songId, SongPtr songPtr);
 		void AddToCache(const std::string& songId, const std::string& itemId);
 		void UpdateCache();
 
-		std::vector<QueueItem> orderQueue_;
-		std::vector<QueueItem> playlistQueue_;
 		std::vector<QueueItem> queue_;
 		std::unordered_map<std::string, SongPtr> cache_;
 		web::http::client::http_client httpClient_;
+	};
+
+	class SongCache::FileserverDisconnectedException : public std::exception {
+	private:
+		std::string message_;
+	public:
+		explicit FileserverDisconnectedException(const std::string& message) : message_(message) {};
+		FileserverDisconnectedException() : FileserverDisconnectedException("Fileserver has disconnected.") {};
+		const char* what() const noexcept override {
+			return message_.c_str();
+		}
+	};
+
+	class SongCache::FailedToLoadSongException : public std::exception {
+	private:
+		std::string message_;
+		std::string songId_;
+		std::string itemId_;
+	public:
+		FailedToLoadSongException(const std::string& songId, const std::string& itemId) : songId_(songId), itemId_(itemId) {
+			std::stringstream ss;
+			ss << "Song failed to load from fileserver." << std::endl
+				<< "Song ID: " << songId_ << std::endl
+				<< "Item ID: " << itemId_;
+
+			message_ = ss.str();
+		}
+		const char* what() const noexcept override {
+			return message_.c_str();
+		}
+		const std::string& songId() const {
+			return songId_;
+		}
+		const std::string& itemId() const {
+			return itemId_;
+		}
+	};
+
+	class SongCache::EmptyQueueException : public std::exception {
+	private:
+		std::string message_ = "Song queue is empty";
+	public:
+		const char* what() const noexcept override {
+			return message_.c_str();
+		}
 	};
 }
 #endif

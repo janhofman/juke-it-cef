@@ -39,50 +39,38 @@ namespace MusicPlayer {
 			});
 	}
 
-	/*
 	SongPtr SongCache::NextSong() {
-		// first check if we have ready a song in order queue
-		if (orderQueue_.size() > 0) {
-			auto item = orderQueue_[0];
-			auto it = cache_.find(item.itemId);
+		// check if we have ready a song in queue
+		if (queue_.size() > 0) {
+			auto item = queue_[0];
+			auto itemId = item.itemId;
+			auto songId = item.songId;
+			auto it = cache_.find(itemId);
 			if (it != cache_.end()) {
-				if (it->second->IsReady()) {
-					// hold the pointer and remove it from cache
-					auto songPtr = it->second->shared_from_this();
-					cache_.erase(item.itemId);
-					// remove it from queue
-					orderQueue_.erase(orderQueue_.begin());
-					// load next song if there is any
-					if (orderQueue_.size() >= 2) {
-						AddToCache(orderQueue_[1].songId, orderQueue_[1].itemId);
-					}
+				// hold the pointer and remove it from cache
+				auto songPtr = it->second->shared_from_this();
+				cache_.erase(itemId);
+				// remove it from queue
+				queue_.erase(queue_.begin());
+				// load next song if there is any
+				UpdateCache();
+
+				if (songPtr->IsReady()) {
 					// return the pointer
 					return songPtr;
 				}
-				// else: orderQueue top is not ready, so we fallback to playlist queue
-			}
-			else {
-				// we didn't find the song in cache. This should not happen, but if it occurs, we just put it there
-				AddToCache(item.songId, item.itemId);
-			}
-		}
-		// song in order queue wasn't available, so we play from playlist queue
-		if (playlistQueue_.size() > 0) {
-			auto item = playlistQueue_[0];
-			auto it = cache_.find(item.itemId);
-			if (it != cache_.end()) {
-				if (it->second->IsReady()) {
-					// hold the pointer and remove it from cache
-					auto songPtr = it->second->shared_from_this();
-					cache_.erase(item.itemId);
-					// remove it from queue
-					playlistQueue_.erase(playlistQueue_.begin());
-					// load next song if there is any
-					if (playlistQueue_.size() >= 2) {
-						AddToCache(playlistQueue_[1].songId, playlistQueue_[1].itemId);
+				else if (songPtr->IsCancelled()) {
+					// return recursively
+					return NextSong();
+				}
+				else if (songPtr->IsFailed()) {
+					// verify that fileserver is still running
+					if (TestConnection()) {
+						throw FailedToLoadSongException(songId, itemId);
 					}
-					// return the pointer
-					return songPtr;
+					else {
+						throw FileserverDisconnectedException();
+					}
 				}
 				else {
 					// we don't have any song ready, we must wait for it to get buffered
@@ -97,54 +85,9 @@ namespace MusicPlayer {
 				return NextSong();
 			}
 		}
-		// TODO: both queues are empty, throw an exception
-		throw 123;
-	}
-	*/
-
-	SongPtr SongCache::NextSong() {
-		// check if we have ready a song in queue
-		if (queue_.size() > 0) {
-			auto item = queue_[0];
-			auto it = cache_.find(item.itemId);
-			if (it != cache_.end()) {
-				if (it->second->IsReady()) {
-					// hold the pointer and remove it from cache
-					auto songPtr = it->second->shared_from_this();
-					cache_.erase(item.itemId);
-					// remove it from queue
-					queue_.erase(queue_.begin());
-					// load next song if there is any
-					UpdateCache();
-					// return the pointer
-					return songPtr;
-				}
-				else {
-					if (it->second->IsFailed() || it->second->IsCancelled()) {
-						if (it->second->IsFailed()) {
-							// TODO: report failed song and verify connection to fileServer
-						}						
-						// remove it from queue
-						cache_.erase(item.itemId);
-						queue_.erase(queue_.begin());
-
-						return NextSong();
-					} 
-					else {
-						// we don't have any song ready, we must wait for it to get buffered
-						std::this_thread::sleep_for(std::chrono::seconds(1));
-						return NextSong();
-					}
-				}
-			}
-			else {
-				// we didn't find the song in cache. This should not happen, but if it occurs, we just put it there
-				AddToCache(item.songId, item.itemId);
-				// call ourselves recursively, this time the first item is available in cache
-				return NextSong();
-			}
+		else {
+			throw SongCache::EmptyQueueException();
 		}
-		throw 123;
 	}
 
 	void SongCache::UpdateQueue(const std::vector<SongCache::QueueItem>& newQueue) {
@@ -202,35 +145,6 @@ namespace MusicPlayer {
 			}
 		}
 	}
-
-
-	/*
-	void SongCache::AddToOrderQueue(const std::string& songId, const std::string& itemId) {
-		QueueItem q;
-		q.songId = songId;
-		q.itemId = itemId;
-
-		// if there are less than 2 items in the order queue, we should load it right away
-		bool shouldLoad = orderQueue_.size() < 2;
-		orderQueue_.push_back(q);
-		if (shouldLoad) {
-			AddToCache(songId, itemId);
-		}
-	}
-
-	void SongCache::AddToPlaylistQueue(const std::string& songId, const std::string& itemId) {
-		QueueItem q;
-		q.songId = songId;
-		q.itemId = itemId;
-
-		// if there are less than 2 items in the order queue, we should load it right away
-		bool shouldLoad = playlistQueue_.size() < 2;
-		playlistQueue_.push_back(q);
-		if (shouldLoad) {
-			AddToCache(songId, itemId);
-		}
-	}
-	*/
 
 	void SongCache::AddToCache(const std::string& songId, const std::string& itemId) {
 		// first make sure the song isn't there already, find is O(1) so it's cheap safety measure

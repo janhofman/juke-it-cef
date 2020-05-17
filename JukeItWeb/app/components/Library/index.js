@@ -20,6 +20,7 @@ import AlbumDetailPage from './../../containers/AlbumDetailPage';
 import ArtistDetailPage from './../../containers/ArtistDetailPage';
 import GenreDetailPage from './../../containers/GenreDetailPage';
 import PlaylistDetailPage from './../../containers/PlaylistDetailPage';
+import ScrollPane from '../../containers/ScrollPane';
 
 const styles = {
   search: {
@@ -57,6 +58,12 @@ const styles = {
   gap: {
     height: '10px',
   },
+  centeredTextContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%'
+},
 };
 
 class Library extends Component {
@@ -71,10 +78,23 @@ class Library extends Component {
         pathname,
       },
       playbackReady,
+      connected,
       localConnected,
       onAddFiles,
       onOpenFileAvailabilityTool,
     } = this.props;
+
+    if (!connected) {
+      return (
+        <div style={styles.base}>     
+          <ScrollPane unscrollable>
+            <div style={styles.centeredTextContainer}>
+              {formatMessage(messages.fileserverNotConnected)}
+            </div>
+          </ScrollPane>
+        </div>
+      )
+    }
 
     const songsPath = match.url;
     const genresPath = `${match.url}/genres`;
@@ -87,9 +107,8 @@ class Library extends Component {
     let artistsMatch  = pathname.startsWith(artistsPath);
     let playlistMatch  = pathname.startsWith(playlistPath);
     let albumsMatch  = pathname.startsWith(albumsPath);
-
     return (
-      <div style={styles.base}>
+      <div style={styles.base}>        
         <div style={styles.menu}>
           <div style={styles.tabs}>
             <StyledLink to={albumsPath} routeActive={albumsMatch}>

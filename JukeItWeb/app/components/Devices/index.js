@@ -158,12 +158,12 @@ class Devices extends Component {
                 onTouchTap={fs.onReloadSettings}
               />
               <Dialog
-                title="Warning"
+                title={formatMessage(messages.fsDialogTitle)}
                 actions={fsDialogActions}
                 modal={true}
                 open={pageLayout.fileServer.dialogOpen}
               >
-                This action will close any open connections to File Server. Do you wish to continue?
+                {formatMessage(messages.fsDialogBody)}                
               </Dialog>    
             </p>
             <OrangeDivider />
@@ -264,12 +264,12 @@ class Devices extends Component {
               onTouchTap={ps.onReloadSettings}
               />
               <Dialog
-                title="Warning"
+                title={formatMessage(messages.playerDialogTitle)}
                 actions={playerDialogActions}
                 modal={true}
                 open={pageLayout.player.dialogOpen}
               >
-                This action will close any open connections to Player. Do you wish to continue?
+                {formatMessage(messages.playerDialogBody)}                
               </Dialog>
             </p>
             <OrangeDivider />

@@ -8,7 +8,6 @@ class Songs extends Component {
     const {
       loaded,
       songs,
-      onSongDoubleClick,
       playAction,
       loadNextPage,
       intl: {

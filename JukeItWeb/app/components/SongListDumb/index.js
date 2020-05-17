@@ -26,7 +26,6 @@ import MillisToTime from '../MillisToTime';
 import StyledTextField from './../StyledTextField';
 import messages from './messages';
 import defaultImage from '../../images/logo_negative_no_bg.png';
-import { addSongToPlaylist } from '../../actions/playlistsActions';
 
 const styles = {
   image: {
@@ -72,7 +71,13 @@ const styles = {
   },
   iconButton: { 
     verticalAlign: 'middle',
-  }
+  },  
+  noRowsContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%'
+  },
 };
 
 class SongListDumb extends Component {
@@ -80,6 +85,7 @@ class SongListDumb extends Component {
     super(props);
 
     this.selectionCellRenderer = this.selectionCellRenderer.bind(this);
+    this.noRowsRenderer = this.noRowsRenderer.bind(this);
     this.setInfiniteLoaderRef = element => {
       this.infiniteLoader = element;
     };
@@ -107,6 +113,22 @@ class SongListDumb extends Component {
       />
     );
   }  
+
+  noRowsRenderer() {
+    const {
+        intl: {
+            formatMessage        
+        }
+    } = this.props;
+   
+    return (
+        <div style={styles.noRowsContainer}>
+          <p>
+              {formatMessage(messages.noRows)}
+          </p>
+        </div>
+    );
+  }
 
   render() {
     const { formatMessage } = this.props.intl;
@@ -138,6 +160,7 @@ class SongListDumb extends Component {
       onRemoveSelectedFiles,
       onRemoveSongsFromPlaylistOption,
       onRemoveSelectedSongsFromPlaylist,
+      onReload,
     } = this.props;
 
     const playButtonDisabled = !playerConnected;
@@ -156,9 +179,9 @@ class SongListDumb extends Component {
 
     // Only load 1 page of items at a time.
     // Pass an empty callback to InfiniteLoader in case it asks us to load more than once.
-    const loadMoreRows = loadNextPage;/*isNextPageLoading
+    const loadMoreRows = /*loadNextPage;*/isNextPageLoading
       ? () => {}
-      : loadNextPage;*/
+      : loadNextPage;
 
     const sortDirection = sort.sortBy ? (sort.desc ? SortDirection.DESC : SortDirection.ASC) : null;
     const onSort = (args) => { sort.onSort(args); this.infiniteLoader.resetLoadMoreRowsCache(true); };
@@ -171,6 +194,12 @@ class SongListDumb extends Component {
         onSearch();
       }
     };
+
+    const handleRemoveSelectedSongsFromPlaylist = () => {
+      onRemoveSelectedSongsFromPlaylist()
+        .then(() => { this.infiniteLoader.resetLoadMoreRowsCache(true); })
+        .catch((err) => { console.log('error removing songs: ', err);/* TODO: show notification */ });
+    }
     
     // Every row is loaded except for our loading indicator row.
     const isRowLoaded = ({ index }) => !hasNextPage || index < rows.length
@@ -233,7 +262,7 @@ class SongListDumb extends Component {
                   <FlatButton
                     label={'Remove'}
                     containerElement="label"
-                    onTouchTap={onRemoveSelectedSongsFromPlaylist}
+                    onTouchTap={handleRemoveSelectedSongsFromPlaylist}
                   />
                 }
                 <FlatButton
@@ -312,7 +341,7 @@ class SongListDumb extends Component {
                       height={height}
                       headerHeight={45}
                       headerStyle={styles.headerStyle}
-                      noRowsRenderer={this._noRowsRenderer}
+                      noRowsRenderer={this.noRowsRenderer}
                       onRowsRendered={onRowsRendered}
                       rowGetter={({index}) => (index < rows.length) ? rows[index] : { loading: true }}
                       rowRenderer={rowRenderer}

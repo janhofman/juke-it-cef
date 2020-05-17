@@ -107,6 +107,9 @@ export function openFileServer(hostName = null, port = null) {
     let payload = null;
     if (hostName || port) {
       payload = { hostName, port };
+      if(!Number.isInteger(payload.port)){
+        payload.port = parseInt(payload.port);
+      }
     }
 
     const onSuccess = (responseStr) => {

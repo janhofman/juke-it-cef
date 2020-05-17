@@ -5,8 +5,8 @@ import {
   apiAlbumPromise,
   apiArtistPromise,
   apiPlaylistPromise,
+  loadPlaylists,
 } from './libraryActions';
-import { loadPlaylists } from './playlistsActions';
 
 export function makeStatic() {
   return {

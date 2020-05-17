@@ -88,6 +88,14 @@ export default defineMessages({
   fsRemoteDisconnectBtn: {
     id: 'Devices.fsRemoteDisconnectBtn',
     defaultMessage: 'Disconnect',
+  }, 
+  fsDialogBody: {
+    id: 'Devices.fsDialogBody',
+    defaultMessage: 'This action will close any open connections to File Server. Do you wish to continue?',
+  },
+  fsDialogTitle: {
+    id: 'Devices.fsDialogTitle',
+    defaultMessage: 'Warning',
   },
   playerLocalHostnameHint: {
     id: 'Devices.playerLocalHostnameHint',
@@ -140,5 +148,13 @@ export default defineMessages({
   playerRemoteDisconnectBtn: {
     id: 'Devices.playerRemoteDisconnectBtn',
     defaultMessage: 'Disconnect',
+  },  
+  playerDialogBody: {
+    id: 'Devices.playerDialogBody',
+    defaultMessage: 'This action will close any open connections to Player. Do you wish to continue?',
+  },
+  playerDialogTitle: {
+    id: 'Devices.playerDialogTitle',
+    defaultMessage: 'Warning',
   },
 });

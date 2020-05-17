@@ -226,19 +226,29 @@ namespace MusicPlayer {
 
 	Session::ResponseErrorCode Session::PlayAction() {
 		if (cache_.get() != nullptr) {
+			bool songOpen = true;
 			if (currentSong_.get() == nullptr) {
 				try {
 					OpenNextSong();
 				}
-				catch (...) {
+				catch (const SongCache::EmptyQueueException&) {
 					// ask for a song
 					waitingForQueue_ = true;
 					RequestPlaylistSong();
+					songOpen = false;
+				}
+				catch (const SongCache::FileserverDisconnectedException&) {
+					// fileserver is not available, we need to reset player and let manager know
+					ResetPlayer();
+					SendNotification("FILESERVERDISCONNECTED");
+					return ResponseErrorCode::FILESERVER_NOT_SET;
 				}
 			}
 			if (!playing_) {
 				playing_ = true;
-				player_.Play();
+				if (songOpen) {
+					player_.Play();
+				}
 			}
 		}
 		else {
@@ -260,19 +270,25 @@ namespace MusicPlayer {
 
 	Session::ResponseErrorCode Session::NextAction() {
 		if (cache_.get() != nullptr) {
+			bool songOpen = false;
 			try {
 				OpenNextSong();
-				if (playing_) {
-					player_.Play();
-				}
-				if (!cache_->HasEnoughSongs()) {
-					RequestPlaylistSong();
-				}
+				songOpen = true;
 			}
-			catch (...) {
+			catch (const SongCache::EmptyQueueException&) {
 				// ask for a song
 				waitingForQueue_ = true;
 				RequestPlaylistSong();
+			}
+			catch (const SongCache::FileserverDisconnectedException&) {
+				// fileserver is not available, we need to reset player and let manager know
+				ResetPlayer();
+				SendNotification("FILESERVERDISCONNECTED");
+				return ResponseErrorCode::FILESERVER_NOT_SET;
+			}
+
+			if (songOpen && playing_) {
+				player_.Play();
 			}
 		}
 		else {
@@ -282,43 +298,29 @@ namespace MusicPlayer {
 	}
 
 	Session::ResponseErrorCode Session::ResetAction() {
-		// we only need to take care of situation where the cache has already been initialized
-		if (cache_.get() != nullptr) {
-			player_.Close();
-			playing_ = false;
-			currentSong_.reset();
-			cache_->Reset();
-		}
+		ResetPlayer();
 		return ResponseErrorCode::OK;
 	}
 
 	Session::ResponseErrorCode Session::CloseAction() {
-		// we only need to take care of situation where the cache has already been initialized
-		if (cache_.get() != nullptr) {
-			player_.Close();
-			playing_ = false;
-			currentSong_.reset();
-			cache_->Reset();
-		}
+		ResetPlayer();
 		return ResponseErrorCode::OK;
 	}
 
 	Session::ResponseErrorCode Session::InitializeAction(const web::json::object& payload) {
 		auto it = payload.find(String_t("url"));
-		if (it != payload.end()) {
-			if (it->second.is_string()) {
-				auto url = utility::conversions::to_utf8string(it->second.as_string());
-				cache_ = std::make_unique<SongCache>(url);
-				if (cache_->TestConnection()) {
-					player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
-					player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
-					// ask for a song
-					RequestPlaylistSong();
-				}
-				else {
-					return ResponseErrorCode::FILESERVER_UNREACHABLE;
-				}
-			}	
+		if (it != payload.end() && it->second.is_string()) {
+			auto url = utility::conversions::to_utf8string(it->second.as_string());
+			cache_ = std::make_unique<SongCache>(url);
+			if (cache_->TestConnection()) {
+				player_.SetPlaybackFinishedCallback(std::bind(&Session::NextAction, this));
+				player_.SetStatusCallback(std::bind(&Session::SendStatus, this, std::placeholders::_1, std::placeholders::_2));
+				// ask for a song
+				RequestPlaylistSong();
+			}
+			else {
+				return ResponseErrorCode::FILESERVER_UNREACHABLE;
+			}
 		}
 		else {
 			return ResponseErrorCode::MALFORMED_REQUEST;
@@ -369,8 +371,18 @@ namespace MusicPlayer {
 	void Session::OpenNextSong() {		
 		SongPtr nextSong;
 		do {
-			nextSong = cache_->NextSong();
-		} while (nextSong.get() == nullptr || nextSong->IsFailed());
+			try {
+				nextSong = cache_->NextSong();
+			}
+			catch (const SongCache::FailedToLoadSongException& ex) {
+				// notify about failed song
+				web::json::value payload;
+				payload[String_t("itemId")] = web::json::value::string(String_t(ex.itemId()));
+				payload[String_t("songId")] = web::json::value::string(String_t(ex.songId()));
+
+				SendNotification("SONGFAILED", payload);
+			}
+		} while (nextSong.get() == nullptr);
 
 		currentSong_ = nextSong->shared_from_this();
 		player_.Open(nextSong->GetStream());
@@ -401,6 +413,17 @@ namespace MusicPlayer {
 			return true;
 		}
 		return false;
+	}
+
+	void Session::ResetPlayer() {
+		// we only need to take care of situation where the cache has already been initialized
+		if (cache_.get() != nullptr) {
+			player_.Close();
+			playing_ = false;
+			currentSong_.reset();
+			cache_->Reset(); // reset cache
+			cache_.reset();  // reset cache pointer
+		}
 	}
 
 	void Session::RequestPlaylistSong() {

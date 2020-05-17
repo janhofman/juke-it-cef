@@ -443,7 +443,7 @@ SqliteAPI::ErrorCode SqliteAPI::AlbumView(const std::unordered_map<std::string, 
 
 SqliteAPI::ErrorCode SqliteAPI::GetSongPath(const std::uint32_t songId, std::string& path) {
 	std::stringstream ss;
-	ss << "SELECT path FROM song WHERE id=" << songId;
+	ss << "SELECT path, notFound FROM song WHERE id=" << songId;
 	std::string sql = ss.str();
 	auto errCode = ErrorCode::OK;
 
@@ -453,6 +453,19 @@ SqliteAPI::ErrorCode SqliteAPI::GetSongPath(const std::uint32_t songId, std::str
 		rtc = sqlite3_step(statement);
 		if (SQLITE_ROW == rtc) {
 			path = TextFieldToString(sqlite3_column_text(statement, 0));
+
+			// perform consistency check
+			bool notFound = sqlite3_column_int(statement, 1) == 1;
+			bool exists = std::filesystem::exists(path);
+			if (exists && notFound) {
+				// song was found
+				SetSongNotFound(false, songId);
+			}
+			else if (!exists && !notFound) {
+				// song is missing
+				SetSongNotFound(true, songId);
+			}
+
 			errCode = ErrorCode::OK;
 		}
 		else {
@@ -867,8 +880,8 @@ void SqliteAPI::SetSongNotFound(const bool notFound, const std::uint32_t songId)
 	auto rtc = sqlite3_prepare_v2(GetDbHandle(), sql.c_str(), -1, &statement, NULL);
 	if (rtc == SQLITE_OK) {
 		sqlite3_step(statement);
-		sqlite3_finalize(statement);
 	}
+	sqlite3_finalize(statement);
 }
 
 bool SqliteAPI::RunFileAvailiabilityCheck() {

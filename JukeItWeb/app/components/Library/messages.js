@@ -41,4 +41,8 @@ export default defineMessages({
       id: 'Library.openDialogTitle',
       defaultMessage: 'Add files to library',            
   },
+  fileserverNotConnected: {
+    id: 'Library.fileserverNotConnected',
+    defaultMessage: 'Fileserver is not connected!',            
+},
 });

@@ -31,7 +31,7 @@ export default defineMessages({
   },
   addToPlaylistOpt: {
     id: 'SongList.addToPlylistOpt',
-    defaultMessage: 'Add to playlist',
+    defaultMessage: 'Add songs to playlist',
   },
   addToQueueOpt: {
     id: 'SongList.addToQueueOpt',
@@ -39,11 +39,11 @@ export default defineMessages({
   },
   removeFilesOpt: {
     id: 'SongList.removeFilesOpt',
-    defaultMessage: 'Remove files',
+    defaultMessage: 'Remove files from library',
   },
   removeSongsOpt: {
     id: 'SongList.removeSongsOpt',
-    defaultMessage: 'Remove songs',
+    defaultMessage: 'Remove songs from playlist',
   },
   playerNotConnectedToolTip: {
     id: 'SongList.playerNotConnectedToolTip',
@@ -56,5 +56,9 @@ export default defineMessages({
   searchLabel: {
     id: 'SongList.searchLabel',
     defaultMessage: 'Search',
+  },
+  noRows: {
+    id: 'SongList.noRows',
+    defaultMessage: 'The list is empty',
   },
 });
