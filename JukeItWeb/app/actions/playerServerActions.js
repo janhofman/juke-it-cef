@@ -54,6 +54,9 @@ export function openPlayerServer(ipAddress = null, port = null) {
     let payload = null;
     if (ipAddress || port) {
       payload = { ipAddress, port };
+      if(!Number.isInteger(payload.port)) {
+        payload.port = parseInt(payload.port);
+      }
     }
 
     const onSuccess = (responseStr) => {

@@ -323,7 +323,10 @@ if(OS_WINDOWS)
   add_executable(${CEF_TARGET} WIN32 ${JUKEITAPP_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper sqlite3 spdlog)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
+  # require C++ 17 standard
   set_target_properties(${CEF_TARGET} PROPERTIES CXX_STANDARD 17)
+  # require run as admin
+  #set_target_properties(${CEF_TARGET} PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\" /SUBSYSTEM:WINDOWS")
   
   #
   # set differences for x64 / x86
