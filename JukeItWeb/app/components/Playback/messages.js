@@ -111,7 +111,7 @@ export default defineMessages({
     },
     fsDialogBody3: {
         id: 'Playback.fsDialogBody3',
-        defaultMessage: '- If the fileservers are different, your playlist will be removed and you will be removed and you will be asked to reupload a playlist.',
+        defaultMessage: '- If the fileservers are different, your playlist will be removed and you will be asked to reupload a playlist.',
     },
     fsDialogBody4: {
         id: 'Playback.fsDialogBody4',

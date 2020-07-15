@@ -187,16 +187,16 @@ class SongList extends Component {
     stopIndex += 1; // adjust to start with 1
 
     // always load at least 20 rows
-    if(stopIndex - startIndex + 1 < 20){
+    /*if(stopIndex - startIndex + 1 < 20){
       stopIndex = startIndex + 19;
-    }
+    }*/
 
     let promise = loadNextPage(fsBaseAddress, startIndex, stopIndex, sortBy, desc, filter);
     promise = makeCancelable(promise);
     promise.promise
       .then((rows) => {
         this.rowsLoaded(rows);
-        if(rows.length != stopIndex - startIndex) {
+        if(rows.length < stopIndex - startIndex + 1) {
           this.noMoreRows();
         }
         this.loadingFinished();

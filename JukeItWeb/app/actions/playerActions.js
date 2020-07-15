@@ -373,11 +373,28 @@ function handleError(payload) {
 export function updateQueue(queue) {
   return (dispatch, getState) => {
     const {
-      player: { webSocket },
+      player: {
+        initialized,
+        webSocket,
+      },
     } = getState();
+
     if (webSocket) {
-      const request = updateQueueRequest(queue);
-      webSocket.send(request);
+      if (initialized) {
+        const request = updateQueueRequest(queue);
+        console.log("Update queue request: ", request);
+        
+        const onSuccess = () => {};
+
+        const onFailure = (error) => {
+          // TODO: notify
+          console.log(error);
+        }
+
+        dispatch(webSocketRequest(request, onSuccess, onFailure));
+      } else {
+        // TODO: log websocket missing error
+      }
     }
   };
 }

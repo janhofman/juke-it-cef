@@ -183,6 +183,10 @@ class SongListDumb extends Component {
       ? () => {}
       : loadNextPage;
 
+    isNextPageLoading
+      ? console.log("loadMoreRows is empty")
+      : console.log("loadMoreRows is functional");
+
     const sortDirection = sort.sortBy ? (sort.desc ? SortDirection.DESC : SortDirection.ASC) : null;
     const onSort = (args) => { sort.onSort(args); this.infiniteLoader.resetLoadMoreRowsCache(true); };
 
@@ -332,8 +336,8 @@ class SongListDumb extends Component {
                   ref={this.setInfiniteLoaderRef}
                   isRowLoaded={isRowLoaded}
                   loadMoreRows={loadMoreRows}
-                  rowCount={rowCount}
-                  minimumBatchSize={20}
+                  rowCount={/*rowCount*/1000000}
+                  minimumBatchSize={30}
                 >
                   {({ onRowsRendered, registerChild }) => (           
                     <Table

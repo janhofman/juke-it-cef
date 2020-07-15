@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <mutex>
+#include <string>
 
 #include "cpprest/json.h"
 #include "AudioInspector.h"
@@ -123,6 +124,7 @@ private:
 	std::mutex dbHandleMutex_;
 	void CreateDatabase();
 	std::string TextFieldToString(const unsigned char *field);
+	static bool TryParseInt(const std::string& str, int& outInt);
 
 	sqlite3* db_handle_ = NULL;
 	std::string database_name_;
