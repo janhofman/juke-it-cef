@@ -19,6 +19,9 @@ source_group("Source files" FILES ${PLAYER_SRCS})
 # Target executable name.
 set(TARGET "JukeIt Player") 
 
+# set policy for find_package to look for *_ROOT environment variables
+cmake_policy(SET CMP0074 NEW)
+
 set(TARGET_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>")
 
 # find Boost and include it
