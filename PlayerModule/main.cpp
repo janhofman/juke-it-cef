@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
 	for (int i = 1; i < argc; ++i) {
 		auto arg = std::string(argv[i]);
-		std::transform(arg.begin(), arg.end(), arg.begin(), std::tolower);
+		std::transform(arg.begin(), arg.end(), arg.begin(), [](unsigned char c) { return std::tolower(c); });
 
 		if (readAddress) {
 			address = arg;

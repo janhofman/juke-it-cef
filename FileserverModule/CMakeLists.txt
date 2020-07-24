@@ -85,7 +85,7 @@ if(OS_WINDOWS)
   #
   # set differences for x64 / x86
   #   
-  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)" OR ${CMAKE_SIZEOF_VOID_P} EQUAL "8")
     # x64
     set(FFMPEG_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/ffmpeg/win64")
     set(CPPRESTSDK_DIRECTORY "${JUKEIT_LIBRARIES_DIR_PATH}/cpprestsdk/win64")
