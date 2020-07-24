@@ -12,13 +12,13 @@ To build boost libraries, follow these steps
 1. Download boost v 1.67 from the Boost link above
 2. Unpack, then place unpacked folder (boost_1_67_0) on desired location (e.g., C:\Program Files\Boost)
 3. Create a temporary folder for intermediate boost build files
-4. Open command line and navigate to boost (boost_1_67_0) folder
+4. Open command line (if you use Visual Studio, open [Developer Command Prompt for Visual Studio](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs) as Administrator) and navigate to boost (boost_1_67_0) folder
 5. From the command line, navigate to unpacked directory and run following commands:
-  * `bootstrap`
-  * `.\b2 --build-dir=build-directory toolset=toolset-name --build-type=complete stage --with-system --with-date_time`, where build-directory is a temporary directory for intermediate build files you've created earlier and toolset-name is name of build tool (use msvc-14.1 for building with Visual Studio 2017/2019)
+    * `bootstrap`
+    * `.\b2 --build-dir=build-directory toolset=toolset-name --build-type=complete stage --with-system --with-date_time`, where build-directory is a temporary directory for intermediate build files you've created earlier and toolset-name is name of build tool (use msvc-14.1 for building with Visual Studio 2017/2019)
 6. Add two environment variables to help CMake find Boost libraries:
-  * `BOOST_ROOT` variable should contain path to root folder (e.g., C:\Program Files\Boost\boost_1_67_0)
-  * `BOOST_LIBRARYDIR` variable should contain path to pre-built libraries in stage\lib folder (e.g., C:\Program Files\Boost\boost_1_67_0\stage\lib)
+    * `BOOST_ROOT` variable should contain path to root folder (e.g., C:\Program Files\Boost\boost_1_67_0)
+    * `BOOST_LIBRARYDIR` variable should contain path to pre-built libraries in stage\lib folder (e.g., C:\Program Files\Boost\boost_1_67_0\stage\lib)
 
 Refer to the Get started manual available via Boost link in case of additional questions.
 
@@ -40,18 +40,18 @@ Refer to the Get started manual available via Boost link in case of additional q
         * ~~Then, open build\cef.xcodeproj in Xcode and select Product > Build.~~
     * To perform a Windows build using a 32-bit CEF binary distribution:
         * Visual Studio 2017:
-          * `cmake -G "Visual Studio 15" ..`
-          * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
+            * `cmake -G "Visual Studio 15" ..`
+            * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
         * Visual Studio 2019:
-          * `cmake -G "Visual Studio 16 2019" -A Win32 ..`
-          * Then, open build\JukeIt.sln in Visual Studio 2019 and select Build > Build Solution.
+            * `cmake -G "Visual Studio 16 2019" -A Win32 ..`
+            * Then, open build\JukeIt.sln in Visual Studio 2019 and select Build > Build Solution.
     * To perform a Windows build using a 64-bit CEF binary distribution:
         * Visual Studio 2017:
-          * `cmake -G "Visual Studio 15 Win64" ..`
-          * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
+            * `cmake -G "Visual Studio 15 Win64" ..`
+            * Then, open build\JukeIt.sln in Visual Studio 2017 and select Build > Build Solution.
         * Visual Studio 2019:
-          * `cmake -G "Visual Studio 16 2019" -A x64 ..`
-          * Then, open build\JukeIt.sln in Visual Studio 2019 and select Build > Build Solution.
+            * `cmake -G "Visual Studio 16 2019" -A x64 ..`
+            * Then, open build\JukeIt.sln in Visual Studio 2019 and select Build > Build Solution.
 
 
 ### Building and using web app:
