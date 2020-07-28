@@ -52,6 +52,11 @@ Refer to the Get started manual available via Boost link in case of additional q
         * Visual Studio 2019:
             * `cmake -G "Visual Studio 16 2019" -A x64 ..`
             * Then, open build\JukeIt.sln in Visual Studio 2019 and select Build > Build Solution.
+    * Note: sometimes CMake fails to read environment variables to locate Boost directories. If that is the case, the path to Boost directory can be supplied as a parameter to cmake command
+            * `-DBOOST_ROOT="path_to _boost_root_directory"` specifies location of Boost root directory
+            * `-DBOOST_LIBRARYDIR="path_to_boost_lib_directory"` specifies loaction of directory containing Boost libraries
+            * `cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="C:\Program Files\Boost\boost_1_67_0" -DBOOST_LIBRARYDIR="C:\Program Files\Boost\boost_1_67_0\stage\lib" ..` is an example of a command containing these parameters
+
 
 
 ### Building and using web app:
