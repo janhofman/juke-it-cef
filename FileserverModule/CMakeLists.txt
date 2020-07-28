@@ -22,7 +22,7 @@ set(FILESERVER_SRCS
 source_group("Source files" FILES ${FILESERVER_SRCS})
 
 # Target executable name.
-set(TARGET "JukeIt FileServer")
+set(TARGET "JukeIt_FileServer")
 
 # set policy for find_package to look for *_ROOT environment variables
 cmake_policy(SET CMP0074 NEW)

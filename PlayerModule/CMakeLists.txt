@@ -17,7 +17,7 @@ set(PLAYER_SRCS
 source_group("Source files" FILES ${PLAYER_SRCS})
 
 # Target executable name.
-set(TARGET "JukeIt Player") 
+set(TARGET "JukeIt_Player") 
 
 # set policy for find_package to look for *_ROOT environment variables
 cmake_policy(SET CMP0074 NEW)
