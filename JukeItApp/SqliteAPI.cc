@@ -453,12 +453,12 @@ void SqliteAPI::CreateDatabase() {
 }
 
 void SqliteAPI::AddFiles() {
-	char const * lFilterPatterns[4] = { "*.mp3", "*.ogg", "*.aac", "*.wav" };
+	char const * lFilterPatterns[6] = { "*.mp3", "*.ogg", "*.aac", "*.wav", "*.m4a", "*.flac" };
 	char const * lTheOpenFileName = NULL;
 	lTheOpenFileName = tinyfd_openFileDialog(
 		"Add audio files",
 		"",
-		4,
+		6,
 		lFilterPatterns,
 		"Audio files",
 		1);

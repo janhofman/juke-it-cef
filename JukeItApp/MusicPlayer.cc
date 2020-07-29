@@ -32,7 +32,7 @@ namespace MusicPlayer {
 				stream->seekg(0, stream->end);
 			}
 			else if (whence == SEEK_SET) {
-				stream->seekg(0, stream->beg);
+				stream->seekg(offset, stream->beg);
 			}
 			else if (whence == SEEK_CUR) {
 				stream->seekg(offset, stream->beg);
@@ -92,22 +92,37 @@ namespace MusicPlayer {
 
 			// first write remaining samples from last loaded frame
 			if (streamInfo->pkt->size && streamInfo->nextDataIndex < streamInfo->frame->nb_samples) {
-				for (i = streamInfo->nextDataIndex; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
-					for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
-						////fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
-						//memcpy(out, streamInfo->frame->data[ch] + data_size * i, data_size);
-						//// move pointer
-						//out += data_size;
-						std::uint8_t sampleBuffer[4];
-						memcpy(sampleBuffer, streamInfo->frame->data[ch] + data_size * i, data_size);
-						ApplyVolume(streamInfo, sampleBuffer);
-						memcpy(out, sampleBuffer, data_size);
-						out += data_size;
+				if (av_sample_fmt_is_planar(streamInfo->ctx_codec->sample_fmt)) {
+					// planar audio
+
+					for (i = streamInfo->nextDataIndex; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+						for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
+							std::uint8_t sampleBuffer[4];
+							memcpy(sampleBuffer, streamInfo->frame->data[ch] + data_size * i, data_size);
+							ApplyVolume(streamInfo, sampleBuffer);
+							memcpy(out, sampleBuffer, data_size);
+							out += data_size;
+						}
+						rtc++;
 					}
-					rtc++;
+					// mark where we ended
+					streamInfo->nextDataIndex = i;
 				}
-				// mark where we ended
-				streamInfo->nextDataIndex = i;
+				else {
+					// non-planar audio
+					for (i = streamInfo->nextDataIndex; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+						for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {							
+							std::uint8_t sampleBuffer[4];
+							memcpy(sampleBuffer, streamInfo->frame->data[0] + data_size * i * streamInfo->ctx_codec->channels + data_size * ch, data_size);
+							ApplyVolume(streamInfo, sampleBuffer);
+							memcpy(out, sampleBuffer, data_size);
+							out += data_size;
+						}
+						rtc++;
+					}
+					// mark where we ended
+					streamInfo->nextDataIndex = i;
+				}
 			}
 			// continue decoding until we write enough data
 			while (rtc < nSamples) {
@@ -143,21 +158,44 @@ namespace MusicPlayer {
 					// we got to the end of file
 					break;
 				}
-				for (i = 0; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
-					for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
-						////fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
-						//memcpy(out, streamInfo->frame->data[ch] + data_size * i, data_size);
-						//out += data_size;
-						std::uint8_t sampleBuffer[4];
-						memcpy(sampleBuffer, streamInfo->frame->data[ch] + data_size * i, data_size);
-						ApplyVolume(streamInfo, sampleBuffer);
-						memcpy(out, sampleBuffer, data_size);	
-						out += data_size;
+
+				if (av_sample_fmt_is_planar(streamInfo->ctx_codec->sample_fmt)) {
+					// planar audio
+
+					for (i = 0; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+						for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
+							////fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
+							//memcpy(out, streamInfo->frame->data[ch] + data_size * i, data_size);
+							//out += data_size;
+							std::uint8_t sampleBuffer[4];
+							memcpy(sampleBuffer, streamInfo->frame->data[ch] + data_size * i, data_size);
+							ApplyVolume(streamInfo, sampleBuffer);
+							memcpy(out, sampleBuffer, data_size);
+							out += data_size;
+						}
+						rtc++;
 					}
-					rtc++;
+					// mark where we ended
+					streamInfo->nextDataIndex = i;
 				}
-				// mark where we ended
-				streamInfo->nextDataIndex = i;
+				else {
+					// non-planar audio
+					for (i = 0; i < streamInfo->frame->nb_samples && rtc < nSamples; i++) {
+						for (ch = 0; ch < streamInfo->ctx_codec->channels; ch++) {
+							////fwrite(streamInfo->frame->data[ch] + data_size*i, 1, data_size, f);
+							//memcpy(out, streamInfo->frame->data[ch] + data_size * i, data_size);
+							//out += data_size;
+							std::uint8_t sampleBuffer[4];
+							memcpy(sampleBuffer, streamInfo->frame->data[0] + data_size * i * streamInfo->ctx_codec->channels + data_size * ch, data_size);
+							ApplyVolume(streamInfo, sampleBuffer);
+							memcpy(out, sampleBuffer, data_size);
+							out += data_size;
+						}
+						rtc++;
+					}
+					// mark where we ended
+					streamInfo->nextDataIndex = i;
+				}
 			}
 			*bufferEnd = out;
 			// return number of processed frames

@@ -157,8 +157,8 @@ class Player extends Component {
 
     const song = currentSong !== null ? currentSong : {};
     const sliderMax = song && song.duration > 0 ? song.duration : 100;
-    const elapsed = seeking ? sliderValue : Math.min(currentTime, sliderMax - 1);
-    const volumeSliderValue = volumeDragging ? volumeValue : Math.min(volume, 100);
+    const elapsed = seeking ? sliderValue : Math.max(Math.min(currentTime, sliderMax), 0);
+    const volumeSliderValue = volumeDragging ? volumeValue : Math.max(Math.min(volume, 100), 0);
 
     return (
       <div style={{ ...styles.base, height }}>
