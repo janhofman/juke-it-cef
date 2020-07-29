@@ -8,6 +8,10 @@ namespace MusicPlayer {
 		{
 			std::basic_istream<std::uint8_t>* stream = (std::basic_istream<std::uint8_t>*)opaque;
 			stream->read(buf, buf_size);
+			if (stream->eof()) {
+				// if we accidentally read past the end of stream, reset error to be able to use stream again
+				stream->clear();
+			}
 			return stream->gcount();
 		}
 
@@ -108,13 +112,15 @@ namespace MusicPlayer {
 			// continue decoding until we write enough data
 			while (rtc < nSamples) {
 				ret = avcodec_receive_frame(streamInfo->ctx_codec, streamInfo->frame);
-				if (ret == AVERROR(EAGAIN)) {
+				while (ret == AVERROR(EAGAIN)) {
 					if (streamInfo->pkt != NULL) {
 						av_packet_unref(streamInfo->pkt);
 					}
 					// we need to read another packet
 					ret = av_read_frame(streamInfo->ctx_format, streamInfo->pkt);
 					if (ret < 0) {
+						char err[AV_ERROR_MAX_STRING_SIZE];
+						av_strerror(ret, err, AV_ERROR_MAX_STRING_SIZE);
 						// end of file
 						if (streamInfo->playbackFinished) {
 							streamInfo->playbackFinished();
@@ -132,7 +138,8 @@ namespace MusicPlayer {
 						}
 					}
 				}
-				else if (ret == AVERROR_EOF) {
+
+				if (ret == AVERROR_EOF) {
 					// we got to the end of file
 					break;
 				}
@@ -192,6 +199,7 @@ namespace MusicPlayer {
 	MusicPlayer::MusicPlayer() {
 		// register all codecs
 		av_register_all();
+		avcodec_register_all();
 
 		// initialize PortAudio
 		PaError err = Pa_Initialize();
@@ -409,13 +417,21 @@ namespace MusicPlayer {
 		_streamInfo.io_context = avio_alloc_context(ioBuffer, ioBufferSize, 0, (void*)(&is), &readFunction, NULL, &seekFunction);
 		_streamInfo.ctx_format = avformat_alloc_context();
 		_streamInfo.ctx_format->pb = _streamInfo.io_context;
-		_streamInfo.ctx_format->flags &= AVFMT_FLAG_CUSTOM_IO; // we supplied custom IO
+		_streamInfo.ctx_format->flags |= AVFMT_FLAG_CUSTOM_IO; // we supplied custom IO
 		
-
-		if (avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL) != 0) {
+		int rtc = 0;
+		
+		rtc = avformat_open_input(&_streamInfo.ctx_format, "dummyFileName", NULL, NULL);
+		if (rtc < 0) {			
+			char errstr[AV_ERROR_MAX_STRING_SIZE];
+			av_strerror(rtc, errstr, AV_ERROR_MAX_STRING_SIZE);
 			return;
 		}
-		if (avformat_find_stream_info(_streamInfo.ctx_format, nullptr) < 0) {
+
+		rtc = avformat_find_stream_info(_streamInfo.ctx_format, nullptr);
+		if (rtc < 0) {
+			char errstr[AV_ERROR_MAX_STRING_SIZE];
+			av_strerror(rtc, errstr, AV_ERROR_MAX_STRING_SIZE);
 			return; // Couldn't find stream information
 		}
 		for (unsigned int i = 0; i < _streamInfo.ctx_format->nb_streams; i++) {
