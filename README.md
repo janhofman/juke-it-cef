@@ -3,7 +3,7 @@
 ## Setting up DEV environment
 
 ### Prerequisities
-1. CMake 3.0 or higher ([download](https://cmake.org/download/))
+1. CMake 3.14 or higher ([download](https://cmake.org/download/))
 2. NodeJS 8.0 or higher ([download](https://nodejs.org/en/download/))
 3. Visual Studio 2017 or newer ([download](https://visualstudio.microsoft.com/downloads/))
 4. Boost v 1.67 with pre-built binaries ([link](https://www.boost.org/doc/libs/1_67_0/more/getting_started/windows.html))
