@@ -212,7 +212,7 @@
     "testRegex": "tests/.*\\.test\\.js$"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "babel-polyfill": "6.23.0",
     "compression": "1.6.2",
     "cross-env": "5.0.0",
